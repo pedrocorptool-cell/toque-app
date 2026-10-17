@@ -1,3 +1,4 @@
+import { type ReactNode } from 'react';
 import { StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -5,7 +6,7 @@ import { AppText } from '@/components/ui';
 import { color, radius, space } from '@/theme/tokens';
 
 /** Écran provisoire pour les onglets qui arrivent dans une étape suivante. */
-export function ComingSoon({ title, step }: { title: string; step: number }) {
+export function ComingSoon({ title, step, children }: { title: string; step: number; children?: ReactNode }) {
   const insets = useSafeAreaInsets();
   return (
     <View style={styles.screen}>
@@ -16,6 +17,7 @@ export function ComingSoon({ title, step }: { title: string; step: number }) {
       </View>
       <View style={styles.content}>
         <AppText color={color.textSecondary}>{`Cet écran arrive à l’étape ${step}.`}</AppText>
+        {children}
       </View>
     </View>
   );
@@ -32,6 +34,8 @@ const styles = StyleSheet.create({
   },
   content: {
     flex: 1,
+    alignItems: 'flex-start',
+    gap: space[16],
     padding: space[16],
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,

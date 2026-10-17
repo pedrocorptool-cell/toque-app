@@ -1,5 +1,5 @@
 import { type ReactNode } from 'react';
-import { Modal, Pressable, StyleSheet, View } from 'react-native';
+import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
@@ -33,6 +33,43 @@ export function BottomSheet({ visible, onClose, title, children, footer }: Botto
           )}
           {children}
           {footer}
+        </View>
+      </View>
+    </Modal>
+  );
+}
+
+type FilterSheetProps = {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  /** Contenu fixe au-dessus de la liste (champ de recherche du filtre Créateur). */
+  header?: ReactNode;
+  children: ReactNode;
+  onClear: () => void;
+  onSubmit: () => void;
+  count: number;
+};
+
+/** Figma : écrans « Filtre/ … » — titre à gauche, croix, liste d'options et « Footer de filtre ». */
+export function FilterSheet({ visible, onClose, title, header, children, onClear, onSubmit, count }: FilterSheetProps) {
+  const insets = useSafeAreaInsets();
+  return (
+    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
+      <View style={styles.sheetRoot}>
+        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
+        <View style={[styles.sheet, styles.filterSheet, { paddingBottom: insets.bottom }]}>
+          <View style={styles.filterHeader}>
+            <AppText variant="title">{title}</AppText>
+            <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
+              <Icon name="close" />
+            </Pressable>
+          </View>
+          {header}
+          <ScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
+            {children}
+          </ScrollView>
+          <FilterFooter onClear={onClear} onSubmit={onSubmit} count={count} />
         </View>
       </View>
     </Modal>
@@ -123,6 +160,19 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     backgroundColor: color.bgPage,
+  },
+  filterSheet: {
+    maxHeight: '85%',
+    paddingBottom: 0,
+  },
+  filterHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  filterBody: {
+    flexGrow: 0,
+    marginBottom: -space[24],
   },
   grip: {
     alignSelf: 'center',

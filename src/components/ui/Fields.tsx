@@ -7,22 +7,32 @@ type SearchFieldProps = {
   value: string;
   onChangeText: (value: string) => void;
   placeholder?: string;
+  /** onBrand : sur fond brun, avec loupe (home) · surface : fond blanc sans loupe (filtre Créateur). */
+  tone?: 'onBrand' | 'surface';
 };
 
-/** Figma : « Search » — champ de recherche sur fond brun. */
-export function SearchField({ value, onChangeText, placeholder = 'Rechercher une recette' }: SearchFieldProps) {
+/** Figma : « Search » — champ de recherche. */
+export function SearchField({ value, onChangeText, placeholder = 'Rechercher une recette', tone = 'onBrand' }: SearchFieldProps) {
+  const onBrand = tone === 'onBrand';
+  const ink = onBrand ? color.textOnBrandPrimary : color.textPrimary;
   return (
-    <View style={styles.search}>
-      <Icon name="search" color={color.textOnBrandPrimary} />
+    <View style={[styles.search, !onBrand && styles.searchSurface]}>
+      {onBrand && <Icon name="search" color={ink} />}
       <TextInput
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={color.textOnBrandSecondary}
-        selectionColor={color.textOnBrandPrimary}
+        placeholderTextColor={onBrand ? color.textOnBrandSecondary : color.textSecondary}
+        selectionColor={ink}
         returnKeyType="search"
-        style={[styles.input, { color: color.textOnBrandPrimary }]}
+        accessibilityLabel={placeholder}
+        style={[styles.input, { color: ink }]}
       />
+      {value.length > 0 && (
+        <Pressable accessibilityRole="button" accessibilityLabel="Effacer la recherche" onPress={() => onChangeText('')} hitSlop={space[8]}>
+          <Icon name="close" size={16} color={ink} />
+        </Pressable>
+      )}
     </View>
   );
 }
@@ -72,6 +82,10 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[12],
     borderRadius: radius.pill,
     backgroundColor: color.actionIconBg,
+  },
+  searchSurface: {
+    paddingHorizontal: space[16],
+    backgroundColor: color.bgSurface,
   },
   input: {
     flex: 1,

@@ -37,7 +37,20 @@ l'icône active de la navbar sur `action/secondary/icon`.
 
 - Dialogue de suppression : « Es-tu sur » corrigé en « Es-tu sûr ».
 
+## Home et filtres (étape 2a)
+
+- **Fond des bottom sheets** : Figma floute l'écran derrière (flou + voile). Le code pose seulement un
+  voile `overlayScrim`, le flou natif demanderait une dépendance de plus. À rediscuter si c'est important.
+- **Filtre actif** : Figma ne montre pas de chip avec une sélection. Le code reprend l'état « Actif » de
+  « Chip/ Filtre » (fond foncé, sans chevron) et ajoute le nombre de choix : « Catégorie (2) ».
+- **Champ de recherche du filtre Créateur** : fond blanc sans loupe, ajouté comme variante `surface` de `SearchField`.
+- **Bouton effacer** dans les champs de recherche : croix ajoutée dès qu'un texte est saisi (absente de Figma).
+- **État vide** (aucune recette ne correspond) : pas d'écran Figma, proposé dans le code
+  (loupe, « Aucune recette trouvée », bouton « Tout effacer »).
+- **Créateur** : la carte Figma écrit « Marmitton », le filtre « Marmiton ». Le code garde « Marmiton ».
+
 ## Limites connues
 
-- Les photos de recettes et les avatars viennent d'une capture des écrans Figma à leur taille d'affichage
-  (120 px et 24 px). Elles seront remplacées par des images en meilleure résolution à l'étape 2.
+- Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.
+- Les filtres d'un même type s'additionnent (Végé OU Dessert), les différents filtres se combinent
+  (Végé ET Jow). Le compteur « Voir les résultats (n) » se met à jour à chaque case cochée.
