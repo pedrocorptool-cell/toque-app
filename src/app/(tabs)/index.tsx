@@ -54,6 +54,8 @@ export default function HomeScreen() {
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
+  // Dernier filtre ouvert : garde le contenu de la sheet pendant son animation de fermeture.
+  const [shownFilter, setShownFilter] = useState<FilterKey>('category');
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
@@ -61,8 +63,8 @@ export default function HomeScreen() {
 
   const results = useMemo(() => filterRecipes(RECIPES, query, filters), [query, filters]);
   const draftCount = useMemo(
-    () => (openFilter ? filterRecipes(RECIPES, query, { ...filters, [openFilter]: draft[openFilter] }).length : 0),
-    [openFilter, draft, filters, query],
+    () => filterRecipes(RECIPES, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
+    [shownFilter, draft, filters, query],
   );
 
   useEffect(() => {
@@ -75,6 +77,7 @@ export default function HomeScreen() {
     setDraft(filters);
     setCreatorQuery('');
     setOpenFilter(key);
+    setShownFilter(key);
   };
 
   const setDraftValues = (key: FilterKey) => (next: string[]) => setDraft({ ...draft, [key]: next });
@@ -84,7 +87,7 @@ export default function HomeScreen() {
     setFilters(EMPTY_FILTERS);
   };
 
-  const current = FILTERS.find((f) => f.key === openFilter);
+  const current = FILTERS.find((f) => f.key === shownFilter)!;
 
   return (
     <View style={styles.screen}>
@@ -153,11 +156,11 @@ export default function HomeScreen() {
       )}
 
       <FilterSheet
-        visible={current !== undefined}
+        visible={openFilter !== null}
         onClose={() => setOpenFilter(null)}
-        title={current?.title ?? ''}
+        title={current.title}
         header={
-          openFilter === 'creator' && (
+          shownFilter === 'creator' && (
             <SearchField
               tone="surface"
               value={creatorQuery}
@@ -167,19 +170,17 @@ export default function HomeScreen() {
           )
         }
         count={draftCount}
-        onClear={() => openFilter && setDraftValues(openFilter)([])}
+        onClear={() => setDraftValues(shownFilter)([])}
         onSubmit={() => {
           setFilters(draft);
           setOpenFilter(null);
         }}>
-        {openFilter && (
-          <FilterOptions
-            options={optionsFor(openFilter, creatorQuery)}
-            selected={draft[openFilter] as string[]}
-            onChange={setDraftValues(openFilter)}
-            emptyLabel="Aucun créateur ne correspond."
-          />
-        )}
+        <FilterOptions
+          options={optionsFor(shownFilter, creatorQuery)}
+          selected={draft[shownFilter] as string[]}
+          onChange={setDraftValues(shownFilter)}
+          emptyLabel="Aucun créateur ne correspond."
+        />
       </FilterSheet>
 
       <ImportSheet

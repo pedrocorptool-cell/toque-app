@@ -1,5 +1,5 @@
-import { type ReactNode } from 'react';
-import { Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
@@ -17,25 +17,68 @@ type BottomSheetProps = {
   footer?: ReactNode;
 };
 
+const SHEET_DURATION = 250;
+
+type SheetModalProps = {
+  visible: boolean;
+  onClose: () => void;
+  sheetStyle: StyleProp<ViewStyle>;
+  children: ReactNode;
+};
+
+/**
+ * Socle des bottom sheets : le voile apparaît en fondu sur place, seule la feuille glisse depuis le bas.
+ * La fenêtre reste montée le temps de l'animation de fermeture.
+ */
+function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps) {
+  const [mounted, setMounted] = useState(visible);
+  const progress = useRef(new Animated.Value(0)).current;
+  const [height, setHeight] = useState(800);
+
+  useEffect(() => {
+    if (visible) setMounted(true);
+    Animated.timing(progress, {
+      toValue: visible ? 1 : 0,
+      duration: SHEET_DURATION,
+      easing: visible ? Easing.out(Easing.cubic) : Easing.in(Easing.cubic),
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished && !visible) setMounted(false);
+    });
+  }, [visible, progress]);
+
+  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] });
+
+  return (
+    <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
+      <View style={styles.sheetRoot}>
+        <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, { opacity: progress }]}>
+          <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
+        </Animated.View>
+        <Animated.View
+          onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
+          style={[styles.sheet, sheetStyle, { transform: [{ translateY }] }]}>
+          {children}
+        </Animated.View>
+      </View>
+    </Modal>
+  );
+}
+
 /** Figma : « Bottom sheet » — poignée, en-tête et contenu. */
 export function BottomSheet({ visible, onClose, title, children, footer }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={styles.sheetRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
-        <View style={[styles.sheet, { paddingBottom: space[16] + insets.bottom }]}>
-          <View style={styles.grip} />
-          {title && (
-            <AppText variant="title" style={styles.center}>
-              {title}
-            </AppText>
-          )}
-          {children}
-          {footer}
-        </View>
-      </View>
-    </Modal>
+    <SheetModal visible={visible} onClose={onClose} sheetStyle={{ paddingBottom: space[16] + insets.bottom }}>
+      <View style={styles.grip} />
+      {title && (
+        <AppText variant="title" style={styles.center}>
+          {title}
+        </AppText>
+      )}
+      {children}
+      {footer}
+    </SheetModal>
   );
 }
 
@@ -55,24 +98,19 @@ type FilterSheetProps = {
 export function FilterSheet({ visible, onClose, title, header, children, onClear, onSubmit, count }: FilterSheetProps) {
   const insets = useSafeAreaInsets();
   return (
-    <Modal visible={visible} transparent animationType="slide" onRequestClose={onClose} statusBarTranslucent>
-      <View style={styles.sheetRoot}>
-        <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
-        <View style={[styles.sheet, styles.filterSheet, { paddingBottom: insets.bottom }]}>
-          <View style={styles.filterHeader}>
-            <AppText variant="title">{title}</AppText>
-            <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
-              <Icon name="close" />
-            </Pressable>
-          </View>
-          {header}
-          <ScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
-            {children}
-          </ScrollView>
-          <FilterFooter onClear={onClear} onSubmit={onSubmit} count={count} />
-        </View>
+    <SheetModal visible={visible} onClose={onClose} sheetStyle={[styles.filterSheet, { paddingBottom: insets.bottom }]}>
+      <View style={styles.filterHeader}>
+        <AppText variant="title">{title}</AppText>
+        <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
+          <Icon name="close" />
+        </Pressable>
       </View>
-    </Modal>
+      {header}
+      <ScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
+        {children}
+      </ScrollView>
+      <FilterFooter onClear={onClear} onSubmit={onSubmit} count={count} />
+    </SheetModal>
   );
 }
 
@@ -152,6 +190,8 @@ const styles = StyleSheet.create({
   sheetRoot: {
     flex: 1,
     justifyContent: 'flex-end',
+  },
+  scrim: {
     backgroundColor: color.overlayScrim,
   },
   sheet: {
