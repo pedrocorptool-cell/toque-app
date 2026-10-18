@@ -19,6 +19,25 @@ export type Recipe = {
   categories: CategoryId[];
   creator: CreatorId;
   source: SourceId;
+  kcal: number;
+  /** Nombre de parts pour lequel les quantités sont écrites. */
+  servings: number;
+  ingredients: Ingredient[];
+  steps: Step[];
+  tip?: string;
+};
+
+export type Ingredient = {
+  /** Quantité pour `servings` parts ; absente pour « Huile d'olive », « Sel »… */
+  qty?: number;
+  /** Texte après la quantité, unité comprise : « cl de crème ». */
+  name: string;
+};
+
+export type Step = {
+  text: string;
+  /** Minuteur proposé dans l'étape, en minutes. */
+  timer?: number;
 };
 
 const PASTA = require('@/assets/images/demo/pasta.jpg');
@@ -55,12 +74,166 @@ export const SOURCES: { id: SourceId; label: string; logo?: ImageSourcePropType;
 ];
 
 export const RECIPES: Recipe[] = [
-  { id: 'pasta-zozzona', title: 'Pasta alla zozzona', image: PASTA, duration: 20, categories: ['plat', 'cheat', 'vege'], creator: 'whoogys', source: 'instagram' },
-  { id: 'naan-tomate', title: 'Naan tomate mozza poivrons', image: NAAN, duration: 45, categories: ['plat'], creator: 'marmiton', source: 'web' },
-  { id: 'rigatoni-vodka', title: 'Rigatoni alla vodka', image: PASTA, duration: 25, categories: ['plat', 'vege'], creator: 'jow', source: 'tiktok' },
-  { id: 'pizza-poele', title: 'Pizza à la poêle express', image: NAAN, duration: 10, categories: ['cheat'], creator: 'whoogys', source: 'tiktok' },
-  { id: 'gratin-pates', title: 'Gratin de pâtes du chef', image: PASTA, duration: 75, categories: ['plat', 'cheat'], creator: 'etchebest', source: 'facebook' },
-  { id: 'flatbread', title: 'Flatbread légumes rôtis', image: NAAN, duration: 35, categories: ['vege'], creator: 'jow', source: 'photo' },
+  {
+    id: 'pasta-zozzona',
+    title: 'Pasta alla zozzona',
+    image: PASTA,
+    duration: 20,
+    categories: ['plat', 'cheat', 'vege'],
+    creator: 'whoogys',
+    source: 'instagram',
+    kcal: 80,
+    servings: 2,
+    ingredients: [
+      { qty: 200, name: 'g de rigatoni' },
+      { qty: 200, name: 'g de champignons de Paris' },
+      { qty: 1, name: 'oignon rouge' },
+      { qty: 400, name: 'g de tomates pelées' },
+      { qty: 2, name: 'jaunes d’œuf' },
+      { qty: 40, name: 'g de pecorino râpé' },
+      { name: 'Huile d’olive' },
+      { name: 'Poivre noir' },
+    ],
+    steps: [
+      { text: 'Faire chauffer une grande casserole d’eau salée.' },
+      { text: 'Émincer l’oignon et les champignons, puis les faire dorer à feu vif dans l’huile d’olive.' },
+      { text: 'Ajouter les tomates pelées et laisser mijoter à feu doux.', timer: 10 },
+      { text: 'Cuire les rigatoni al dente en gardant une louche d’eau de cuisson.', timer: 11 },
+      { text: 'Fouetter les jaunes d’œuf avec le pecorino et beaucoup de poivre.' },
+      { text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.' },
+    ],
+    tip: 'Pour accompagner ce plat, un vin rouge du Beaujolais sera parfait !',
+  },
+  {
+    id: 'naan-tomate',
+    title: 'Naan tomate mozza poivrons',
+    image: NAAN,
+    duration: 45,
+    categories: ['plat'],
+    creator: 'marmiton',
+    source: 'web',
+    kcal: 520,
+    servings: 2,
+    ingredients: [
+      { qty: 2, name: 'naans nature' },
+      { qty: 4, name: 'c. à s. de sauce tomate' },
+      { qty: 1, name: 'boule de mozzarella' },
+      { qty: 1, name: 'poivron rouge' },
+      { qty: 0.5, name: 'oignon rouge' },
+      { name: 'Origan séché' },
+    ],
+    steps: [
+      { text: 'Préchauffer le four à 220 °C.' },
+      { text: 'Couper le poivron en lanières et l’oignon en fines rondelles.' },
+      { text: 'Étaler la sauce tomate sur les naans, puis répartir la mozzarella et les légumes.' },
+      { text: 'Enfourner jusqu’à ce que le fromage soit doré.', timer: 12 },
+      { text: 'Parsemer d’origan avant de servir.' },
+    ],
+    tip: 'Ajoute quelques feuilles de basilic frais à la sortie du four.',
+  },
+  {
+    id: 'rigatoni-vodka',
+    title: 'Rigatoni alla vodka',
+    image: PASTA,
+    duration: 25,
+    categories: ['plat', 'vege'],
+    creator: 'jow',
+    source: 'tiktok',
+    kcal: 640,
+    servings: 2,
+    ingredients: [
+      { qty: 200, name: 'g de rigatoni' },
+      { qty: 1, name: 'échalote' },
+      { qty: 2, name: 'gousses d’ail' },
+      { qty: 2, name: 'c. à s. de concentré de tomate' },
+      { qty: 3, name: 'cl de vodka' },
+      { qty: 10, name: 'cl de crème liquide' },
+      { qty: 30, name: 'g de parmesan' },
+    ],
+    steps: [
+      { text: 'Faire revenir l’échalote et l’ail hachés dans un filet d’huile.' },
+      { text: 'Ajouter le concentré de tomate et le faire caraméliser 2 minutes.' },
+      { text: 'Déglacer à la vodka, puis verser la crème.' },
+      { text: 'Cuire les rigatoni dans une grande casserole d’eau salée.', timer: 11 },
+      { text: 'Mélanger les pâtes à la sauce avec le parmesan et un peu d’eau de cuisson.' },
+    ],
+  },
+  {
+    id: 'pizza-poele',
+    title: 'Pizza à la poêle express',
+    image: NAAN,
+    duration: 10,
+    categories: ['cheat'],
+    creator: 'whoogys',
+    source: 'tiktok',
+    kcal: 710,
+    servings: 1,
+    ingredients: [
+      { qty: 1, name: 'grande tortilla de blé' },
+      { qty: 3, name: 'c. à s. de sauce tomate' },
+      { qty: 80, name: 'g de mozzarella râpée' },
+      { qty: 6, name: 'tranches de chorizo' },
+    ],
+    steps: [
+      { text: 'Chauffer une poêle à feu moyen et y déposer la tortilla.' },
+      { text: 'Garnir de sauce tomate, de mozzarella et de chorizo.' },
+      { text: 'Couvrir et laisser cuire jusqu’à ce que le fromage fonde.', timer: 5 },
+    ],
+    tip: 'Un filet de miel piquant à la fin, et c’est le paradis.',
+  },
+  {
+    id: 'gratin-pates',
+    title: 'Gratin de pâtes du chef',
+    image: PASTA,
+    duration: 75,
+    categories: ['plat', 'cheat'],
+    creator: 'etchebest',
+    source: 'facebook',
+    kcal: 820,
+    servings: 4,
+    ingredients: [
+      { qty: 400, name: 'g de coquillettes' },
+      { qty: 50, name: 'g de beurre' },
+      { qty: 50, name: 'g de farine' },
+      { qty: 75, name: 'cl de lait' },
+      { qty: 200, name: 'g de jambon blanc' },
+      { qty: 150, name: 'g de comté râpé' },
+      { name: 'Noix de muscade' },
+    ],
+    steps: [
+      { text: 'Préchauffer le four à 200 °C.' },
+      { text: 'Cuire les coquillettes 2 minutes de moins que le temps indiqué.', timer: 7 },
+      { text: 'Préparer une béchamel avec le beurre, la farine et le lait, puis assaisonner de muscade.' },
+      { text: 'Mélanger les pâtes, la béchamel, le jambon et la moitié du comté dans un plat.' },
+      { text: 'Couvrir du reste de comté et enfourner.', timer: 30 },
+    ],
+    tip: 'Laisse reposer 5 minutes avant de servir : le gratin se tient mieux.',
+  },
+  {
+    id: 'flatbread',
+    title: 'Flatbread légumes rôtis',
+    image: NAAN,
+    duration: 35,
+    categories: ['vege'],
+    creator: 'jow',
+    source: 'photo',
+    kcal: 450,
+    servings: 2,
+    ingredients: [
+      { qty: 2, name: 'flatbreads' },
+      { qty: 1, name: 'courgette' },
+      { qty: 1, name: 'poivron jaune' },
+      { qty: 100, name: 'g de feta' },
+      { qty: 4, name: 'c. à s. de houmous' },
+      { name: 'Huile d’olive' },
+    ],
+    steps: [
+      { text: 'Préchauffer le four à 200 °C.' },
+      { text: 'Couper les légumes en dés, les arroser d’huile d’olive et les rôtir.', timer: 20 },
+      { text: 'Tartiner les flatbreads de houmous.' },
+      { text: 'Garnir de légumes rôtis et de feta émiettée.' },
+    ],
+  },
 ];
 
 export type Filters = {
@@ -73,6 +246,13 @@ export type Filters = {
 export type FilterKey = keyof Filters;
 
 export const EMPTY_FILTERS: Filters = { category: [], creator: [], duration: [], source: [] };
+
+/** Quantité ajustée au nombre de parts choisi : « 1,5 », « 300 ». */
+export function formatIngredient(ingredient: Ingredient, servings: number, base: number) {
+  if (ingredient.qty === undefined) return ingredient.name;
+  const qty = Math.round(((ingredient.qty * servings) / base) * 10) / 10;
+  return `${String(qty).replace('.', ',')} ${ingredient.name}`;
+}
 
 export function hashtagsOf(recipe: Recipe) {
   const tags = CATEGORIES.filter((c) => c.hashtag && recipe.categories.includes(c.id)).map((c) => c.hashtag);

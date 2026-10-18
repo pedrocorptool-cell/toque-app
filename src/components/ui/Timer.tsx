@@ -67,14 +67,26 @@ export function TimerWidget({ count, remaining, onPress }: { count: number; rema
   );
 }
 
+type TimerPillProps = {
+  remaining: number;
+  onPress?: () => void;
+  /** Dans une étape : lecture / pause. Sans valeur : chevron (rappel déroulant). */
+  running?: boolean;
+};
+
 /** Figma : « Minuteur » type Pastille — dans une étape de recette. */
-export function TimerPill({ remaining, onPress }: { remaining: number; onPress?: () => void }) {
+export function TimerPill({ remaining, onPress, running }: TimerPillProps) {
+  const icon = running === undefined ? 'chevronDown' : running ? 'pause' : 'play';
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.surface, styles.pill]}>
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'}
+      onPress={onPress}
+      style={({ pressed }) => [styles.surface, styles.pill, pressed && styles.pressed]}>
       <AppText variant="label" color={color.textOnBrandPrimary}>
         {formatDuration(remaining)}
       </AppText>
-      <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
+      <Icon name={icon} size={16} color={color.textOnBrandPrimary} />
     </Pressable>
   );
 }
@@ -124,6 +136,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[8],
+  },
+  pressed: {
+    opacity: 0.8,
   },
   pill: {
     alignSelf: 'flex-start',

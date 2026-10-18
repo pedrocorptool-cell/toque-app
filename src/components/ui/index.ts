@@ -8,7 +8,7 @@ export { AiChatField, SearchField } from './Fields';
 export { Fab, IconButton } from './IconButton';
 export { Logo } from './Logo';
 export { Navbar } from './Navbar';
-export { BottomSheet, Dialog, FilterFooter, FilterSheet, Toast } from './Overlays';
+export { BottomSheet, Dialog, DialogFrame, FilterFooter, FilterSheet, Toast } from './Overlays';
 export { ColorDot, FilterOptions, type FilterOption } from './FilterOptions';
 export { RecipeCard } from './RecipeCard';
 export { SegmentedTabs } from './SegmentedTabs';

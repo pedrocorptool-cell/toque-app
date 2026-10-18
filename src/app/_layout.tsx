@@ -4,17 +4,24 @@ import {
   ZalandoSans_500Medium,
   useFonts,
 } from '@expo-google-fonts/zalando-sans';
+import { Rubik_900Black } from '@expo-google-fonts/rubik';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { RecipesProvider } from '@/data/RecipesContext';
 import { color } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
-  const [loaded, error] = useFonts({ ZalandoSans_300Light, ZalandoSans_400Regular, ZalandoSans_500Medium });
+  const [loaded, error] = useFonts({
+    ZalandoSans_300Light,
+    ZalandoSans_400Regular,
+    ZalandoSans_500Medium,
+    Rubik_900Black,
+  });
 
   useEffect(() => {
     if (loaded || error) SplashScreen.hideAsync();
@@ -23,9 +30,9 @@ export default function RootLayout() {
   if (!loaded && !error) return null;
 
   return (
-    <>
+    <RecipesProvider>
       <StatusBar style="light" />
       <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }} />
-    </>
+    </RecipesProvider>
   );
 }

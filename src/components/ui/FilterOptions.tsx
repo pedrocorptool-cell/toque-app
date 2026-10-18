@@ -1,6 +1,7 @@
 import { Fragment, type ReactNode } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
+import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
@@ -19,15 +20,29 @@ type FilterOptionsProps<Id extends string> = {
   onChange: (next: Id[]) => void;
   /** Texte affiché quand la liste est vide (recherche sans résultat). */
   emptyLabel?: string;
+  /** Ligne d'action placée en tête de carte (« + Nouvelle catégorie »). */
+  firstRow?: { label: string; icon: IconName; onPress: () => void };
 };
 
 /** Figma : liste des écrans « Filtre/ … » — lignes de 56 px séparées par un filet, case à droite. */
-export function FilterOptions<Id extends string>({ options, selected, onChange, emptyLabel }: FilterOptionsProps<Id>) {
+export function FilterOptions<Id extends string>({ options, selected, onChange, emptyLabel, firstRow }: FilterOptionsProps<Id>) {
   const toggle = (id: Id) =>
     onChange(selected.includes(id) ? selected.filter((s) => s !== id) : [...selected, id]);
 
   return (
     <View style={styles.card}>
+      {firstRow && (
+        <>
+          <Pressable
+            accessibilityRole="button"
+            onPress={firstRow.onPress}
+            style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+            <Icon name={firstRow.icon} color={color.actionSecondaryIcon} />
+            <AppText style={styles.label}>{firstRow.label}</AppText>
+          </Pressable>
+          {options.length > 0 && <View style={styles.divider} />}
+        </>
+      )}
       {options.length === 0 && emptyLabel && (
         <AppText color={color.textSecondary} style={styles.empty}>
           {emptyLabel}

@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
+import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -24,7 +25,6 @@ import {
   CREATORS,
   DURATIONS,
   EMPTY_FILTERS,
-  RECIPES,
   SOURCES,
   creatorOf,
   filterRecipes,
@@ -33,6 +33,7 @@ import {
   type FilterKey,
   type Filters,
 } from '@/data/recipes';
+import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space } from '@/theme/tokens';
 
 const FILTERS: { key: FilterKey; chip: string; title: string }[] = [
@@ -51,6 +52,7 @@ const IMPORT_LABEL: Record<ImportMethod, string> = {
 /** Figma : écran « Home » — liste des recettes, recherche et filtres. */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
+  const { recipes } = useRecipes();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
@@ -61,10 +63,10 @@ export default function HomeScreen() {
   const [importOpen, setImportOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
-  const results = useMemo(() => filterRecipes(RECIPES, query, filters), [query, filters]);
+  const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
   const draftCount = useMemo(
-    () => filterRecipes(RECIPES, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
-    [shownFilter, draft, filters, query],
+    () => filterRecipes(recipes, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
+    [recipes, shownFilter, draft, filters, query],
   );
 
   useEffect(() => {
@@ -129,7 +131,7 @@ export default function HomeScreen() {
               duration={`${recipe.duration}mn`}
               hashtags={hashtagsOf(recipe)}
               creator={creatorOf(recipe)}
-              onPress={() => setToast('La fiche recette arrive à l’étape suivante')}
+              onPress={() => router.push(`/recette/${recipe.id}`)}
             />
           ))}
           {results.length === 0 && (

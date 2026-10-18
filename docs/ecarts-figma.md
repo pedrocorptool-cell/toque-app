@@ -49,6 +49,24 @@ l'icône active de la navbar sur `action/secondary/icon`.
   (loupe, « Aucune recette trouvée », bouton « Tout effacer »).
 - **Créateur** : la carte Figma écrit « Marmitton », le filtre « Marmiton ». Le code garde « Marmiton ».
 
+## Fiche recette (étape 2b)
+
+- **Police du titre** : Figma utilise « Avoin Demo Bold », qui n'est pas libre. Le code la remplace par
+  Rubik Black (Google Fonts). Si tu as une licence Avoin, il suffit de remplacer `font.display`.
+- **Couleurs codées en dur dans la maquette**, passées en tokens : `borderPaper` (#927760),
+  `tipCorner` (#2C5F7D), `borderPhoto` (#EAE6E1), `textOnBrandMuted` (blanc 80 %), et les pastilles
+  de « Créer une catégorie » (`accentLime`, `accentGrey`, `accentPurple`, `accentPink`).
+- **Fond flouté du hero** : `blurRadius` sur la photo, opacité 60 % et fondu vers le brun de la page.
+  Le rendu varie un peu entre iOS, Android et le web.
+- **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
+  pause), un toast signale la fin. Le mode pas à pas (« Démarrer la recette ») arrive à l'étape 3.
+- **Icône vin de l'astuce** : 19 px dans Figma, 16 px dans le code (tailles d'icône 14 / 16 / 24).
+- **Nom du créateur souligné** : pas de page créateur dans Figma, le lien ne mène nulle part pour l'instant.
+- **« Modifier avec l'IA »** (menu …) : affiche un toast, prévu avec le chat IA de l'étape 3.
+- **Liste de courses** : toutes les cases sont cochées à l'ouverture, les quantités suivent le nombre de
+  parts choisi. Les articles sont gardés en mémoire pour l'onglet Liste, pas encore affichés.
+- **Suppression** : la recette disparaît de la home jusqu'au redémarrage de l'app (données en mémoire).
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

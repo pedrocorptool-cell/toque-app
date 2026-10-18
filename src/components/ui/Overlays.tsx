@@ -15,6 +15,8 @@ type BottomSheetProps = {
   children: ReactNode;
   /** Pied fixe (CTA principal, « Footer de filtre »…). */
   footer?: ReactNode;
+  /** Sous-écran (« Créer une catégorie ») : flèche retour à gauche du titre, croix à droite, sans poignée. */
+  onBack?: () => void;
 };
 
 const SHEET_DURATION = 250;
@@ -66,15 +68,27 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
 }
 
 /** Figma : « Bottom sheet » — poignée, en-tête et contenu. */
-export function BottomSheet({ visible, onClose, title, children, footer }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, children, footer, onBack }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
   return (
     <SheetModal visible={visible} onClose={onClose} sheetStyle={{ paddingBottom: space[16] + insets.bottom }}>
-      <View style={styles.grip} />
-      {title && (
-        <AppText variant="title" style={styles.center}>
-          {title}
-        </AppText>
+      {onBack ? (
+        <View style={styles.dialogHeader}>
+          <Pressable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
+            <Icon name="arrowLeft" />
+          </Pressable>
+          <AppText variant="title">{title}</AppText>
+          <CloseButton onPress={onClose} />
+        </View>
+      ) : (
+        <>
+          <View style={styles.grip} />
+          {title && (
+            <AppText variant="title" style={styles.center}>
+              {title}
+            </AppText>
+          )}
+        </>
       )}
       {children}
       {footer}
@@ -101,9 +115,7 @@ export function FilterSheet({ visible, onClose, title, header, children, onClear
     <SheetModal visible={visible} onClose={onClose} sheetStyle={[styles.filterSheet, { paddingBottom: insets.bottom }]}>
       <View style={styles.filterHeader}>
         <AppText variant="title">{title}</AppText>
-        <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
-          <Icon name="close" />
-        </Pressable>
+        <CloseButton onPress={onClose} />
       </View>
       {header}
       <ScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
@@ -124,8 +136,15 @@ type DialogProps = {
   cancelLabel?: string;
 };
 
-/** Figma : « Dialogue » — titre, texte et deux actions. */
-export function Dialog({ visible, onClose, title, message, confirmLabel, onConfirm, cancelLabel = 'Annuler' }: DialogProps) {
+type DialogFrameProps = {
+  visible: boolean;
+  onClose: () => void;
+  title: string;
+  children: ReactNode;
+};
+
+/** Cadre commun des dialogues : voile, carte centrée, titre et croix de fermeture. */
+export function DialogFrame({ visible, onClose, title, children }: DialogFrameProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.dialogRoot}>
@@ -134,20 +153,35 @@ export function Dialog({ visible, onClose, title, message, confirmLabel, onConfi
           <View style={styles.dialogHeader}>
             <View style={styles.headerSpacer} />
             <AppText variant="title">{title}</AppText>
-            <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
-              <Icon name="close" />
-            </Pressable>
+            <CloseButton onPress={onClose} />
           </View>
-          <AppText color={color.textSecondary} style={[styles.center, styles.message]}>
-            {message}
-          </AppText>
-          <View style={styles.dialogActions}>
-            <Button label={confirmLabel} onPress={onConfirm} />
-            <TextButton label={cancelLabel} onPress={onClose} />
-          </View>
+          {children}
         </View>
       </View>
     </Modal>
+  );
+}
+
+/** Figma : « Dialogue » — titre, texte et deux actions. */
+export function Dialog({ visible, onClose, title, message, confirmLabel, onConfirm, cancelLabel = 'Annuler' }: DialogProps) {
+  return (
+    <DialogFrame visible={visible} onClose={onClose} title={title}>
+      <AppText color={color.textSecondary} style={[styles.center, styles.message]}>
+        {message}
+      </AppText>
+      <View style={styles.dialogActions}>
+        <Button label={confirmLabel} onPress={onConfirm} />
+        <TextButton label={cancelLabel} onPress={onClose} />
+      </View>
+    </DialogFrame>
+  );
+}
+
+function CloseButton({ onPress }: { onPress: () => void }) {
+  return (
+    <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onPress} hitSlop={space[12]}>
+      <Icon name="close" />
+    </Pressable>
   );
 }
 

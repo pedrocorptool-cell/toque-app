@@ -25,6 +25,10 @@ export const palette = {
   blue800: '#1B5071',
   green100: '#D1FAB8',
   green900: '#243B16',
+  // Couleurs de catégorie de « Créer une catégorie », sans variable dans Figma.
+  grey300: '#C8C7C3',
+  purple400: '#777ED0',
+  pink300: '#F9AEF2',
 } as const;
 
 // Collection Figma « Semantic » (mode Light)
@@ -73,10 +77,23 @@ export const color = {
   accentOrange: palette.orange600,
   accentCreme: palette.orange100,
 
-  // Absents de Figma : valeurs « pressed » codées en dur dans la maquette,
+  accentLime: palette.green100,
+  accentGrey: palette.grey300,
+  accentPurple: palette.purple400,
+  accentPink: palette.pink300,
+
+  // Absents de Figma : valeurs codées en dur dans la maquette,
   // proposées ici comme tokens (voir docs/ecarts-figma.md).
   actionPrimaryBgPressed: '#B33919',
   actionIconBgPressed: 'rgba(40, 39, 37, 0.32)',
+  /** Filets des cartes « papier » de la fiche recette (#927760 dans Figma). */
+  borderPaper: '#927760',
+  /** Coin plié de la carte « Astuce » (#2C5F7D dans Figma). */
+  tipCorner: '#2C5F7D',
+  /** Liseré de la photo du hero recette (#EAE6E1 dans Figma). */
+  borderPhoto: '#EAE6E1',
+  /** Chiffres secondaires du hero recette (blanc à 80 %). */
+  textOnBrandMuted: 'rgba(255, 255, 255, 0.8)',
 } as const;
 
 // Collection Figma « Space »
@@ -111,10 +128,13 @@ export const font = {
   light: 'ZalandoSans_300Light',
   regular: 'ZalandoSans_400Regular',
   medium: 'ZalandoSans_500Medium',
+  /** Titre de recette. Figma utilise « Avoin Demo » (non libre) : remplacé par Rubik Black. */
+  display: 'Rubik_900Black',
 } as const;
 
 // Styles de texte relevés dans la maquette (Figma n'a pas de styles de texte déclarés).
 export const text = {
+  display: { fontFamily: font.display, fontSize: 40, lineHeight: 44, letterSpacing: 0.8, textTransform: 'uppercase' },
   title: { fontFamily: font.medium, fontSize: 20 },
   cardTitle: { fontFamily: font.medium, fontSize: 18 },
   body: { fontFamily: font.regular, fontSize: 16 },
@@ -125,6 +145,8 @@ export const text = {
   badge: { fontFamily: font.medium, fontSize: 12 },
   timer: { fontFamily: font.light, fontSize: 24, lineHeight: 28 },
   timerSmall: { fontFamily: font.light, fontSize: 16, lineHeight: 28 },
+  stat: { fontFamily: font.medium, fontSize: 24 },
+  step: { fontFamily: font.medium, fontSize: 18 },
 } as const;
 
 export const shadow = {
