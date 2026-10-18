@@ -14,7 +14,7 @@ const TABS: Record<string, { label: string; icon: IconName }> = {
 };
 
 /** Figma : « Navbar » (Recettes / Liste / Profil), branchée comme barre d'onglets. */
-export function Navbar({ state, emitter, navigateToTab }: BottomTabBarProps) {
+export function Navbar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
   return (
     <View style={[styles.bar, { paddingBottom: space[8] + insets.bottom }]}>
@@ -28,8 +28,8 @@ export function Navbar({ state, emitter, navigateToTab }: BottomTabBarProps) {
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
             onPress={() => {
-              const event = emitter.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!focused && !event.defaultPrevented) navigateToTab(route.key);
+              const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
+              if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
             }}
             style={styles.item}>
             <Icon name={tab.icon} color={focused ? color.actionSecondaryIcon : color.textSecondary} />

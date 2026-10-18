@@ -1,6 +1,6 @@
 # Toqué — prototype mobile
 
-Prototype cliquable de l'app Toqué, en React Native avec Expo (SDK 58, Expo Router, TypeScript),
+Prototype cliquable de l'app Toqué, en React Native avec Expo (SDK 57, Expo Router, TypeScript),
 construit à partir de la maquette Figma.
 
 ## Lancer le prototype sur ton téléphone
