@@ -1,6 +1,5 @@
 import { useEffect, useState, type ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
-import { router } from 'expo-router';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
@@ -31,6 +30,7 @@ import {
   TimerWidget,
   Toast,
 } from '@/components/ui';
+import { goBack } from '@/navigation/goBack';
 import { color, space, radius, text } from '@/theme/tokens';
 
 /** Catalogue du design system, accessible depuis l'onglet Profil. */
@@ -52,7 +52,7 @@ export default function DesignSystemScreen() {
     <ScrollView style={styles.screen} contentContainerStyle={styles.scrollContent}>
       <View style={[styles.brandHeader, { paddingTop: insets.top + space[24] }]}>
         <View style={styles.row}>
-          <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => router.back()} />
+          <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => goBack()} />
           <Logo />
           <ChefButton />
         </View>

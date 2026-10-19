@@ -1,4 +1,4 @@
-import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -19,6 +19,7 @@ import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers } from '@/data/TimersContext';
+import { goBack } from '@/navigation/goBack';
 import { blur, color, radius, space, text } from '@/theme/tokens';
 
 /** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou `blur.glow`). */
@@ -135,15 +136,15 @@ export default function StepByStepScreen() {
 
   /** Quitter : la photo et le flou reviennent à leur place sur la fiche avant de fermer. */
   const close = useCallback(() => {
-    if (!origin) return router.back();
+    if (!origin) return goBack(`/recette/${id}`);
     setSettled(false);
     Animated.timing(progress, {
       toValue: 0,
       duration: TRANSITION,
       easing: Easing.inOut(Easing.cubic),
       useNativeDriver: false,
-    }).start(() => router.back());
-  }, [origin, progress]);
+    }).start(() => goBack(`/recette/${id}`));
+  }, [origin, progress, id]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {

@@ -26,6 +26,7 @@ import {
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers } from '@/data/TimersContext';
+import { goBack } from '@/navigation/goBack';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
@@ -108,7 +109,7 @@ export default function RecipeScreen() {
     return (
       <View style={[styles.screen, styles.missing]}>
         <AppText color={color.textOnBrandPrimary}>Cette recette n’existe plus.</AppText>
-        <Button label="Retour" onPress={() => router.back()} />
+        <Button label="Retour" onPress={() => goBack()} />
       </View>
     );
   }
@@ -149,7 +150,7 @@ export default function RecipeScreen() {
         </View>
 
         <View style={[styles.topBar, { paddingTop: insets.top + space[16] }]}>
-          <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => router.back()} />
+          <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => goBack()} />
           <View style={styles.topActions}>
             <IconButton icon="qrCode" accessibilityLabel="Partager" onPress={() => setShareOpen(true)} />
             <IconButton icon="more" accessibilityLabel="Plus d’actions" onPress={() => setMenuOpen(true)} />
@@ -331,7 +332,7 @@ export default function RecipeScreen() {
         onConfirm={() => {
           setDeleteOpen(false);
           removeRecipe(recipe.id);
-          router.back();
+          goBack();
         }}
       />
 
