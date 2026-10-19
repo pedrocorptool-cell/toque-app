@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import { AppText, IconButton, TimerCard, TimerWidget, Toast } from '@/components/ui';
+import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers } from '@/data/TimersContext';
 import { blur, color, radius, space, text } from '@/theme/tokens';
@@ -26,7 +26,7 @@ const GLOW_WIDTH = 194;
 const GLOW_HEIGHT = 120;
 const THUMB = 80;
 const TRANSITION = 500;
-/** Hauteur de la rangée de boutons du bas (48 px + 24 px de marge) et 16 px d'écart : rappel et toast se posent au-dessus. */
+/** Hauteur de la rangée de boutons du bas (48 px + 24 px de marge) et 16 px d'écart : le toast se pose au-dessus. */
 const BOTTOM_ROW = space[24] + 48 + space[16];
 
 type Origin = { px: number; py: number; ps: number; by: number; bh: number };
@@ -52,7 +52,7 @@ export default function StepByStepScreen() {
   const { id } = params;
   const { width: screenWidth } = useWindowDimensions();
   const { recipes } = useRecipes();
-  const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
+  const { timers: allTimers, timerFor, toggle, setFocusedRecipeId } = useTimers();
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
 
@@ -68,10 +68,9 @@ export default function StepByStepScreen() {
     }, [id, setFocusedRecipeId]),
   );
 
-  // Minuteurs des autres étapes : rappelés au-dessus des boutons. Celui de l'étape affichée a déjà sa carte.
+  // Minuteurs lancés : regroupés dans une pastille parmi les actions du bas (le plus proche de sonner affiché).
   const timers = allTimers.filter((t) => t.recipeId === id).sort((x, y) => x.step - y.step);
-  const others = timers.filter((t) => t.step !== index);
-  const nextOther = [...others].sort((x, y) => x.remaining - y.remaining)[0];
+  const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 
   // Un minuteur de la recette arrive à zéro : la sheet s'ouvre, comme sur la fiche.
   const doneCount = timers.filter(isDone).length;
@@ -223,13 +222,9 @@ export default function StepByStepScreen() {
             <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
               {step.text}
             </AppText>
-            {step.timer !== undefined && (
-              <TimerCard
-                remaining={timer?.remaining ?? step.timer}
-                running={timer?.running ?? false}
-                onToggle={() => toggle(recipe.id, index, step.timer!)}
-                onCancel={() => timer && remove(timer.id)}
-              />
+            {/* Une fois lancé, le minuteur rejoint la pastille du bas ; il revient ici s'il est arrêté depuis la sheet. */}
+            {step.timer !== undefined && !timer && (
+              <TimerCard remaining={step.timer} running={false} onToggle={() => toggle(recipe.id, index, step.timer!)} />
             )}
           </Animated.View>
         </Animated.View>
@@ -251,24 +246,23 @@ export default function StepByStepScreen() {
         />
       )}
 
-      {nextOther && (
-        <Animated.View style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom, opacity: contentOpacity }]}>
-          <TimerWidget count={others.length} remaining={nextOther.remaining} onPress={() => setTimersOpen(true)} />
-        </Animated.View>
-      )}
-
       {toast && (
-        <View style={[styles.floating, { bottom: BOTTOM_ROW + (nextOther ? 48 + space[8] : 0) + insets.bottom }]}>
+        <View style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom }]}>
           <Toast message={toast} onClose={() => setToast(null)} />
         </View>
       )}
 
       <Animated.View style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
-        <RoundButton
-          icon="magic"
-          label="Modifier avec l’IA"
-          onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
-        />
+        <View style={styles.nav}>
+          <RoundButton
+            icon="magic"
+            label="Modifier avec l’IA"
+            onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
+          />
+          {nextTimer && (
+            <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
+          )}
+        </View>
         <View style={styles.nav}>
           <RoundButton
             icon="caretLeft"

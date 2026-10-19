@@ -12,4 +12,4 @@ export { BottomSheet, Dialog, DialogFrame, FilterFooter, FilterSheet, Toast } fr
 export { ColorDot, FilterOptions, type FilterOption } from './FilterOptions';
 export { RecipeCard } from './RecipeCard';
 export { SegmentedTabs } from './SegmentedTabs';
-export { Blink, TimerCard, TimerPill, TimerWidget, formatDuration } from './Timer';
+export { Blink, TimerCard, TimerChip, TimerPill, TimerWidget, formatDuration } from './Timer';

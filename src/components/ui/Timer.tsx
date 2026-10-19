@@ -2,7 +2,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
-import { color, radius, space } from '@/theme/tokens';
+import { color, font, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 
@@ -94,6 +94,28 @@ export function TimerWidget({ count, remaining, onPress }: { count: number; rema
   );
 }
 
+/** Figma (Exploration 442:865) : minuteurs lancés, rangés parmi les actions du bas du mode étape par étape. */
+export function TimerChip({ count, remaining, onPress }: { count: number; remaining: number; onPress?: () => void }) {
+  return (
+    <Pressable
+      accessibilityRole="button"
+      accessibilityLabel={`Minuteurs (${count})`}
+      onPress={onPress}
+      style={({ pressed }) => [styles.surface, styles.chip, pressed && styles.pressed]}>
+      <Icon name="alarm" color={color.aiBg} />
+      <Blink active={remaining === 0}>
+        <AppText variant="label" color={color.textOnBrandPrimary}>
+          <AppText variant="label" color={color.textOnBrandPrimary} style={styles.chipTime}>
+            {formatDuration(remaining)}
+          </AppText>
+          {count > 1 ? ` (${count})` : ''}
+        </AppText>
+      </Blink>
+      <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
+    </Pressable>
+  );
+}
+
 type TimerPillProps = {
   remaining: number;
   onPress?: () => void;
@@ -169,6 +191,15 @@ const styles = StyleSheet.create({
   },
   pressed: {
     opacity: 0.8,
+  },
+  chip: {
+    height: 48,
+    gap: space[8],
+    paddingHorizontal: space[12],
+    borderRadius: radius.pill,
+  },
+  chipTime: {
+    fontFamily: font.light,
   },
   pill: {
     alignSelf: 'flex-start',
