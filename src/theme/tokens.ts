@@ -130,6 +130,8 @@ export const font = {
   medium: 'ZalandoSans_500Medium',
   /** Titre de recette. Figma utilise « Avoin Demo » (non libre) : remplacé par Rubik Black. */
   display: 'Rubik_900Black',
+  /** Mention manuscrite « Fais maison! » de l'écran de fin. */
+  handwritten: 'Kalam_400Regular',
 } as const;
 
 // Styles de texte relevés dans la maquette (Figma n'a pas de styles de texte déclarés).

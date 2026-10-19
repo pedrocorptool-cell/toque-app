@@ -3,6 +3,7 @@
   "version": "1.0.0",
   "main": "expo-router/entry",
   "dependencies": {
+    "@expo-google-fonts/kalam": "^0.4.1",
     "@expo-google-fonts/rubik": "^0.4.2",
     "@expo-google-fonts/zalando-sans": "^0.4.1",
     "@expo/ui": "~57.0.25",

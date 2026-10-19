@@ -12,10 +12,14 @@ type ButtonProps = {
   /** Prend toute la largeur disponible (CTA de bas de bottom sheet). */
   block?: boolean;
   disabled?: boolean;
+  /** `secondary` : blanc, libellé orange, sur les fonds bruns (écran de fin du mode étape). */
+  variant?: 'primary' | 'secondary';
 };
 
 /** Figma : « CTA/ Primary » (Default / Pressed). */
-export function Button({ label, onPress, icon, block, disabled }: ButtonProps) {
+export function Button({ label, onPress, icon, block, disabled, variant = 'primary' }: ButtonProps) {
+  const secondary = variant === 'secondary';
+  const tint = secondary ? color.actionSecondaryIcon : color.actionPrimaryText;
   return (
     <Pressable
       accessibilityRole="button"
@@ -24,15 +28,17 @@ export function Button({ label, onPress, icon, block, disabled }: ButtonProps) {
       style={({ pressed }) => [
         styles.base,
         block && styles.block,
-        { backgroundColor: pressed ? color.actionPrimaryBgPressed : color.actionPrimaryBg },
+        secondary
+          ? { backgroundColor: pressed ? color.bgPage : color.bgSurface }
+          : { backgroundColor: pressed ? color.actionPrimaryBgPressed : color.actionPrimaryBg },
         disabled && styles.disabled,
       ]}>
       {icon && (
         <View>
-          <Icon name={icon} size={block ? 16 : 24} color={color.actionPrimaryText} />
+          <Icon name={icon} size={block ? 16 : 24} color={tint} />
         </View>
       )}
-      <AppText variant="button" color={color.actionPrimaryText}>
+      <AppText variant="button" color={tint}>
         {label}
       </AppText>
     </Pressable>

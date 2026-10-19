@@ -19,7 +19,7 @@ import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import { AppText, Button, IconButton, TextButton, TimerCard, TimerChip, Toast } from '@/components/ui';
+import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -138,8 +138,17 @@ export default function StepByStepScreen() {
     }).start(() => setSettled(true));
   }, [origin, progress]);
 
+  // Quitter depuis l'écran de fin : simple fondu, la vignette n'y est plus à sa place du mode étape.
+  const leave = useRef(new Animated.Value(1)).current;
+  const ending = useRef(false);
+
   /** Quitter : la photo et le flou reviennent à leur place sur la fiche avant de fermer. */
   const close = useCallback(() => {
+    if (ending.current) {
+      return Animated.timing(leave, { toValue: 0, duration: 250, useNativeDriver: true }).start(() =>
+        goBack(`/recette/${id}`),
+      );
+    }
     if (!origin) return goBack(`/recette/${id}`);
     setSettled(false);
     Animated.timing(progress, {
@@ -148,7 +157,7 @@ export default function StepByStepScreen() {
       easing: Easing.inOut(Easing.cubic),
       useNativeDriver: false,
     }).start(() => goBack(`/recette/${id}`));
-  }, [origin, progress, id]);
+  }, [origin, progress, id, leave]);
 
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
@@ -182,6 +191,7 @@ export default function StepByStepScreen() {
 
   // Après la dernière étape vient l'écran de fin (index = nombre d'étapes).
   const finished = index === recipe.steps.length;
+  ending.current = finished;
   const step = recipe.steps[index];
   const timer = timerFor(recipe.id, index);
 
@@ -241,7 +251,7 @@ export default function StepByStepScreen() {
   });
 
   return (
-    <View style={styles.screen}>
+    <Animated.View style={[styles.screen, { opacity: leave }]}>
       {/* Fond brun en fondu : la fiche reste visible dessous au début de la transition. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]} />
 
@@ -265,53 +275,92 @@ export default function StepByStepScreen() {
           styles.glow,
           {
             top: 0,
-            opacity: progress,
+            // L'écran de fin a son propre halo, derrière le timbre.
+            opacity: finished ? 0 : progress,
             transform: [{ scaleX: lerp(screenWidth / GLOW_WIDTH, 1) }, { scaleY: lerp(from.bh / glowHeight, 1) }],
           },
         ]}>
         <BlurGlow source={recipe.image} width={GLOW_WIDTH} height={glowHeight} blur={blur.glow} />
       </Animated.View>
 
-      <ScrollView
-        contentContainerStyle={[
-          styles.content,
-          finished && styles.contentFinished,
-          { paddingTop: insets.top + space[16] },
-        ]}>
-        <View style={styles.topRow}>
-          {/* Pendant la transition, c'est la photo animée (plus bas) qui occupe cette place. */}
-          {/* Sur l'écran de fin, la vignette est au centre : celle-ci s'efface. */}
-          <Image source={recipe.image} style={[styles.thumb, (!settled || finished) && styles.hidden]} />
-          <Animated.View style={{ opacity: contentOpacity }}>
-            <IconButton icon="close" accessibilityLabel="Quitter le mode étape par étape" onPress={close} />
-          </Animated.View>
-        </View>
-
-        <Animated.View style={[{ opacity: contentOpacity }, finished && styles.finishCenter]}>
-          {finished ? (
-            <Animated.View style={[styles.finishCenter, { opacity: enter, transform: [{ translateX }] }]}>
-              <FinishStep image={recipe.image} photoTaken={photoTaken} onTakePhoto={takePhoto} />
-            </Animated.View>
-          ) : (
-            <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
-              <View style={styles.number}>
-                <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
-                  {index + 1}
-                </AppText>
-              </View>
-              <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
-                {step.text}
-              </AppText>
-              {/* Lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
-              {step.timer !== undefined && !timer && (
-                <View ref={cardRef}>
-                  <TimerCard remaining={step.timer} running={false} onToggle={() => startTimer(step.timer!)} />
-                </View>
-              )}
-            </Animated.View>
-          )}
+      {finished ? (
+        // Écran de fin (Figma 452:1752) : plein écran, sans vignette ni barre du bas.
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: enter }]}>
+          <FinishStep
+            image={recipe.image}
+            photoTaken={photoTaken}
+            onTakePhoto={takePhoto}
+            onDone={close}
+            onBack={() => goTo(index - 1)}
+          />
         </Animated.View>
-      </ScrollView>
+      ) : (
+        <>
+          <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space[16] }]}>
+            <View style={styles.topRow}>
+              {/* Pendant la transition, c'est la photo animée (plus bas) qui occupe cette place. */}
+              <Image source={recipe.image} style={[styles.thumb, !settled && styles.hidden]} />
+              <Animated.View style={{ opacity: contentOpacity }}>
+                <IconButton icon="close" accessibilityLabel="Quitter le mode étape par étape" onPress={close} />
+              </Animated.View>
+            </View>
+
+            <Animated.View style={{ opacity: contentOpacity }}>
+              <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
+                <View style={styles.number}>
+                  <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
+                    {index + 1}
+                  </AppText>
+                </View>
+                <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
+                  {step.text}
+                </AppText>
+                {/* Lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
+                {step.timer !== undefined && !timer && (
+                  <View ref={cardRef}>
+                    <TimerCard remaining={step.timer} running={false} onToggle={() => startTimer(step.timer!)} />
+                  </View>
+                )}
+              </Animated.View>
+            </Animated.View>
+          </ScrollView>
+
+            <Animated.View
+              style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
+              <View style={styles.nav}>
+                <RoundButton
+                  icon="magic"
+                  label="Modifier avec l’IA"
+                  onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
+                />
+                {nextTimer && (
+                  <View ref={chipRef}>
+                    <Animated.View style={flying && { opacity: chipOpacity }}>
+                      <TimerChip
+                        count={timers.length}
+                        remaining={nextTimer.remaining}
+                        onPress={() => setTimersOpen(true)}
+                      />
+                    </Animated.View>
+                  </View>
+                )}
+              </View>
+              <View style={styles.nav}>
+                <RoundButton
+                  icon="caretLeft"
+                  label="Étape précédente"
+                  disabled={index === 0}
+                  onPress={() => goTo(index - 1)}
+                />
+                <RoundButton
+                  icon="caretRight"
+                  label="Étape suivante"
+                  onPress={() => goTo(index + 1)}
+                />
+              </View>
+            </Animated.View>
+        </>
+      )}
 
       {!settled && (
         <Animated.Image
@@ -339,51 +388,8 @@ export default function StepByStepScreen() {
         </View>
       )}
 
-      {finished ? (
-        <Animated.View style={[styles.finishActions, { paddingBottom: insets.bottom + space[24], opacity: enter }]}>
-          <Button label="Terminé" onPress={close} block />
-          <TextButton tone="onBrand" label="Retour" onPress={() => goTo(index - 1)} />
-        </Animated.View>
-      ) : (
-        <Animated.View
-          style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
-          <View style={styles.nav}>
-            <RoundButton
-              icon="magic"
-              label="Modifier avec l’IA"
-              onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
-            />
-            {nextTimer && (
-              <View ref={chipRef}>
-                <Animated.View style={flying && { opacity: chipOpacity }}>
-                  <TimerChip
-                    count={timers.length}
-                    remaining={nextTimer.remaining}
-                    onPress={() => setTimersOpen(true)}
-                  />
-                </Animated.View>
-              </View>
-            )}
-          </View>
-          <View style={styles.nav}>
-            <RoundButton
-              icon="caretLeft"
-              label="Étape précédente"
-              disabled={index === 0}
-              onPress={() => goTo(index - 1)}
-            />
-            <RoundButton
-              icon="caretRight"
-              label="Étape suivante"
-              onPress={() => goTo(index + 1)}
-            />
-          </View>
-        </Animated.View>
-
-      )}
-
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
-    </View>
+    </Animated.View>
   );
 }
 
@@ -494,18 +500,6 @@ const styles = StyleSheet.create({
   instruction: {
     fontSize: 24,
     lineHeight: 32,
-  },
-  contentFinished: {
-    flexGrow: 1,
-  },
-  finishCenter: {
-    flex: 1,
-    justifyContent: 'center',
-  },
-  finishActions: {
-    alignItems: 'center',
-    gap: space[24],
-    paddingHorizontal: space[16],
   },
   bottomRow: {
     flexDirection: 'row',

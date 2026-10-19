@@ -106,11 +106,14 @@ l'icône active de la navbar sur `action/secondary/icon`.
   au lieu du dialogue global. Au lancement depuis l'étape, la carte se resserre et glisse jusqu'à la pastille
   (450 ms), seulement si aucun minuteur ne tourne déjà. « Arrêter » sur un minuteur terminé referme la sheet.
 
-- **Écran de fin** (pas de maquette) : la flèche suivante de la dernière étape ouvre un écran « Bon appétit ! ».
-  La vignette y est posée au centre comme un tirage photo ; la toucher ouvre l'appareil photo (ou la galerie s'il
-  n'est pas disponible). La photo, recadrée au carré, remplace la vignette de la recette (fiche, home, flous)
-  jusqu'au redémarrage de l'app. Deux actions : « Terminé » ramène à la fiche, « Retour » à la dernière étape.
-  Ajout au DS : `TextButton` ton `onBrand` (blanc sur fond brun).
+- **Écran de fin** (Figma 452:1752) : la flèche suivante de la dernière étape l'ouvre. Toucher la photo du timbre
+  ou le bouton appareil photo ouvre l'appareil (ou la galerie s'il n'est pas disponible) ; la photo, recadrée au
+  carré, remplace la vignette de la recette (fiche, home, flous) jusqu'au redémarrage. Après la photo, seul le
+  texte change (« Ta photo est maintenant la vignette de la recette. »), pas de maquette pour cet état.
+  « Terminer » ramène à la fiche par un fondu, « Retour » à la dernière étape. Le titre est en Rubik Black comme les
+  autres titres (Avoin Demo dans Figma). Le timbre est dessiné en SVG (masque de trous de 12 px tous les 24 px).
+  Ajouts au DS : `Button` variante `secondary` (blanc, libellé orange), `TextButton` ton `onBrand`, police Kalam
+  pour « Fais maison! ».
 
 ## Limites connues
 
