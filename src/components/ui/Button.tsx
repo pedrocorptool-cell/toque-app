@@ -43,12 +43,13 @@ type TextButtonProps = {
   label: string;
   onPress?: () => void;
   icon?: IconName;
-  tone?: 'default' | 'danger';
+  /** `onBrand` : en blanc, sur les fonds bruns. */
+  tone?: 'default' | 'danger' | 'onBrand';
 };
 
 /** Figma : « CTA/ Secondary » — action texte avec icône optionnelle. */
 export function TextButton({ label, onPress, icon, tone = 'default' }: TextButtonProps) {
-  const tint = tone === 'danger' ? color.feedbackDanger : color.textPrimary;
+  const tint = { default: color.textPrimary, danger: color.feedbackDanger, onBrand: color.textOnBrandPrimary }[tone];
   return (
     <Pressable
       accessibilityRole="button"

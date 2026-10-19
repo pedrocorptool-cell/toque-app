@@ -36,7 +36,14 @@
       "expo-font",
       "expo-image",
       "expo-status-bar",
-      "expo-web-browser"
+      "expo-web-browser",
+      [
+        "expo-image-picker",
+        {
+          "cameraPermission": "Toqué utilise l’appareil photo pour photographier tes plats.",
+          "photosPermission": "Toqué accède à tes photos pour illustrer tes recettes."
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true,

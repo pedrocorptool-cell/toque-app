@@ -106,6 +106,11 @@ l'icône active de la navbar sur `action/secondary/icon`.
   au lieu du dialogue global. Au lancement depuis l'étape, la carte se resserre et glisse jusqu'à la pastille
   (450 ms), seulement si aucun minuteur ne tourne déjà. « Arrêter » sur un minuteur terminé referme la sheet.
 
+- **Écran de fin** (pas de maquette) : la flèche suivante de la dernière étape ouvre un écran « Bon appétit ! »
+  qui invite à photographier son plat (appareil photo, ou galerie si l'appareil n'est pas disponible). La photo,
+  recadrée au carré, remplace la vignette de la recette (fiche, home, flous) jusqu'au redémarrage de l'app.
+  « Plus tard » ou « Terminer » ramène à la fiche. Ajouts au DS : `TextButton` ton `onBrand` (blanc sur fond brun).
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

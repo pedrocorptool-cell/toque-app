@@ -5,6 +5,7 @@ import {
   BackHandler,
   Easing,
   Image,
+  type ImageSourcePropType,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -13,8 +14,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import * as ImagePicker from 'expo-image-picker';
+
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
+import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
@@ -56,7 +60,7 @@ export default function StepByStepScreen() {
   }>();
   const { id } = params;
   const { width: screenWidth } = useWindowDimensions();
-  const { recipes } = useRecipes();
+  const { recipes, setRecipeImage } = useRecipes();
   const { timers: allTimers, timerFor, toggle, setFocusedRecipeId } = useTimers();
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
@@ -64,6 +68,7 @@ export default function StepByStepScreen() {
   const [index, setIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
   const [timersOpen, setTimersOpen] = useState(false);
+  const [photo, setPhoto] = useState<ImageSourcePropType | null>(null);
 
   // Comme sur la fiche : un minuteur de cette recette qui se termine ouvre la sheet, pas le dialogue global.
   useFocusEffect(
@@ -176,8 +181,9 @@ export default function StepByStepScreen() {
 
   if (!recipe) return null;
 
+  // Après la dernière étape vient l'écran de fin (index = nombre d'étapes).
+  const finished = index === recipe.steps.length;
   const step = recipe.steps[index];
-  const last = recipe.steps.length - 1;
   const timer = timerFor(recipe.id, index);
 
   // Pendant le trajet, la pastille n'apparaît qu'à l'arrivée de la carte.
@@ -191,6 +197,24 @@ export default function StepByStepScreen() {
       setFlying({ from: { x, y, width, height }, remaining: seconds });
       toggle(recipe.id, index, seconds);
     });
+  };
+
+  /** Appareil photo, ou galerie s'il n'est pas disponible (simulateur) ou refusé. */
+  const takePhoto = async () => {
+    const options: ImagePicker.ImagePickerOptions = {
+      mediaTypes: ['images'],
+      allowsEditing: true,
+      aspect: [1, 1],
+      quality: 0.8,
+    };
+    const camera = await ImagePicker.requestCameraPermissionsAsync();
+    const result = camera.granted
+      ? await ImagePicker.launchCameraAsync(options).catch(() => ImagePicker.launchImageLibraryAsync(options))
+      : await ImagePicker.launchImageLibraryAsync(options);
+    if (result.canceled) return;
+    const { uri } = result.assets[0];
+    setRecipeImage(recipe.id, uri);
+    setPhoto({ uri });
   };
 
   const goTo = (next: number) => {
@@ -260,22 +284,28 @@ export default function StepByStepScreen() {
         </View>
 
         <Animated.View style={{ opacity: contentOpacity }}>
-          <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
-            <View style={styles.number}>
-              <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
-                {index + 1}
-              </AppText>
-            </View>
-            <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
-              {step.text}
-            </AppText>
-            {/* Une fois lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
-            {step.timer !== undefined && !timer && (
-              <View ref={cardRef}>
-                <TimerCard remaining={step.timer} running={false} onToggle={() => startTimer(step.timer!)} />
+          {finished ? (
+            <Animated.View style={{ opacity: enter, transform: [{ translateX }] }}>
+              <FinishStep photo={photo} onTakePhoto={takePhoto} onDone={close} />
+            </Animated.View>
+          ) : (
+            <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
+              <View style={styles.number}>
+                <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
+                  {index + 1}
+                </AppText>
               </View>
-            )}
-          </Animated.View>
+              <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
+                {step.text}
+              </AppText>
+              {/* Lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
+              {step.timer !== undefined && !timer && (
+                <View ref={cardRef}>
+                  <TimerCard remaining={step.timer} running={false} onToggle={() => startTimer(step.timer!)} />
+                </View>
+              )}
+            </Animated.View>
+          )}
         </Animated.View>
       </ScrollView>
 
@@ -307,11 +337,13 @@ export default function StepByStepScreen() {
 
       <Animated.View style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
         <View style={styles.nav}>
-          <RoundButton
-            icon="magic"
-            label="Modifier avec l’IA"
-            onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
-          />
+          {!finished && (
+            <RoundButton
+              icon="magic"
+              label="Modifier avec l’IA"
+              onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
+            />
+          )}
           {nextTimer && (
             <View ref={chipRef}>
               <Animated.View style={flying && { opacity: chipOpacity }}>
@@ -330,7 +362,7 @@ export default function StepByStepScreen() {
           <RoundButton
             icon="caretRight"
             label="Étape suivante"
-            disabled={index === last}
+            disabled={finished}
             onPress={() => goTo(index + 1)}
           />
         </View>

@@ -8,6 +8,8 @@ export type ShoppingItem = { label: string; recipeId: string };
 type RecipesState = {
   recipes: Recipe[];
   removeRecipe: (id: string) => void;
+  /** Remplace la vignette par la photo du plat prise en fin de recette. */
+  setRecipeImage: (id: string, uri: string) => void;
   shoppingList: ShoppingItem[];
   addToShoppingList: (items: ShoppingItem[]) => void;
 };
@@ -23,6 +25,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
     () => ({
       recipes,
       removeRecipe: (id) => setRecipes((list) => list.filter((r) => r.id !== id)),
+      setRecipeImage: (id, uri) => setRecipes((list) => list.map((r) => (r.id === id ? { ...r, image: { uri } } : r))),
       shoppingList,
       addToShoppingList: (items) =>
         setShoppingList((list) => [...list, ...items.filter((i) => !list.some((l) => l.label === i.label))]),
