@@ -10,7 +10,9 @@ import { useRecipes } from '@/data/RecipesContext';
 import { useTimers } from '@/data/TimersContext';
 import { color, radius, space, text } from '@/theme/tokens';
 
-const BLUR_HEIGHT = 160;
+/** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou 100). */
+const GLOW_WIDTH = 194;
+const GLOW_HEIGHT = 120;
 
 /** Figma : « Recette/ Stepp/ Minuteur off » (191:4929) et « Minuteur on » (352:12715). */
 export default function StepByStepScreen() {
@@ -58,11 +60,22 @@ export default function StepByStepScreen() {
 
   return (
     <View style={styles.screen}>
-      <Image source={recipe.image} blurRadius={25} style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]} />
-      <LinearGradient
-        colors={['transparent', color.bgBrandPage]}
-        style={[styles.blurFade, { top: (BLUR_HEIGHT + insets.top) / 2, height: (BLUR_HEIGHT + insets.top) / 2 }]}
-      />
+      {/* Le flou natif garde des bords nets : deux fondus vers le brun en font un halo. */}
+      <View style={[styles.glow, { height: GLOW_HEIGHT + insets.top }]}>
+        <Image source={recipe.image} blurRadius={25} style={styles.glowImage} />
+        <LinearGradient
+          colors={['transparent', color.bgBrandPage]}
+          start={{ x: 0.4, y: 0 }}
+          end={{ x: 1, y: 0 }}
+          style={StyleSheet.absoluteFill}
+        />
+        <LinearGradient
+          colors={['transparent', color.bgBrandPage]}
+          start={{ x: 0, y: 0.4 }}
+          end={{ x: 0, y: 1 }}
+          style={StyleSheet.absoluteFill}
+        />
+      </View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space[16] }]}>
         <View style={styles.topRow}>
@@ -141,18 +154,15 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: color.bgBrandPage,
   },
-  blur: {
+  glow: {
     position: 'absolute',
     top: 0,
     left: 0,
-    right: 0,
-    width: '100%',
-    opacity: 0.6,
+    width: GLOW_WIDTH,
   },
-  blurFade: {
-    position: 'absolute',
-    left: 0,
-    right: 0,
+  glowImage: {
+    width: '100%',
+    height: '100%',
   },
   content: {
     gap: space[32],

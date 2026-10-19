@@ -73,6 +73,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 ## Mode étape par étape (étape 3)
 
 - Ouvert par « Démarrer la recette », il monte depuis le bas. Figma : « Recette/ Stepp/ Minuteur off / on ».
+- Halo flouté : 194 × 120 dans le coin haut gauche comme dans Figma (flou 100). Le flou natif garde des
+  bords nets, deux fondus vers le brun les adoucissent.
 - Flèches précédent / suivant : grisées à la première et à la dernière étape (pas d'écran de fin dans Figma).
   Le texte de l'étape glisse depuis le côté de la flèche touchée.
 - Bouton IA (baguette) : gardé en V1 comme point d'entrée de « Modifier avec l'IA », sans action pour
