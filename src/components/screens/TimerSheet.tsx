@@ -14,11 +14,15 @@ type TimerSheetProps = {
 /** Figma : sheet « Minuteur » — les minuteurs lancés d'une recette, pilotables. */
 export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
   const { remove } = useTimers();
-  // Garde les cartes affichées pendant que la sheet descend, quand on supprime le dernier minuteur.
+  // Fige les cartes dès la fermeture : la sheet descend telle quelle, sans se redimensionner quand
+  // « Arrêter » retire un minuteur juste avant.
   const shown = useRef<Timer[]>([]);
-  if (timers.length) shown.current = timers;
+  const closing = useRef(false);
+  if (!visible) closing.current = false;
+  else if (timers.length && !closing.current) shown.current = timers;
 
   const close = () => {
+    closing.current = true;
     // Comme le dialogue : fermer arrête les minuteurs terminés, les autres continuent.
     timers.filter(isDone).forEach((t) => remove(t.id));
     onClose();

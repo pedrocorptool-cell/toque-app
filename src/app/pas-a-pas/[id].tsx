@@ -184,6 +184,8 @@ export default function StepByStepScreen() {
   const chipOpacity = flight.interpolate({ inputRange: [0, 0.8, 1], outputRange: [0, 0, 1] });
 
   const startTimer = (seconds: number) => {
+    // La pastille est déjà là : son compteur suffit, pas de trajet.
+    if (timers.length) return toggle(recipe.id, index, seconds);
     cardRef.current?.measureInWindow((x, y, width, height) => {
       flight.setValue(0);
       setFlying({ from: { x, y, width, height }, remaining: seconds });

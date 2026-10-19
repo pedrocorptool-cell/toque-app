@@ -104,7 +104,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
   clignote à zéro). Elle ouvre la sheet « Minuteur » avec tous les minuteurs de la recette. Arrêté depuis la sheet,
   le minuteur revient sur son étape. Un minuteur de la recette qui se termine ouvre cette sheet, comme sur la fiche,
   au lieu du dialogue global. Au lancement depuis l'étape, la carte se resserre et glisse jusqu'à la pastille
-  (450 ms). « Arrêter » sur un minuteur terminé referme la sheet.
+  (450 ms), seulement si aucun minuteur ne tourne déjà. « Arrêter » sur un minuteur terminé referme la sheet.
 
 ## Limites connues
 
