@@ -1,7 +1,17 @@
 import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  BackHandler,
+  Easing,
+  Image,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
@@ -13,10 +23,31 @@ import { color, radius, space, text } from '@/theme/tokens';
 /** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou 100). */
 const GLOW_WIDTH = 194;
 const GLOW_HEIGHT = 120;
+const THUMB = 80;
+const TRANSITION = 500;
+
+type Origin = { px: number; py: number; ps: number; by: number; bh: number };
+
+/** Position de la photo et du flou sur la fiche, transmise à l'ouverture. */
+function readOrigin(params: Record<string, string | undefined>): Origin | null {
+  const values = ['px', 'py', 'ps', 'by', 'bh'].map((k) => Number(params[k]));
+  if (values.some((v) => !Number.isFinite(v))) return null;
+  const [px, py, ps, by, bh] = values;
+  return { px, py, ps, by, bh };
+}
 
 /** Figma : « Recette/ Stepp/ Minuteur off » (191:4929) et « Minuteur on » (352:12715). */
 export default function StepByStepScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const params = useLocalSearchParams<{
+    id: string;
+    px?: string;
+    py?: string;
+    ps?: string;
+    by?: string;
+    bh?: string;
+  }>();
+  const { id } = params;
+  const { width: screenWidth } = useWindowDimensions();
   const { recipes } = useRecipes();
   const { timerFor, toggle, remove } = useTimers();
   const insets = useSafeAreaInsets();
@@ -24,6 +55,42 @@ export default function StepByStepScreen() {
 
   const [index, setIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+
+  // Transition depuis la fiche : 0 = photo et flou à leur place sur la fiche, 1 = place du mode étape.
+  // Animée en JS (tailles et positions), ce que le pilote natif ne sait pas faire.
+  const origin = useRef(readOrigin(params)).current;
+  const progress = useRef(new Animated.Value(origin ? 0 : 1)).current;
+  const [settled, setSettled] = useState(!origin);
+
+  useEffect(() => {
+    if (!origin) return;
+    Animated.timing(progress, {
+      toValue: 1,
+      duration: TRANSITION,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
+    }).start(() => setSettled(true));
+  }, [origin, progress]);
+
+  /** Quitter : la photo et le flou reviennent à leur place sur la fiche avant de fermer. */
+  const close = useCallback(() => {
+    if (!origin) return router.back();
+    setSettled(false);
+    Animated.timing(progress, {
+      toValue: 0,
+      duration: TRANSITION,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
+    }).start(() => router.back());
+  }, [origin, progress]);
+
+  useEffect(() => {
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      close();
+      return true;
+    });
+    return () => sub.remove();
+  }, [close]);
 
   // Changement d'étape : le texte glisse depuis le côté de la flèche touchée.
   const enter = useRef(new Animated.Value(1)).current;
@@ -56,52 +123,103 @@ export default function StepByStepScreen() {
     setIndex(next);
   };
 
-  const translateX = enter.interpolate({ inputRange: [0, 1], outputRange: [direction.current * 32, 0] });
+  const translateX = enter.interpolate({
+    inputRange: [0, 1],
+    outputRange: [direction.current * 32, 0],
+  });
+
+  const from = origin ?? {
+    px: space[16],
+    py: insets.top + space[16],
+    ps: THUMB,
+    by: 0,
+    bh: GLOW_HEIGHT + insets.top,
+  };
+  const lerp = (a: number, b: number) => progress.interpolate({ inputRange: [0, 1], outputRange: [a, b] });
+  // Le contenu de l'étape n'apparaît qu'une fois la photo presque à sa place.
+  const contentOpacity = progress.interpolate({
+    inputRange: [0, 0.6, 1],
+    outputRange: [0, 0, 1],
+  });
 
   return (
     <View style={styles.screen}>
+      {/* Fond brun en fondu : la fiche reste visible dessous au début de la transition. */}
+      <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]} />
+
       {/* Le flou natif garde des bords nets : deux fondus vers le brun en font un halo. */}
-      <View style={[styles.glow, { height: GLOW_HEIGHT + insets.top }]}>
+      <Animated.View
+        style={[
+          styles.glow,
+          {
+            top: lerp(from.by, 0),
+            width: lerp(screenWidth, GLOW_WIDTH),
+            height: lerp(from.bh, GLOW_HEIGHT + insets.top),
+          },
+        ]}>
         <Image source={recipe.image} blurRadius={25} style={styles.glowImage} />
-        <LinearGradient
-          colors={['transparent', color.bgBrandPage]}
-          start={{ x: 0.4, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={StyleSheet.absoluteFill}
-        />
+        <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
+          <LinearGradient
+            colors={['transparent', color.bgBrandPage]}
+            start={{ x: 0.4, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={StyleSheet.absoluteFill}
+          />
+        </Animated.View>
         <LinearGradient
           colors={['transparent', color.bgBrandPage]}
           start={{ x: 0, y: 0.4 }}
           end={{ x: 0, y: 1 }}
           style={StyleSheet.absoluteFill}
         />
-      </View>
+      </Animated.View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space[16] }]}>
         <View style={styles.topRow}>
-          <Image source={recipe.image} style={styles.thumb} />
-          <IconButton icon="close" accessibilityLabel="Quitter le mode étape par étape" onPress={() => router.back()} />
+          {/* Pendant la transition, c'est la photo animée (plus bas) qui occupe cette place. */}
+          <Image source={recipe.image} style={[styles.thumb, !settled && styles.hidden]} />
+          <Animated.View style={{ opacity: contentOpacity }}>
+            <IconButton icon="close" accessibilityLabel="Quitter le mode étape par étape" onPress={close} />
+          </Animated.View>
         </View>
 
-        <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
-          <View style={styles.number}>
-            <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
-              {index + 1}
+        <Animated.View style={{ opacity: contentOpacity }}>
+          <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
+            <View style={styles.number}>
+              <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
+                {index + 1}
+              </AppText>
+            </View>
+            <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
+              {step.text}
             </AppText>
-          </View>
-          <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
-            {step.text}
-          </AppText>
-          {step.timer !== undefined && (
-            <TimerCard
-              remaining={timer?.remaining ?? step.timer}
-              running={timer?.running ?? false}
-              onToggle={() => toggle(recipe.id, index, step.timer!)}
-              onCancel={() => timer && remove(timer.id)}
-            />
-          )}
+            {step.timer !== undefined && (
+              <TimerCard
+                remaining={timer?.remaining ?? step.timer}
+                running={timer?.running ?? false}
+                onToggle={() => toggle(recipe.id, index, step.timer!)}
+                onCancel={() => timer && remove(timer.id)}
+              />
+            )}
+          </Animated.View>
         </Animated.View>
       </ScrollView>
+
+      {!settled && (
+        <Animated.Image
+          source={recipe.image}
+          style={[
+            styles.flyingPhoto,
+            {
+              left: lerp(from.px, space[16]),
+              top: lerp(from.py, insets.top + space[16]),
+              width: lerp(from.ps, THUMB),
+              height: lerp(from.ps, THUMB),
+              borderRadius: lerp(radius.xl, radius.md),
+            },
+          ]}
+        />
+      )}
 
       {toast && (
         <View style={[styles.toast, { bottom: insets.bottom + space[24] + 48 + space[16] }]}>
@@ -109,17 +227,27 @@ export default function StepByStepScreen() {
         </View>
       )}
 
-      <View style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24] }]}>
+      <Animated.View style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
         <RoundButton
           icon="magic"
           label="Modifier avec l’IA"
           onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
         />
         <View style={styles.nav}>
-          <RoundButton icon="caretLeft" label="Étape précédente" disabled={index === 0} onPress={() => goTo(index - 1)} />
-          <RoundButton icon="caretRight" label="Étape suivante" disabled={index === last} onPress={() => goTo(index + 1)} />
+          <RoundButton
+            icon="caretLeft"
+            label="Étape précédente"
+            disabled={index === 0}
+            onPress={() => goTo(index - 1)}
+          />
+          <RoundButton
+            icon="caretRight"
+            label="Étape suivante"
+            disabled={index === last}
+            onPress={() => goTo(index + 1)}
+          />
         </View>
-      </View>
+      </Animated.View>
     </View>
   );
 }
@@ -152,13 +280,22 @@ function RoundButton({
 const styles = StyleSheet.create({
   screen: {
     flex: 1,
+  },
+  backdrop: {
     backgroundColor: color.bgBrandPage,
+  },
+  hidden: {
+    opacity: 0,
+  },
+  flyingPhoto: {
+    position: 'absolute',
+    borderWidth: 2,
+    borderColor: color.borderPhoto,
   },
   glow: {
     position: 'absolute',
-    top: 0,
     left: 0,
-    width: GLOW_WIDTH,
+    overflow: 'hidden',
   },
   glowImage: {
     width: '100%',

@@ -100,6 +100,8 @@ export default function RecipeScreen() {
   const [saveOpen, setSaveOpen] = useState(false);
   const [shoppingOpen, setShoppingOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  const photoRef = useRef<Image>(null);
+  const blurRef = useRef<Image>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -137,6 +139,16 @@ export default function RecipeScreen() {
     else toggle(recipe.id, index, seconds);
   };
 
+  /** Mesure la photo et le flou à l'écran : le mode étape par étape part de là pour sa transition. */
+  const startStepByStep = () => {
+    photoRef.current?.measureInWindow((px, py, ps) => {
+      blurRef.current?.measureInWindow((_bx, by, _bw, bh) => {
+        const params = { id: recipe.id, px: String(px), py: String(py), ps: String(ps), by: String(by), bh: String(bh) };
+        router.push({ pathname: '/pas-a-pas/[id]', params });
+      });
+    });
+  };
+
   const menuAction = (action: () => void) => () => {
     setMenuOpen(false);
     action();
@@ -146,6 +158,7 @@ export default function RecipeScreen() {
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? space[16] + insets.bottom : space[24] }}>
         <Image
+          ref={blurRef}
           source={recipe.image}
           blurRadius={BLUR_RADIUS}
           style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]}
@@ -164,7 +177,13 @@ export default function RecipeScreen() {
         </View>
 
         <View style={styles.hero}>
-          <Image source={recipe.image} style={styles.photo} accessibilityIgnoresInvertColors />
+          {/* Masquée pendant le mode étape par étape : c'est sa copie animée qui voyage là-bas et revient. */}
+          <Image
+            ref={photoRef}
+            source={recipe.image}
+            style={[styles.photo, !focused && styles.away]}
+            accessibilityIgnoresInvertColors
+          />
           <AppText variant="display" color={color.textOnBrandPrimary} style={styles.title}>
             {recipe.title}
           </AppText>
@@ -270,7 +289,7 @@ export default function RecipeScreen() {
       {tab === 'steps' && (
         <View pointerEvents="box-none" style={[styles.cta, { bottom: CTA_BOTTOM + insets.bottom }]}>
           <View style={styles.ctaHalo}>
-            <Button icon="play" label="Démarrer la recette" onPress={() => router.push(`/pas-a-pas/${recipe.id}`)} />
+            <Button icon="play" label="Démarrer la recette" onPress={startStepByStep} />
           </View>
         </View>
       )}
@@ -412,6 +431,9 @@ const styles = StyleSheet.create({
     paddingTop: space[8],
     paddingHorizontal: space[16],
     paddingBottom: space[24],
+  },
+  away: {
+    opacity: 0,
   },
   photo: {
     width: 180,

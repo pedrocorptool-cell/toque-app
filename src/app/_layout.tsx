@@ -36,8 +36,12 @@ export default function RootLayout() {
       <TimersProvider>
         <StatusBar style="light" />
         <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }}>
-          {/* Le mode étape par étape monte depuis le bas, comme une vue plein écran. */}
-          <Stack.Screen name="pas-a-pas/[id]" options={{ animation: 'slide_from_bottom' }} />
+          {/* Le mode étape par étape s'ouvre par-dessus la fiche, sur fond transparent : il anime lui-même
+              la photo et le flou de la fiche jusqu'à leur place (voir pas-a-pas/[id].tsx). */}
+          <Stack.Screen
+            name="pas-a-pas/[id]"
+            options={{ presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }}
+          />
         </Stack>
         <TimerAlert />
       </TimersProvider>
