@@ -56,10 +56,14 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Couleurs codées en dur dans la maquette**, passées en tokens : `borderPaper` (#927760),
   `tipCorner` (#2C5F7D), `borderPhoto` (#EAE6E1), `textOnBrandMuted` (blanc 80 %), et les pastilles
   de « Créer une catégorie » (`accentLime`, `accentGrey`, `accentPurple`, `accentPink`).
-- **Fond flouté du hero** : `blurRadius` sur la photo, opacité 60 % et fondu vers le brun de la page.
+- **Fond flouté du hero** : `blurRadius` 20 sur la photo (Android plafonne à 25) et fondu vers le brun de la page.
   Le rendu varie un peu entre iOS, Android et le web.
 - **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
   pause), un toast signale la fin. Le mode pas à pas (« Démarrer la recette ») arrive à l'étape 3.
+  L'étape 3 de « Pasta alla zozzona » a un minuteur de 10 s pour tester.
+- **« Démarrer la recette »** : Figma le pose dans une barre fixe pleine largeur. Sur retour de Pierre, le
+  code en fait un bouton flottant centré, à la largeur de son texte, avec le halo orange du FAB
+  (`shadow.fab`) : plus de coupure de l'écran, et le bouton passe surtout au-dessus de la carte blanche.
 - **Icône vin de l'astuce** : 19 px dans Figma, 16 px dans le code (tailles d'icône 14 / 16 / 24).
 - **Nom du créateur souligné** : pas de page créateur dans Figma, le lien ne mène nulle part pour l'instant.
 - **« Modifier avec l'IA »** (menu …) : affiche un toast, prévu avec le chat IA de l'étape 3.

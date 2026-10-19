@@ -146,7 +146,7 @@ export const text = {
   timer: { fontFamily: font.light, fontSize: 24, lineHeight: 28 },
   timerSmall: { fontFamily: font.light, fontSize: 16, lineHeight: 28 },
   stat: { fontFamily: font.medium, fontSize: 24 },
-  step: { fontFamily: font.medium, fontSize: 18 },
+  step: { fontFamily: font.medium, fontSize: 18, lineHeight: 20 },
 } as const;
 
 export const shadow = {

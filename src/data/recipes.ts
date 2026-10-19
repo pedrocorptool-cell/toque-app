@@ -36,7 +36,7 @@ export type Ingredient = {
 
 export type Step = {
   text: string;
-  /** Minuteur proposé dans l'étape, en minutes. */
+  /** Minuteur proposé dans l'étape, en secondes. */
   timer?: number;
 };
 
@@ -98,7 +98,7 @@ export const RECIPES: Recipe[] = [
       { text: 'Faire chauffer une grande casserole d’eau salée.' },
       { text: 'Émincer l’oignon et les champignons, puis les faire dorer à feu vif dans l’huile d’olive.' },
       { text: 'Ajouter les tomates pelées et laisser mijoter à feu doux.', timer: 10 },
-      { text: 'Cuire les rigatoni al dente en gardant une louche d’eau de cuisson.', timer: 11 },
+      { text: 'Cuire les rigatoni al dente en gardant une louche d’eau de cuisson.', timer: 660 },
       { text: 'Fouetter les jaunes d’œuf avec le pecorino et beaucoup de poivre.' },
       { text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.' },
     ],
@@ -126,7 +126,7 @@ export const RECIPES: Recipe[] = [
       { text: 'Préchauffer le four à 220 °C.' },
       { text: 'Couper le poivron en lanières et l’oignon en fines rondelles.' },
       { text: 'Étaler la sauce tomate sur les naans, puis répartir la mozzarella et les légumes.' },
-      { text: 'Enfourner jusqu’à ce que le fromage soit doré.', timer: 12 },
+      { text: 'Enfourner jusqu’à ce que le fromage soit doré.', timer: 720 },
       { text: 'Parsemer d’origan avant de servir.' },
     ],
     tip: 'Ajoute quelques feuilles de basilic frais à la sortie du four.',
@@ -154,7 +154,7 @@ export const RECIPES: Recipe[] = [
       { text: 'Faire revenir l’échalote et l’ail hachés dans un filet d’huile.' },
       { text: 'Ajouter le concentré de tomate et le faire caraméliser 2 minutes.' },
       { text: 'Déglacer à la vodka, puis verser la crème.' },
-      { text: 'Cuire les rigatoni dans une grande casserole d’eau salée.', timer: 11 },
+      { text: 'Cuire les rigatoni dans une grande casserole d’eau salée.', timer: 660 },
       { text: 'Mélanger les pâtes à la sauce avec le parmesan et un peu d’eau de cuisson.' },
     ],
   },
@@ -177,7 +177,7 @@ export const RECIPES: Recipe[] = [
     steps: [
       { text: 'Chauffer une poêle à feu moyen et y déposer la tortilla.' },
       { text: 'Garnir de sauce tomate, de mozzarella et de chorizo.' },
-      { text: 'Couvrir et laisser cuire jusqu’à ce que le fromage fonde.', timer: 5 },
+      { text: 'Couvrir et laisser cuire jusqu’à ce que le fromage fonde.', timer: 300 },
     ],
     tip: 'Un filet de miel piquant à la fin, et c’est le paradis.',
   },
@@ -202,10 +202,10 @@ export const RECIPES: Recipe[] = [
     ],
     steps: [
       { text: 'Préchauffer le four à 200 °C.' },
-      { text: 'Cuire les coquillettes 2 minutes de moins que le temps indiqué.', timer: 7 },
+      { text: 'Cuire les coquillettes 2 minutes de moins que le temps indiqué.', timer: 420 },
       { text: 'Préparer une béchamel avec le beurre, la farine et le lait, puis assaisonner de muscade.' },
       { text: 'Mélanger les pâtes, la béchamel, le jambon et la moitié du comté dans un plat.' },
-      { text: 'Couvrir du reste de comté et enfourner.', timer: 30 },
+      { text: 'Couvrir du reste de comté et enfourner.', timer: 1800 },
     ],
     tip: 'Laisse reposer 5 minutes avant de servir : le gratin se tient mieux.',
   },
@@ -229,7 +229,7 @@ export const RECIPES: Recipe[] = [
     ],
     steps: [
       { text: 'Préchauffer le four à 200 °C.' },
-      { text: 'Couper les légumes en dés, les arroser d’huile d’olive et les rôtir.', timer: 20 },
+      { text: 'Couper les légumes en dés, les arroser d’huile d’olive et les rôtir.', timer: 1200 },
       { text: 'Tartiner les flatbreads de houmous.' },
       { text: 'Garnir de légumes rôtis et de feta émiettée.' },
     ],

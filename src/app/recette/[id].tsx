@@ -14,7 +14,7 @@ import { TipCard } from '@/components/screens/recipe/TipCard';
 import { ActionMenu, AppText, Button, Dialog, IconButton, SegmentedTabs, TimerPill, Toast } from '@/components/ui';
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
-import { color, font, radius, space } from '@/theme/tokens';
+import { color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
 
@@ -25,7 +25,10 @@ const TABS = [
 
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
-const CTA_BAR = space[16] + 48 + space[16];
+/** Assez fort pour gommer les détails, assez faible pour garder les couleurs du plat (Android plafonne à 25). */
+const BLUR_RADIUS = 20;
+/** Place laissée sous la dernière étape pour le bouton flottant « Démarrer la recette ». */
+const CTA_SPACE = 48 + space[16] * 2;
 
 type Timer = { remaining: number; running: boolean };
 
@@ -88,10 +91,10 @@ export default function RecipeScreen() {
   const creator = CREATORS.find((c) => c.id === recipe.creator)!;
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
-  const toggleTimer = (index: number, minutes: number) =>
+  const toggleTimer = (index: number, seconds: number) =>
     setTimers((current) => {
-      const t = current[index] ?? { remaining: minutes * 60, running: false };
-      const remaining = t.remaining > 0 ? t.remaining : minutes * 60;
+      const t = current[index] ?? { remaining: seconds, running: false };
+      const remaining = t.remaining > 0 ? t.remaining : seconds;
       return { ...current, [index]: { remaining, running: !t.running } };
     });
 
@@ -102,10 +105,10 @@ export default function RecipeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? CTA_BAR + insets.bottom : space[24] }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? CTA_SPACE + insets.bottom : space[24] }}>
         <Image
           source={recipe.image}
-          blurRadius={70}
+          blurRadius={BLUR_RADIUS}
           style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]}
         />
         <LinearGradient
@@ -209,7 +212,7 @@ export default function RecipeScreen() {
                       <AppText color={color.textSecondary}>{step.text}</AppText>
                       {step.timer !== undefined && (
                         <TimerPill
-                          remaining={timer?.remaining ?? step.timer * 60}
+                          remaining={timer?.remaining ?? step.timer}
                           running={timer?.running ?? false}
                           onPress={() => toggleTimer(index, step.timer!)}
                         />
@@ -224,13 +227,15 @@ export default function RecipeScreen() {
       </ScrollView>
 
       {tab === 'steps' && (
-        <View style={[styles.ctaBar, { paddingBottom: space[16] + insets.bottom }]}>
-          <Button block icon="play" label="Démarrer la recette" onPress={() => setToast('Le mode pas à pas arrive à l’étape 3')} />
+        <View pointerEvents="box-none" style={[styles.cta, { bottom: space[16] + insets.bottom }]}>
+          <View style={styles.ctaHalo}>
+            <Button icon="play" label="Démarrer la recette" onPress={() => setToast('Le mode pas à pas arrive à l’étape 3')} />
+          </View>
         </View>
       )}
 
       {toast && (
-        <View style={[styles.toast, { bottom: (tab === 'steps' ? CTA_BAR : space[16]) + insets.bottom }]}>
+        <View style={[styles.toast, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}>
           <Toast message={toast} onClose={() => setToast(null)} />
         </View>
       )}
@@ -335,7 +340,6 @@ const styles = StyleSheet.create({
     left: 0,
     right: 0,
     width: '100%',
-    opacity: 0.6,
   },
   blurFade: {
     position: 'absolute',
@@ -463,16 +467,15 @@ const styles = StyleSheet.create({
     borderColor: color.actionSecondaryIcon,
     borderRadius: 40,
   },
-  ctaBar: {
+  cta: {
     position: 'absolute',
     left: 0,
     right: 0,
-    bottom: 0,
-    paddingTop: space[16],
-    paddingHorizontal: space[16],
-    borderTopWidth: 1,
-    borderTopColor: color.borderOnBrand,
-    backgroundColor: color.bgBrandPage,
+    alignItems: 'center',
+  },
+  ctaHalo: {
+    borderRadius: radius.pill,
+    ...shadow.fab,
   },
   toast: {
     position: 'absolute',
