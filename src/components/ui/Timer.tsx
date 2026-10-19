@@ -83,9 +83,11 @@ export function TimerWidget({ count, remaining, onPress }: { count: number; rema
         {`Minuteurs (${count})`}
       </AppText>
       <View style={styles.widgetRight}>
-        <AppText variant="timerSmall" color={color.textOnBrandPrimary}>
-          {formatDuration(remaining)}
-        </AppText>
+        <Blink active={remaining === 0}>
+          <AppText variant="timerSmall" color={color.textOnBrandPrimary}>
+            {formatDuration(remaining)}
+          </AppText>
+        </Blink>
         <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
       </View>
     </Pressable>

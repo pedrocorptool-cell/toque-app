@@ -11,11 +11,10 @@ import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
 import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
 import { TipCard } from '@/components/screens/recipe/TipCard';
-import { TimerList } from '@/components/screens/TimerList';
+import { TimerSheet } from '@/components/screens/TimerSheet';
 import {
   ActionMenu,
   AppText,
-  BottomSheet,
   Button,
   Dialog,
   IconButton,
@@ -26,7 +25,7 @@ import {
 } from '@/components/ui';
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
-import { isDone, useTimers, type Timer } from '@/data/TimersContext';
+import { isDone, useTimers } from '@/data/TimersContext';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
@@ -77,9 +76,6 @@ export default function RecipeScreen() {
     }, [id, setFocusedRecipeId]),
   );
 
-  // Garde les cartes affichées pendant que la sheet descend, quand on supprime le dernier minuteur.
-  const sheetTimers = useRef<Timer[]>([]);
-
   // Un minuteur de cette recette arrive à zéro : sa sheet s'ouvre (le dialogue global est réservé aux autres écrans).
   const doneCount = allTimers.filter((t) => t.recipeId === id && isDone(t)).length;
   const previousDone = useRef(doneCount);
@@ -123,14 +119,6 @@ export default function RecipeScreen() {
   const timers = allTimers.filter((t) => t.recipeId === recipe.id).sort((x, y) => x.step - y.step);
   // Le minuteur qui sonnera le plus tôt, pour le rappel « Minuteurs (n) ».
   const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
-
-  if (timers.length) sheetTimers.current = timers;
-
-  const closeTimers = () => {
-    // Comme le dialogue : fermer arrête les minuteurs terminés, les autres continuent.
-    timers.filter(isDone).forEach((t) => remove(t.id));
-    setTimersOpen(false);
-  };
 
   /** Premier appui : lance le minuteur. Ensuite : ouvre la sheet pour le piloter. */
   const pressTimer = (index: number, seconds: number) => {
@@ -317,9 +305,7 @@ export default function RecipeScreen() {
         </View>
       </Modal>
 
-      <BottomSheet visible={timersOpen && timers.length > 0} onClose={closeTimers} title="Minuteur">
-        <TimerList timers={sheetTimers.current} />
-      </BottomSheet>
+      <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
 
       <ShareDialog
         visible={shareOpen}

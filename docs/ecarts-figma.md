@@ -99,6 +99,12 @@ l'icône active de la navbar sur `action/secondary/icon`.
   parts choisi. Les articles sont gardés en mémoire pour l'onglet Liste, pas encore affichés.
 - **Suppression** : la recette disparaît de la home jusqu'au redémarrage de l'app (données en mémoire).
 
+- **Minuteurs des autres étapes** (ajout, pas de maquette) : quand un minuteur tourne sur une autre étape que
+  celle affichée, la barre « Minuteurs (n) » du DS se pose au-dessus des boutons du bas (n = minuteurs des autres
+  étapes, temps = celui qui sonne le plus tôt, clignote à zéro). Elle ouvre la sheet « Minuteur » avec tous les
+  minuteurs de la recette ; l'étape affichée garde sa propre carte. Un minuteur de la recette qui se termine
+  ouvre cette sheet, comme sur la fiche, au lieu du dialogue global.
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

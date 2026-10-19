@@ -1,4 +1,4 @@
-import { router, useLocalSearchParams } from 'expo-router';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
@@ -15,9 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
-import { AppText, IconButton, TimerCard, Toast } from '@/components/ui';
+import { TimerSheet } from '@/components/screens/TimerSheet';
+import { AppText, IconButton, TimerCard, TimerWidget, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
-import { useTimers } from '@/data/TimersContext';
+import { isDone, useTimers } from '@/data/TimersContext';
 import { blur, color, radius, space, text } from '@/theme/tokens';
 
 /** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou `blur.glow`). */
@@ -25,6 +26,8 @@ const GLOW_WIDTH = 194;
 const GLOW_HEIGHT = 120;
 const THUMB = 80;
 const TRANSITION = 500;
+/** Hauteur de la rangée de boutons du bas (48 px + 24 px de marge) et 16 px d'écart : rappel et toast se posent au-dessus. */
+const BOTTOM_ROW = space[24] + 48 + space[16];
 
 type Origin = { px: number; py: number; ps: number; by: number; bh: number };
 
@@ -49,12 +52,38 @@ export default function StepByStepScreen() {
   const { id } = params;
   const { width: screenWidth } = useWindowDimensions();
   const { recipes } = useRecipes();
-  const { timerFor, toggle, remove } = useTimers();
+  const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
 
   const [index, setIndex] = useState(0);
   const [toast, setToast] = useState<string | null>(null);
+  const [timersOpen, setTimersOpen] = useState(false);
+
+  // Comme sur la fiche : un minuteur de cette recette qui se termine ouvre la sheet, pas le dialogue global.
+  useFocusEffect(
+    useCallback(() => {
+      setFocusedRecipeId(id ?? null);
+      return () => setFocusedRecipeId(null);
+    }, [id, setFocusedRecipeId]),
+  );
+
+  // Minuteurs des autres étapes : rappelés au-dessus des boutons. Celui de l'étape affichée a déjà sa carte.
+  const timers = allTimers.filter((t) => t.recipeId === id).sort((x, y) => x.step - y.step);
+  const others = timers.filter((t) => t.step !== index);
+  const nextOther = [...others].sort((x, y) => x.remaining - y.remaining)[0];
+
+  // Un minuteur de la recette arrive à zéro : la sheet s'ouvre, comme sur la fiche.
+  const doneCount = timers.filter(isDone).length;
+  const previousDone = useRef(doneCount);
+  useEffect(() => {
+    if (doneCount > previousDone.current) setTimersOpen(true);
+    previousDone.current = doneCount;
+  }, [doneCount]);
+
+  useEffect(() => {
+    if (timers.length === 0) setTimersOpen(false);
+  }, [timers.length]);
 
   // Transition depuis la fiche : 0 = photo et flou à leur place sur la fiche, 1 = place du mode étape.
   // Animée en JS (tailles et positions), ce que le pilote natif ne sait pas faire.
@@ -222,8 +251,14 @@ export default function StepByStepScreen() {
         />
       )}
 
+      {nextOther && (
+        <Animated.View style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom, opacity: contentOpacity }]}>
+          <TimerWidget count={others.length} remaining={nextOther.remaining} onPress={() => setTimersOpen(true)} />
+        </Animated.View>
+      )}
+
       {toast && (
-        <View style={[styles.toast, { bottom: insets.bottom + space[24] + 48 + space[16] }]}>
+        <View style={[styles.floating, { bottom: BOTTOM_ROW + (nextOther ? 48 + space[8] : 0) + insets.bottom }]}>
           <Toast message={toast} onClose={() => setToast(null)} />
         </View>
       )}
@@ -249,6 +284,8 @@ export default function StepByStepScreen() {
           />
         </View>
       </Animated.View>
+
+      <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
     </View>
   );
 }
@@ -359,7 +396,7 @@ const styles = StyleSheet.create({
   disabled: {
     opacity: 0.4,
   },
-  toast: {
+  floating: {
     position: 'absolute',
     left: space[16],
     right: space[16],
