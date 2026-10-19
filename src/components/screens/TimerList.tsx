@@ -5,18 +5,24 @@ import { AppText, Blink, formatDuration } from '@/components/ui';
 import { isDone, useTimers, type Timer } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
 
+type TimerListProps = {
+  timers: Timer[];
+  /** Après « Arrêter » sur un minuteur terminé. */
+  onStop?: () => void;
+};
+
 /** Figma : cartes « Etape n » de « Bottom Sheet/ Minuteur » et « Dialogue/ Minuteur ». */
-export function TimerList({ timers }: { timers: Timer[] }) {
+export function TimerList({ timers, onStop }: TimerListProps) {
   return (
     <View style={styles.list}>
       {timers.map((t) => (
-        <TimerRow key={t.id} timer={t} />
+        <TimerRow key={t.id} timer={t} onStop={onStop} />
       ))}
     </View>
   );
 }
 
-function TimerRow({ timer }: { timer: Timer }) {
+function TimerRow({ timer, onStop }: { timer: Timer; onStop?: () => void }) {
   const { toggle, reset, remove } = useTimers();
   return (
     <View style={styles.card}>
@@ -32,7 +38,13 @@ function TimerRow({ timer }: { timer: Timer }) {
       </View>
       {isDone(timer) ? (
         <View style={styles.controls}>
-          <Control label="Arrêter" onPress={() => remove(timer.id)} />
+          <Control
+            label="Arrêter"
+            onPress={() => {
+              remove(timer.id);
+              onStop?.();
+            }}
+          />
         </View>
       ) : (
         <View style={styles.controls}>

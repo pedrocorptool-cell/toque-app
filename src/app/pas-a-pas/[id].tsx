@@ -26,10 +26,14 @@ const GLOW_WIDTH = 194;
 const GLOW_HEIGHT = 120;
 const THUMB = 80;
 const TRANSITION = 500;
+/** Durée du passage de la carte minuteur à la pastille du bas. */
+const FLIGHT = 450;
 /** Hauteur de la rangée de boutons du bas (48 px + 24 px de marge) et 16 px d'écart : le toast se pose au-dessus. */
 const BOTTOM_ROW = space[24] + 48 + space[16];
 
 type Origin = { px: number; py: number; ps: number; by: number; bh: number };
+type Rect = { x: number; y: number; width: number; height: number };
+type Flight = { from: Rect; to?: Rect; remaining: number };
 
 /** Position de la photo et du flou sur la fiche, transmise à l'ouverture. */
 function readOrigin(params: Record<string, string | undefined>): Origin | null {
@@ -83,6 +87,35 @@ export default function StepByStepScreen() {
   useEffect(() => {
     if (timers.length === 0) setTimersOpen(false);
   }, [timers.length]);
+
+  // Lancement depuis la carte : elle se resserre et glisse jusqu'à la pastille du bas.
+  const cardRef = useRef<View>(null);
+  const chipRef = useRef<View>(null);
+  const flight = useRef(new Animated.Value(0)).current;
+  const [flying, setFlying] = useState<Flight | null>(null);
+
+  // La pastille vient d'apparaître (ou de changer) : on mesure sa place une fois affichée.
+  useEffect(() => {
+    if (!flying || flying.to) return;
+    const frame = requestAnimationFrame(() =>
+      chipRef.current?.measureInWindow((x, y, width, height) =>
+        setFlying((f) => f && { ...f, to: { x, y, width, height } }),
+      ),
+    );
+    return () => cancelAnimationFrame(frame);
+  }, [flying]);
+
+  const landed = flying?.to;
+  useEffect(() => {
+    if (!landed) return;
+    flight.setValue(0);
+    Animated.timing(flight, {
+      toValue: 1,
+      duration: FLIGHT,
+      easing: Easing.inOut(Easing.cubic),
+      useNativeDriver: false,
+    }).start(() => setFlying(null));
+  }, [landed, flight]);
 
   // Transition depuis la fiche : 0 = photo et flou à leur place sur la fiche, 1 = place du mode étape.
   // Animée en JS (tailles et positions), ce que le pilote natif ne sait pas faire.
@@ -145,6 +178,17 @@ export default function StepByStepScreen() {
   const step = recipe.steps[index];
   const last = recipe.steps.length - 1;
   const timer = timerFor(recipe.id, index);
+
+  // Pendant le trajet, la pastille n'apparaît qu'à l'arrivée de la carte.
+  const chipOpacity = flight.interpolate({ inputRange: [0, 0.8, 1], outputRange: [0, 0, 1] });
+
+  const startTimer = (seconds: number) => {
+    cardRef.current?.measureInWindow((x, y, width, height) => {
+      flight.setValue(0);
+      setFlying({ from: { x, y, width, height }, remaining: seconds });
+      toggle(recipe.id, index, seconds);
+    });
+  };
 
   const goTo = (next: number) => {
     direction.current = next > index ? 1 : -1;
@@ -222,9 +266,11 @@ export default function StepByStepScreen() {
             <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
               {step.text}
             </AppText>
-            {/* Une fois lancé, le minuteur rejoint la pastille du bas ; il revient ici s'il est arrêté depuis la sheet. */}
+            {/* Une fois lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
             {step.timer !== undefined && !timer && (
-              <TimerCard remaining={step.timer} running={false} onToggle={() => toggle(recipe.id, index, step.timer!)} />
+              <View ref={cardRef}>
+                <TimerCard remaining={step.timer} running={false} onToggle={() => startTimer(step.timer!)} />
+              </View>
             )}
           </Animated.View>
         </Animated.View>
@@ -246,6 +292,10 @@ export default function StepByStepScreen() {
         />
       )}
 
+      {flying && (
+        <FlyingCard flight={flight} from={flying.from} to={flying.to ?? flying.from} remaining={flying.remaining} />
+      )}
+
       {toast && (
         <View style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom }]}>
           <Toast message={toast} onClose={() => setToast(null)} />
@@ -260,7 +310,11 @@ export default function StepByStepScreen() {
             onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
           />
           {nextTimer && (
-            <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
+            <View ref={chipRef}>
+              <Animated.View style={flying && { opacity: chipOpacity }}>
+                <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
+              </Animated.View>
+            </View>
           )}
         </View>
         <View style={styles.nav}>
@@ -281,6 +335,32 @@ export default function StepByStepScreen() {
 
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
     </View>
+  );
+}
+
+/** La carte minuteur pendant son trajet : son contenu s'efface tandis qu'elle prend la forme de la pastille. */
+type FlyingCardProps = { flight: Animated.Value; from: Rect; to: Rect; remaining: number };
+
+function FlyingCard({ flight, from, to, remaining }: FlyingCardProps) {
+  const lerp = (a: number, b: number) => flight.interpolate({ inputRange: [0, 1], outputRange: [a, b] });
+  const fade = flight.interpolate({ inputRange: [0, 0.4], outputRange: [1, 0], extrapolate: 'clamp' });
+  return (
+    <Animated.View
+      pointerEvents="none"
+      style={[
+        styles.flyingCard,
+        {
+          left: lerp(from.x, to.x),
+          top: lerp(from.y, to.y),
+          width: lerp(from.width, to.width),
+          height: lerp(from.height, to.height),
+          borderRadius: lerp(radius.lg, to.height / 2),
+        },
+      ]}>
+      <Animated.View style={{ width: from.width, opacity: fade }}>
+        <TimerCard remaining={remaining} running={false} onToggle={() => {}} />
+      </Animated.View>
+    </Animated.View>
   );
 }
 
@@ -389,6 +469,11 @@ const styles = StyleSheet.create({
   },
   disabled: {
     opacity: 0.4,
+  },
+  flyingCard: {
+    position: 'absolute',
+    overflow: 'hidden',
+    backgroundColor: color.controlSelectedBg,
   },
   floating: {
     position: 'absolute',

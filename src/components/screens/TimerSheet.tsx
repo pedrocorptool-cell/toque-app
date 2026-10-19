@@ -26,7 +26,8 @@ export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
 
   return (
     <BottomSheet visible={visible && timers.length > 0} onClose={close} title="Minuteur">
-      <TimerList timers={shown.current} />
+      {/* Arrêter un minuteur terminé referme la sheet, les autres minuteurs continuent. */}
+      <TimerList timers={shown.current} onStop={close} />
     </BottomSheet>
   );
 }
