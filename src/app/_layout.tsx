@@ -35,7 +35,10 @@ export default function RootLayout() {
     <RecipesProvider>
       <TimersProvider>
         <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }} />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }}>
+          {/* Le mode étape par étape monte depuis le bas, comme une vue plein écran. */}
+          <Stack.Screen name="pas-a-pas/[id]" options={{ animation: 'slide_from_bottom' }} />
+        </Stack>
         <TimerAlert />
       </TimersProvider>
     </RecipesProvider>

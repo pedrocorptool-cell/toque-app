@@ -65,10 +65,16 @@ export default function RecipeScreen() {
   const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
   const [timersOpen, setTimersOpen] = useState(false);
 
+  // Écran au premier plan : la sheet ne doit pas s'ouvrir par-dessus le mode étape par étape.
+  const [focused, setFocused] = useState(true);
   useFocusEffect(
     useCallback(() => {
       setFocusedRecipeId(id ?? null);
-      return () => setFocusedRecipeId(null);
+      setFocused(true);
+      return () => {
+        setFocusedRecipeId(null);
+        setFocused(false);
+      };
     }, [id, setFocusedRecipeId]),
   );
 
@@ -79,9 +85,9 @@ export default function RecipeScreen() {
   const doneCount = allTimers.filter((t) => t.recipeId === id && isDone(t)).length;
   const previousDone = useRef(doneCount);
   useEffect(() => {
-    if (doneCount > previousDone.current) setTimersOpen(true);
+    if (doneCount > previousDone.current && focused) setTimersOpen(true);
     previousDone.current = doneCount;
-  }, [doneCount]);
+  }, [doneCount, focused]);
 
   // Plus aucun minuteur : la sheet se referme (et ne se rouvrira pas toute seule au prochain lancement).
   const timerCount = allTimers.filter((t) => t.recipeId === id).length;
@@ -264,7 +270,7 @@ export default function RecipeScreen() {
       {tab === 'steps' && (
         <View pointerEvents="box-none" style={[styles.cta, { bottom: CTA_BOTTOM + insets.bottom }]}>
           <View style={styles.ctaHalo}>
-            <Button icon="play" label="Démarrer la recette" onPress={() => setToast('Le mode pas à pas arrive à l’étape 3')} />
+            <Button icon="play" label="Démarrer la recette" onPress={() => router.push(`/pas-a-pas/${recipe.id}`)} />
           </View>
         </View>
       )}

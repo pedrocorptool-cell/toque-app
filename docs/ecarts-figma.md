@@ -67,7 +67,19 @@ l'icône active de la navbar sur `action/secondary/icon`.
   (« Arrêter » le retire ; la croix arrête les minuteurs terminés et laisse tourner les autres).
   Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres
   pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet, le dialogue et la pastille d'étape.
-- **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`).
+- **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`) et la
+  pastille blanche glisse d'un onglet à l'autre (250 ms).
+
+## Mode étape par étape (étape 3)
+
+- Ouvert par « Démarrer la recette », il monte depuis le bas. Figma : « Recette/ Stepp/ Minuteur off / on ».
+- Flèches précédent / suivant : grisées à la première et à la dernière étape (pas d'écran de fin dans Figma).
+  Le texte de l'étape glisse depuis le côté de la flèche touchée.
+- Bouton IA (baguette) : gardé en V1 comme point d'entrée de « Modifier avec l'IA », sans action pour
+  l'instant (message d'attente), sur décision de Pierre.
+- Le minuteur de l'étape est le même que sur la fiche (lancé ici, il apparaît aussi dans la sheet).
+  Quand il arrive à zéro dans ce mode, le dialogue « Minuteurs » s'ouvre.
+- Icônes ajoutées depuis Figma : `magic`, `caretLeft`, `caretRight`.
   Sur l'onglet Ingrédients, le rappel « Minuteurs (n) » ouvre la même sheet. Pas de son ni de
   notification système dans le prototype.
 - **« Démarrer la recette »** : Figma le pose dans une barre fixe pleine largeur. Sur retour de Pierre, le

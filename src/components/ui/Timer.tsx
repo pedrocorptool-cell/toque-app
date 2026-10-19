@@ -51,9 +51,11 @@ export function TimerCard({ remaining, running, onToggle, onCancel }: TimerCardP
         <AppText variant="label" color={color.textOnBrandSecondary} style={styles.cardLabel}>
           Minuteur
         </AppText>
-        <AppText variant="timer" color={color.textOnBrandPrimary}>
-          {formatDuration(remaining)}
-        </AppText>
+        <Blink active={remaining === 0}>
+          <AppText variant="timer" color={color.textOnBrandPrimary}>
+            {formatDuration(remaining)}
+          </AppText>
+        </Blink>
       </View>
       <View style={styles.actions}>
         <Pressable
