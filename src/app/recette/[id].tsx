@@ -1,10 +1,10 @@
 import * as Clipboard from 'expo-clipboard';
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon } from '@/components/icons/Icon';
 import { PaperCard } from '@/components/screens/recipe/PaperCard';
 import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
@@ -27,7 +27,7 @@ import {
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers, type Timer } from '@/data/TimersContext';
-import { color, font, radius, shadow, space } from '@/theme/tokens';
+import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
 
@@ -38,8 +38,6 @@ const TABS = [
 
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
-/** Assez fort pour gommer les détails, assez faible pour garder les couleurs du plat (Android plafonne à 25). */
-const BLUR_RADIUS = 20;
 /** Bouton flottant « Démarrer la recette » : 48 px de haut, à 32 px du bas de l'écran. */
 const CTA_BOTTOM = space[32];
 /** Hauteur réservée sous la dernière étape : en fin de défilement, la carte blanche s'arrête juste sous le
@@ -53,6 +51,7 @@ export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
   const { recipes, removeRecipe, addToShoppingList } = useRecipes();
   const insets = useSafeAreaInsets();
+  const { width: screenWidth } = useWindowDimensions();
 
   // Garde la recette affichée pendant l'animation de retour qui suit une suppression.
   const found = recipes.find((r) => r.id === id);
@@ -101,7 +100,7 @@ export default function RecipeScreen() {
   const [shoppingOpen, setShoppingOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
   const photoRef = useRef<Image>(null);
-  const blurRef = useRef<Image>(null);
+  const blurRef = useRef<View>(null);
 
   useEffect(() => {
     if (!toast) return;
@@ -157,16 +156,9 @@ export default function RecipeScreen() {
   return (
     <View style={styles.screen}>
       <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? space[16] + insets.bottom : space[24] }}>
-        <Image
-          ref={blurRef}
-          source={recipe.image}
-          blurRadius={BLUR_RADIUS}
-          style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]}
-        />
-        <LinearGradient
-          colors={['transparent', color.bgBrandPage]}
-          style={[styles.blurFade, { top: (BLUR_HEIGHT + insets.top) / 2, height: (BLUR_HEIGHT + insets.top) / 2 }]}
-        />
+        <View ref={blurRef} style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]}>
+          <BlurGlow source={recipe.image} width={screenWidth} height={BLUR_HEIGHT + insets.top} blur={blur.hero} />
+        </View>
 
         <View style={[styles.topBar, { paddingTop: insets.top + space[16] }]}>
           <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => router.back()} />
@@ -407,12 +399,6 @@ const styles = StyleSheet.create({
   blur: {
     position: 'absolute',
     top: 0,
-    left: 0,
-    right: 0,
-    width: '100%',
-  },
-  blurFade: {
-    position: 'absolute',
     left: 0,
     right: 0,
   },

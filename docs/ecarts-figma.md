@@ -56,7 +56,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Couleurs codées en dur dans la maquette**, passées en tokens : `borderPaper` (#927760),
   `tipCorner` (#2C5F7D), `borderPhoto` (#EAE6E1), `textOnBrandMuted` (blanc 80 %), et les pastilles
   de « Créer une catégorie » (`accentLime`, `accentGrey`, `accentPurple`, `accentPink`).
-- **Fond flouté du hero** : `blurRadius` 20 sur la photo (Android plafonne à 25) et fondu vers le brun de la page.
+- **Fond flouté du hero** : valeur exacte de Figma (« Layer blur » 140, token `blur.hero`), sans fondu de couleur.
+  Rendu avec Skia sur mobile (le `blurRadius` natif garde des bords nets) et le filtre CSS `blur()` sur le web.
   Le rendu varie un peu entre iOS, Android et le web.
 - **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
   pause). La fin est signalée par la sheet ou le dialogue « Minuteurs » (voir plus bas).
@@ -76,8 +77,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   Pierre (absente de Figma) : la photo de la fiche rétrécit jusqu'à la miniature et le flou pleine largeur
   devient le halo du coin, pendant que le fond brun recouvre la fiche (0,5 s) ; le contenu de l'étape
   apparaît ensuite en fondu. La croix et le retour Android jouent l'animation à l'envers.
-- Halo flouté : 194 × 120 dans le coin haut gauche comme dans Figma (flou 100). Le flou natif garde des
-  bords nets, deux fondus vers le brun les adoucissent.
+- Halo flouté : 194 × 120 dans le coin haut gauche, flou 100 comme dans Figma (token `blur.glow`), sans fondu.
+  Pendant la transition, le flou 140 de la fiche et le halo 100 se croisent en fondu en se redimensionnant.
 - Flèches précédent / suivant : grisées à la première et à la dernière étape (pas d'écran de fin dans Figma).
   Le texte de l'étape glisse depuis le côté de la flèche touchée.
 - Bouton IA (baguette) : gardé en V1 comme point d'entrée de « Modifier avec l'IA », sans action pour

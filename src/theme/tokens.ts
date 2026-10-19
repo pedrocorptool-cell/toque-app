@@ -149,6 +149,12 @@ export const text = {
   step: { fontFamily: font.medium, fontSize: 18, lineHeight: 20 },
 } as const;
 
+/** Valeurs « Layer blur » des maquettes (photo floutée derrière la fiche et en mode étape par étape). */
+export const blur = {
+  hero: 140,
+  glow: 100,
+} as const;
+
 export const shadow = {
   // FAB : halo orange 0 0 25 rgba(202,64,28,.32)
   fab: {

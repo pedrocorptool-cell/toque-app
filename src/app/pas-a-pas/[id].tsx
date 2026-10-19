@@ -1,4 +1,3 @@
-import { LinearGradient } from 'expo-linear-gradient';
 import { router, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import {
@@ -14,13 +13,14 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { AppText, IconButton, TimerCard, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { useTimers } from '@/data/TimersContext';
-import { color, radius, space, text } from '@/theme/tokens';
+import { blur, color, radius, space, text } from '@/theme/tokens';
 
-/** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou 100). */
+/** Figma : halo flouté de 194 × 120 dans le coin haut gauche (flou `blur.glow`). */
 const GLOW_WIDTH = 194;
 const GLOW_HEIGHT = 120;
 const THUMB = 80;
@@ -135,6 +135,7 @@ export default function StepByStepScreen() {
     by: 0,
     bh: GLOW_HEIGHT + insets.top,
   };
+  const glowHeight = GLOW_HEIGHT + insets.top;
   const lerp = (a: number, b: number) => progress.interpolate({ inputRange: [0, 1], outputRange: [a, b] });
   // Le contenu de l'étape n'apparaît qu'une fois la photo presque à sa place.
   const contentOpacity = progress.interpolate({
@@ -147,31 +148,31 @@ export default function StepByStepScreen() {
       {/* Fond brun en fondu : la fiche reste visible dessous au début de la transition. */}
       <Animated.View style={[StyleSheet.absoluteFill, styles.backdrop, { opacity: progress }]} />
 
-      {/* Le flou natif garde des bords nets : deux fondus vers le brun en font un halo. */}
+      {/* Le flou de la fiche (140) se resserre en halo (100) : les deux calques se croisent en fondu
+          pendant qu'ils se redimensionnent depuis le coin haut gauche. */}
+      {!settled && (
+        <Animated.View
+          style={[
+            styles.glow,
+            {
+              top: lerp(from.by, 0),
+              opacity: lerp(1, 0),
+              transform: [{ scaleX: lerp(1, GLOW_WIDTH / screenWidth) }, { scaleY: lerp(1, glowHeight / from.bh) }],
+            },
+          ]}>
+          <BlurGlow source={recipe.image} width={screenWidth} height={from.bh} blur={blur.hero} />
+        </Animated.View>
+      )}
       <Animated.View
         style={[
           styles.glow,
           {
-            top: lerp(from.by, 0),
-            width: lerp(screenWidth, GLOW_WIDTH),
-            height: lerp(from.bh, GLOW_HEIGHT + insets.top),
+            top: 0,
+            opacity: progress,
+            transform: [{ scaleX: lerp(screenWidth / GLOW_WIDTH, 1) }, { scaleY: lerp(from.bh / glowHeight, 1) }],
           },
         ]}>
-        <Image source={recipe.image} blurRadius={25} style={styles.glowImage} />
-        <Animated.View style={[StyleSheet.absoluteFill, { opacity: progress }]}>
-          <LinearGradient
-            colors={['transparent', color.bgBrandPage]}
-            start={{ x: 0.4, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={StyleSheet.absoluteFill}
-          />
-        </Animated.View>
-        <LinearGradient
-          colors={['transparent', color.bgBrandPage]}
-          start={{ x: 0, y: 0.4 }}
-          end={{ x: 0, y: 1 }}
-          style={StyleSheet.absoluteFill}
-        />
+        <BlurGlow source={recipe.image} width={GLOW_WIDTH} height={glowHeight} blur={blur.glow} />
       </Animated.View>
 
       <ScrollView contentContainerStyle={[styles.content, { paddingTop: insets.top + space[16] }]}>
@@ -295,11 +296,7 @@ const styles = StyleSheet.create({
   glow: {
     position: 'absolute',
     left: 0,
-    overflow: 'hidden',
-  },
-  glowImage: {
-    width: '100%',
-    height: '100%',
+    transformOrigin: 'top left',
   },
   content: {
     gap: space[32],
