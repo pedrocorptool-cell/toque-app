@@ -59,7 +59,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Fond flouté du hero** : `blurRadius` 20 sur la photo (Android plafonne à 25) et fondu vers le brun de la page.
   Le rendu varie un peu entre iOS, Android et le web.
 - **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
-  pause), un toast signale la fin. Le mode pas à pas (« Démarrer la recette ») arrive à l'étape 3.
+  pause). La fin est signalée par la sheet ou le dialogue « Minuteurs » (voir plus bas).
   L'étape 3 de « Pasta alla zozzona » a un minuteur de 10 s pour tester.
 - **Minuteurs** (section Figma « Feature minuteur ») : le premier appui sur une pastille lance le minuteur,
   les suivants ouvrent « Bottom Sheet/ Minuteur » (pause, recommencer, supprimer). Les minuteurs tournent
