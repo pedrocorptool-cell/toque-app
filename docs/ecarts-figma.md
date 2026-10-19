@@ -61,9 +61,16 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
   pause), un toast signale la fin. Le mode pas à pas (« Démarrer la recette ») arrive à l'étape 3.
   L'étape 3 de « Pasta alla zozzona » a un minuteur de 10 s pour tester.
+- **Minuteurs** (section Figma « Feature minuteur ») : le premier appui sur une pastille lance le minuteur,
+  les suivants ouvrent « Bottom Sheet/ Minuteur » (pause, recommencer, supprimer). Les minuteurs tournent
+  même hors de la fiche. Quand l'un arrive à zéro, « Dialogue/ Minuteur » s'ouvre où que l'on soit
+  (« Arrêter » le retire ; la croix arrête les minuteurs terminés et laisse tourner les autres).
+  Sur l'onglet Ingrédients, le rappel « Minuteurs (n) » ouvre la même sheet. Pas de son ni de
+  notification système dans le prototype.
 - **« Démarrer la recette »** : Figma le pose dans une barre fixe pleine largeur. Sur retour de Pierre, le
   code en fait un bouton flottant centré, à la largeur de son texte, avec le halo orange du FAB
-  (`shadow.fab`) : plus de coupure de l'écran, et le bouton passe surtout au-dessus de la carte blanche.
+  (`shadow.fab`) : plus de coupure de l'écran. La carte « Étapes » se prolonge sous le bouton jusqu'en bas
+  de l'écran, pour qu'il reste sur fond blanc même en fin de défilement.
 - **Icône vin de l'astuce** : 19 px dans Figma, 16 px dans le code (tailles d'icône 14 / 16 / 24).
 - **Nom du créateur souligné** : pas de page créateur dans Figma, le lien ne mène nulle part pour l'instant.
 - **« Modifier avec l'IA »** (menu …) : affiche un toast, prévu avec le chat IA de l'étape 3.

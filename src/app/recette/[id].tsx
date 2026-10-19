@@ -11,9 +11,22 @@ import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
 import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
 import { TipCard } from '@/components/screens/recipe/TipCard';
-import { ActionMenu, AppText, Button, Dialog, IconButton, SegmentedTabs, TimerPill, Toast } from '@/components/ui';
+import { TimerList } from '@/components/screens/TimerList';
+import {
+  ActionMenu,
+  AppText,
+  BottomSheet,
+  Button,
+  Dialog,
+  IconButton,
+  SegmentedTabs,
+  TimerPill,
+  TimerWidget,
+  Toast,
+} from '@/components/ui';
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
+import { useTimers } from '@/data/TimersContext';
 import { color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
@@ -30,8 +43,6 @@ const BLUR_RADIUS = 20;
 /** Place laissée sous la dernière étape pour le bouton flottant « Démarrer la recette ». */
 const CTA_SPACE = 48 + space[16] * 2;
 
-type Timer = { remaining: number; running: boolean };
-
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
@@ -46,7 +57,8 @@ export default function RecipeScreen() {
 
   const [tab, setTab] = useState<Tab>('ingredients');
   const [servings, setServings] = useState(recipe?.servings ?? 2);
-  const [timers, setTimers] = useState<Record<number, Timer>>({});
+  const { timers: allTimers, timerFor, toggle } = useTimers();
+  const [timersOpen, setTimersOpen] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -60,25 +72,6 @@ export default function RecipeScreen() {
     return () => clearTimeout(t);
   }, [toast]);
 
-  const anyRunning = Object.values(timers).some((t) => t.running);
-  useEffect(() => {
-    if (!anyRunning) return;
-    const tick = setInterval(() => {
-      setTimers((current) => {
-        const next = { ...current };
-        for (const key of Object.keys(next)) {
-          const t = next[Number(key)];
-          if (!t.running) continue;
-          const remaining = t.remaining - 1;
-          next[Number(key)] = { remaining: Math.max(0, remaining), running: remaining > 0 };
-          if (remaining <= 0) setToast(`Minuteur de l’étape ${Number(key) + 1} terminé`);
-        }
-        return next;
-      });
-    }, 1000);
-    return () => clearInterval(tick);
-  }, [anyRunning]);
-
   if (!recipe) {
     return (
       <View style={[styles.screen, styles.missing]}>
@@ -91,12 +84,15 @@ export default function RecipeScreen() {
   const creator = CREATORS.find((c) => c.id === recipe.creator)!;
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
-  const toggleTimer = (index: number, seconds: number) =>
-    setTimers((current) => {
-      const t = current[index] ?? { remaining: seconds, running: false };
-      const remaining = t.remaining > 0 ? t.remaining : seconds;
-      return { ...current, [index]: { remaining, running: !t.running } };
-    });
+  const timers = allTimers.filter((t) => t.recipeId === recipe.id).sort((x, y) => x.step - y.step);
+  // Le minuteur qui sonnera le plus tôt, pour le rappel « Minuteurs (n) ».
+  const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
+
+  /** Premier appui : lance le minuteur. Ensuite : ouvre la sheet pour le piloter. */
+  const pressTimer = (index: number, seconds: number) => {
+    if (timerFor(recipe.id, index)) setTimersOpen(true);
+    else toggle(recipe.id, index, seconds);
+  };
 
   const menuAction = (action: () => void) => () => {
     setMenuOpen(false);
@@ -105,7 +101,7 @@ export default function RecipeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? CTA_SPACE + insets.bottom : space[24] }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? 0 : space[24] }}>
         <Image
           source={recipe.image}
           blurRadius={BLUR_RADIUS}
@@ -201,7 +197,7 @@ export default function RecipeScreen() {
             <PaperCard title="Étapes">
               <View style={styles.steps}>
                 {recipe.steps.map((step, index) => {
-                  const timer = timers[index];
+                  const timer = timerFor(recipe.id, index);
                   return (
                     <View key={index} style={styles.step}>
                       <View style={styles.stepNumber}>
@@ -214,13 +210,15 @@ export default function RecipeScreen() {
                         <TimerPill
                           remaining={timer?.remaining ?? step.timer}
                           running={timer?.running ?? false}
-                          onPress={() => toggleTimer(index, step.timer!)}
+                          onPress={() => pressTimer(index, step.timer!)}
                         />
                       )}
                     </View>
                   );
                 })}
               </View>
+              {/* La feuille continue sous le bouton flottant : il reste sur fond blanc jusqu'en bas. */}
+              <View style={{ height: CTA_SPACE + insets.bottom }} />
             </PaperCard>
           )}
         </View>
@@ -234,8 +232,14 @@ export default function RecipeScreen() {
         </View>
       )}
 
+      {tab === 'ingredients' && nextTimer && (
+        <View style={[styles.widget, { bottom: space[16] + insets.bottom }]}>
+          <TimerWidget count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
+        </View>
+      )}
+
       {toast && (
-        <View style={[styles.toast, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}>
+        <View style={[styles.toast, { bottom: (tab === 'steps' || nextTimer ? CTA_SPACE : space[16]) + insets.bottom }]}>
           <Toast message={toast} onClose={() => setToast(null)} />
         </View>
       )}
@@ -258,6 +262,10 @@ export default function RecipeScreen() {
           />
         </View>
       </Modal>
+
+      <BottomSheet visible={timersOpen && timers.length > 0} onClose={() => setTimersOpen(false)} title="Minuteur">
+        <TimerList timers={timers} />
+      </BottomSheet>
 
       <ShareDialog
         visible={shareOpen}
@@ -476,6 +484,11 @@ const styles = StyleSheet.create({
   ctaHalo: {
     borderRadius: radius.pill,
     ...shadow.fab,
+  },
+  widget: {
+    position: 'absolute',
+    left: space[16],
+    right: space[16],
   },
   toast: {
     position: 'absolute',

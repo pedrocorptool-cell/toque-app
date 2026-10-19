@@ -10,7 +10,9 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { TimerAlert } from '@/components/screens/TimerAlert';
 import { RecipesProvider } from '@/data/RecipesContext';
+import { TimersProvider } from '@/data/TimersContext';
 import { color } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
@@ -31,8 +33,11 @@ export default function RootLayout() {
 
   return (
     <RecipesProvider>
-      <StatusBar style="light" />
-      <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }} />
+      <TimersProvider>
+        <StatusBar style="light" />
+        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }} />
+        <TimerAlert />
+      </TimersProvider>
     </RecipesProvider>
   );
 }
