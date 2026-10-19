@@ -1,7 +1,7 @@
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
-import { AppText, formatDuration } from '@/components/ui';
+import { AppText, Blink, formatDuration } from '@/components/ui';
 import { isDone, useTimers, type Timer } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
 
@@ -24,9 +24,11 @@ function TimerRow({ timer }: { timer: Timer }) {
         <AppText variant="label" color={color.textSecondary} style={styles.step}>
           {`Étape ${timer.step + 1}`}
         </AppText>
-        <AppText variant="timer" style={styles.time}>
-          {formatDuration(timer.remaining)}
-        </AppText>
+        <Blink active={isDone(timer)}>
+          <AppText variant="timer" style={styles.time}>
+            {formatDuration(timer.remaining)}
+          </AppText>
+        </Blink>
       </View>
       {isDone(timer) ? (
         <View style={styles.controls}>

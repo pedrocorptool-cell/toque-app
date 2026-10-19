@@ -27,7 +27,7 @@ export function SegmentedTabs<T extends string>({ options, value, onChange }: Se
             accessibilityState={{ selected: active }}
             onPress={() => onChange(option.value)}
             style={[styles.tab, active && styles.tabActive]}>
-            <Icon name={option.icon} color={tint} />
+            <Icon name={option.icon} color={active ? color.actionSecondaryIcon : tint} />
             <AppText color={tint}>{option.label}</AppText>
           </Pressable>
         );

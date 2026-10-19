@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { LinearGradient } from 'expo-linear-gradient';
-import { router, useLocalSearchParams } from 'expo-router';
-import { useEffect, useRef, useState } from 'react';
+import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Modal, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -26,7 +26,7 @@ import {
 } from '@/components/ui';
 import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
-import { useTimers } from '@/data/TimersContext';
+import { isDone, useTimers, type Timer } from '@/data/TimersContext';
 import { color, font, radius, shadow, space } from '@/theme/tokens';
 
 type Tab = 'ingredients' | 'steps';
@@ -40,8 +40,13 @@ const TABS = [
 const BLUR_HEIGHT = 244;
 /** Assez fort pour gommer les détails, assez faible pour garder les couleurs du plat (Android plafonne à 25). */
 const BLUR_RADIUS = 20;
-/** Place laissée sous la dernière étape pour le bouton flottant « Démarrer la recette ». */
-const CTA_SPACE = 48 + space[16] * 2;
+/** Bouton flottant « Démarrer la recette » : 48 px de haut, à 32 px du bas de l'écran. */
+const CTA_BOTTOM = space[32];
+/** Hauteur réservée sous la dernière étape : en fin de défilement, la carte blanche s'arrête juste sous le
+ * bouton (16 px de blanc) et laisse 16 px de fond brun en bas de l'écran. */
+const CTA_SLOT = 48 + space[16];
+/** Hauteur occupée par le bouton, pour poser toast et rappel au-dessus. */
+const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
 
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
@@ -57,8 +62,32 @@ export default function RecipeScreen() {
 
   const [tab, setTab] = useState<Tab>('ingredients');
   const [servings, setServings] = useState(recipe?.servings ?? 2);
-  const { timers: allTimers, timerFor, toggle } = useTimers();
+  const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
   const [timersOpen, setTimersOpen] = useState(false);
+
+  useFocusEffect(
+    useCallback(() => {
+      setFocusedRecipeId(id ?? null);
+      return () => setFocusedRecipeId(null);
+    }, [id, setFocusedRecipeId]),
+  );
+
+  // Garde les cartes affichées pendant que la sheet descend, quand on supprime le dernier minuteur.
+  const sheetTimers = useRef<Timer[]>([]);
+
+  // Un minuteur de cette recette arrive à zéro : sa sheet s'ouvre (le dialogue global est réservé aux autres écrans).
+  const doneCount = allTimers.filter((t) => t.recipeId === id && isDone(t)).length;
+  const previousDone = useRef(doneCount);
+  useEffect(() => {
+    if (doneCount > previousDone.current) setTimersOpen(true);
+    previousDone.current = doneCount;
+  }, [doneCount]);
+
+  // Plus aucun minuteur : la sheet se referme (et ne se rouvrira pas toute seule au prochain lancement).
+  const timerCount = allTimers.filter((t) => t.recipeId === id).length;
+  useEffect(() => {
+    if (timerCount === 0) setTimersOpen(false);
+  }, [timerCount]);
   const [menuOpen, setMenuOpen] = useState(false);
   const [shareOpen, setShareOpen] = useState(false);
   const [deleteOpen, setDeleteOpen] = useState(false);
@@ -88,6 +117,14 @@ export default function RecipeScreen() {
   // Le minuteur qui sonnera le plus tôt, pour le rappel « Minuteurs (n) ».
   const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 
+  if (timers.length) sheetTimers.current = timers;
+
+  const closeTimers = () => {
+    // Comme le dialogue : fermer arrête les minuteurs terminés, les autres continuent.
+    timers.filter(isDone).forEach((t) => remove(t.id));
+    setTimersOpen(false);
+  };
+
   /** Premier appui : lance le minuteur. Ensuite : ouvre la sheet pour le piloter. */
   const pressTimer = (index: number, seconds: number) => {
     if (timerFor(recipe.id, index)) setTimersOpen(true);
@@ -101,7 +138,7 @@ export default function RecipeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? 0 : space[24] }}>
+      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? space[16] + insets.bottom : space[24] }}>
         <Image
           source={recipe.image}
           blurRadius={BLUR_RADIUS}
@@ -217,15 +254,15 @@ export default function RecipeScreen() {
                   );
                 })}
               </View>
-              {/* La feuille continue sous le bouton flottant : il reste sur fond blanc jusqu'en bas. */}
-              <View style={{ height: CTA_SPACE + insets.bottom }} />
+              {/* Réserve la place du bouton flottant : il reste sur fond blanc jusqu'en fin de défilement. */}
+              <View style={{ height: CTA_SLOT }} />
             </PaperCard>
           )}
         </View>
       </ScrollView>
 
       {tab === 'steps' && (
-        <View pointerEvents="box-none" style={[styles.cta, { bottom: space[16] + insets.bottom }]}>
+        <View pointerEvents="box-none" style={[styles.cta, { bottom: CTA_BOTTOM + insets.bottom }]}>
           <View style={styles.ctaHalo}>
             <Button icon="play" label="Démarrer la recette" onPress={() => setToast('Le mode pas à pas arrive à l’étape 3')} />
           </View>
@@ -263,8 +300,8 @@ export default function RecipeScreen() {
         </View>
       </Modal>
 
-      <BottomSheet visible={timersOpen && timers.length > 0} onClose={() => setTimersOpen(false)} title="Minuteur">
-        <TimerList timers={timers} />
+      <BottomSheet visible={timersOpen && timers.length > 0} onClose={closeTimers} title="Minuteur">
+        <TimerList timers={sheetTimers.current} />
       </BottomSheet>
 
       <ShareDialog

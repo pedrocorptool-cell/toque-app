@@ -20,6 +20,9 @@ type TimersState = {
   /** Repart de la durée de départ, sans changer lecture / pause. */
   reset: (id: string) => void;
   remove: (id: string) => void;
+  /** Fiche recette à l'écran : ses minuteurs terminés s'affichent dans sa sheet, pas dans le dialogue. */
+  focusedRecipeId: string | null;
+  setFocusedRecipeId: (id: string | null) => void;
 };
 
 const TimersContext = createContext<TimersState | null>(null);
@@ -28,6 +31,7 @@ const timerId = (recipeId: string, step: number) => `${recipeId}:${step}`;
 
 export function TimersProvider({ children }: { children: ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([]);
+  const [focusedRecipeId, setFocusedRecipeId] = useState<string | null>(null);
 
   const anyRunning = timers.some((t) => t.running);
   useEffect(() => {
@@ -59,8 +63,10 @@ export function TimersProvider({ children }: { children: ReactNode }) {
         }),
       reset: (id) => setTimers((list) => list.map((t) => (t.id === id ? { ...t, remaining: t.duration } : t))),
       remove: (id) => setTimers((list) => list.filter((t) => t.id !== id)),
+      focusedRecipeId,
+      setFocusedRecipeId,
     }),
-    [timers],
+    [timers, focusedRecipeId],
   );
 
   return <TimersContext.Provider value={value}>{children}</TimersContext.Provider>;

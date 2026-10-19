@@ -1,4 +1,5 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, type ReactNode } from 'react';
+import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { color, radius, space } from '@/theme/tokens';
@@ -11,6 +12,28 @@ export function formatDuration(totalSeconds: number) {
   const mm = String(Math.floor((s % 3600) / 60)).padStart(2, '0');
   const ss = String(s % 60).padStart(2, '0');
   return `${hh}:${mm}:${ss}`;
+}
+
+/** Minuteur arrivé à zéro : les chiffres pulsent doucement (opacité 100 % ↔ 30 %) jusqu'à l'arrêt. */
+export function Blink({ active, children }: { active: boolean; children: ReactNode }) {
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (!active) {
+      opacity.setValue(1);
+      return;
+    }
+    const pulse = Animated.loop(
+      Animated.sequence([
+        Animated.timing(opacity, { toValue: 0.3, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+      ]),
+    );
+    pulse.start();
+    return () => pulse.stop();
+  }, [active, opacity]);
+
+  return <Animated.View style={{ opacity }}>{children}</Animated.View>;
 }
 
 type TimerCardProps = {
@@ -76,6 +99,7 @@ type TimerPillProps = {
 
 /** Figma : « Minuteur » type Pastille — dans une étape de recette. */
 export function TimerPill({ remaining, onPress, running }: TimerPillProps) {
+  const done = running !== undefined && remaining === 0;
   const icon = running === undefined ? 'chevronDown' : running ? 'pause' : 'play';
   return (
     <Pressable
@@ -83,9 +107,11 @@ export function TimerPill({ remaining, onPress, running }: TimerPillProps) {
       accessibilityLabel={running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'}
       onPress={onPress}
       style={({ pressed }) => [styles.surface, styles.pill, pressed && styles.pressed]}>
-      <AppText variant="label" color={color.textOnBrandPrimary}>
-        {formatDuration(remaining)}
-      </AppText>
+      <Blink active={done}>
+        <AppText variant="label" color={color.textOnBrandPrimary}>
+          {formatDuration(remaining)}
+        </AppText>
+      </Blink>
       <Icon name={icon} size={16} color={color.textOnBrandPrimary} />
     </Pressable>
   );

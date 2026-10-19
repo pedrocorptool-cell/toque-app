@@ -10,9 +10,10 @@ import { TimerList } from './TimerList';
  * dès qu'un minuteur arrive à zéro, avec ceux qui tournent encore en dessous.
  */
 export function TimerAlert() {
-  const { timers, remove } = useTimers();
+  const { timers, remove, focusedRecipeId } = useTimers();
   const [open, setOpen] = useState(false);
-  const doneCount = timers.filter(isDone).length;
+  // Sur la fiche de la recette concernée, c'est sa sheet qui s'ouvre.
+  const doneCount = timers.filter((t) => isDone(t) && t.recipeId !== focusedRecipeId).length;
   const previous = useRef(doneCount);
 
   useEffect(() => {
@@ -28,10 +29,13 @@ export function TimerAlert() {
   };
 
   const sorted = [...timers].sort((a, b) => Number(isDone(b)) - Number(isDone(a)) || a.step - b.step);
+  // Garde la liste affichée pendant le fondu de fermeture.
+  const shown = useRef(sorted);
+  if (open) shown.current = sorted;
 
   return (
     <DialogFrame visible={open} onClose={close} title="Minuteurs">
-      <TimerList timers={sorted} />
+      <TimerList timers={shown.current} />
     </DialogFrame>
   );
 }

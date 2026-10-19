@@ -65,12 +65,15 @@ l'icône active de la navbar sur `action/secondary/icon`.
   les suivants ouvrent « Bottom Sheet/ Minuteur » (pause, recommencer, supprimer). Les minuteurs tournent
   même hors de la fiche. Quand l'un arrive à zéro, « Dialogue/ Minuteur » s'ouvre où que l'on soit
   (« Arrêter » le retire ; la croix arrête les minuteurs terminés et laisse tourner les autres).
+  Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres
+  pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet, le dialogue et la pastille d'étape.
+- **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`).
   Sur l'onglet Ingrédients, le rappel « Minuteurs (n) » ouvre la même sheet. Pas de son ni de
   notification système dans le prototype.
 - **« Démarrer la recette »** : Figma le pose dans une barre fixe pleine largeur. Sur retour de Pierre, le
   code en fait un bouton flottant centré, à la largeur de son texte, avec le halo orange du FAB
-  (`shadow.fab`) : plus de coupure de l'écran. La carte « Étapes » se prolonge sous le bouton jusqu'en bas
-  de l'écran, pour qu'il reste sur fond blanc même en fin de défilement.
+  (`shadow.fab`) : plus de coupure de l'écran. En fin de défilement, la carte « Étapes » s'arrête 16 px
+  sous le bouton, qui reste sur fond blanc, et laisse une bande de fond brun en bas de l'écran.
 - **Icône vin de l'astuce** : 19 px dans Figma, 16 px dans le code (tailles d'icône 14 / 16 / 24).
 - **Nom du créateur souligné** : pas de page créateur dans Figma, le lien ne mène nulle part pour l'instant.
 - **« Modifier avec l'IA »** (menu …) : affiche un toast, prévu avec le chat IA de l'étape 3.
