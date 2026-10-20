@@ -4,6 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
+import { ImportLoading, IMPORT_DURATION } from '@/components/screens/import/ImportLoading';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import {
   AppText,
@@ -33,8 +34,11 @@ import {
   type FilterKey,
   type Filters,
 } from '@/data/recipes';
+import { importedRecipe, type ImportRequest } from '@/data/imports';
 import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space } from '@/theme/tokens';
+
+const NOTEBOOK = require('@/assets/images/illus/notebook.png');
 
 const FILTERS: { key: FilterKey; chip: string; title: string }[] = [
   { key: 'category', chip: 'Catégorie', title: 'Catégorie' },
@@ -55,6 +59,7 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
+  const [importing, setImporting] = useState<ImportRequest | null>(null);
   const [toast, setToast] = useState<string | null>(null);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
@@ -62,6 +67,18 @@ export default function HomeScreen() {
     () => filterRecipes(recipes, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
     [recipes, shownFilter, draft, filters, query],
   );
+
+  // Import simulé : l'écran d'attente reste le temps de voir l'animation, puis la recette s'ouvre.
+  useEffect(() => {
+    if (!importing) return;
+    const id = setTimeout(() => {
+      const recipe = importedRecipe(importing);
+      addRecipe(recipe);
+      setImporting(null);
+      router.push({ pathname: '/recette/[id]', params: { id: recipe.id, importee: '1' } });
+    }, IMPORT_DURATION);
+    return () => clearTimeout(id);
+  }, [importing, addRecipe]);
 
   useEffect(() => {
     if (!toast) return;
@@ -128,7 +145,17 @@ export default function HomeScreen() {
               onPress={() => router.push(`/recette/${recipe.id}`)}
             />
           ))}
-          {results.length === 0 && (
+          {recipes.length === 0 ? (
+            <View style={styles.noRecipe}>
+              <Image source={NOTEBOOK} style={styles.notebook} />
+              <View style={styles.noRecipeTexts}>
+                <AppText variant="headline">Aucune recette</AppText>
+                <AppText color={color.textSecondary} style={styles.noRecipeText}>
+                  Tu n’as encore aucune recette enregistrée. Importe ta première recette avec le bouton + !
+                </AppText>
+              </View>
+            </View>
+          ) : results.length === 0 && (
             <View style={styles.empty}>
               <Icon name="search" color={color.textSecondary} />
               <AppText variant="cardTitle">Aucune recette trouvée</AppText>
@@ -182,12 +209,12 @@ export default function HomeScreen() {
       <ImportSheet
         visible={importOpen}
         onClose={() => setImportOpen(false)}
-        onImported={(recipe) => {
-          addRecipe(recipe);
+        onStart={(request) => {
           setImportOpen(false);
-          router.push({ pathname: '/recette/[id]', params: { id: recipe.id, importee: '1' } });
+          setImporting(request);
         }}
       />
+      <ImportLoading visible={!!importing} onCancel={() => setImporting(null)} />
     </View>
   );
 }
@@ -251,6 +278,24 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     backgroundColor: color.bgPage,
+  },
+  noRecipe: {
+    alignItems: 'center',
+    gap: space[24],
+    paddingTop: space[40],
+  },
+  notebook: {
+    width: 224,
+    height: 204,
+  },
+  noRecipeTexts: {
+    alignItems: 'center',
+    gap: space[16],
+    maxWidth: 309,
+  },
+  noRecipeText: {
+    textAlign: 'center',
+    lineHeight: 24,
   },
   empty: {
     alignItems: 'center',

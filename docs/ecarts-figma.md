@@ -134,10 +134,18 @@ l'icône active de la navbar sur `action/secondary/icon`.
   défilent seules ; « Ouvrir … » ouvre l'app du réseau (ou son site, dans un nouvel onglet sur le web). Le partage
   vers Toqué ne peut pas exister dans le prototype : au retour dans l'app, on fait comme si une publication venait
   d'être partagée. Lien web et photo n'ont pas de maquette : champ de lien avec « Coller » et message d'erreur,
-  appareil photo ou galerie. Puis « Import en cours » (lecture, ingrédients, étapes cochés un à un) et ouverture de
-  la recette importée avec un toast. Chaque mode crée une recette de démo (la photo choisie sert de vignette pour
+  appareil photo ou galerie. Puis l'écran plein écran « Import en cours » (Figma 493:2221) et ouverture de la
+  recette importée avec un toast. Chaque mode crée une recette de démo (la photo choisie sert de vignette pour
   l'import par photo). Icônes réseaux, partage, coller, galerie et coche prises chez Phosphor (famille des icônes
   Figma). La poignée apparaît aussi au-dessus des en-têtes avec flèche retour, comme dans Figma.
+
+- **Import en cours** (Figma 493:2221) : les trois ingrédients tombent l'un après l'autre dans l'assiette et s'y
+  enfoncent, puis la boucle reprend après une pause. L'écran reste un peu plus de 4 s (l'import est simulé).
+  « Annuler » revient à la home sans rien importer. Texte corrigé : « elle sera prête d'ici un instant ! ».
+- **Aucune recette** (Figma 493:2104) : affiché quand la home n'a plus aucune recette ; « Aucune recette trouvée »
+  reste pour une recherche ou des filtres sans résultat. Texte passé au tutoiement comme le reste de l'app :
+  « Tu n'as encore aucune recette enregistrée. Importe ta première recette avec le bouton + ! ».
+- Illustrations exportées de Figma en PNG ×3 (grain compris), dans `assets/images/illus`.
 
 ## Limites connues
 

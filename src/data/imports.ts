@@ -28,10 +28,6 @@ export function normalizeUrl(input: string): string | null {
   return /^https?:\/\/[^/.]+\.[^/]{2,}/i.test(url) ? url : null;
 }
 
-export function domainOf(url: string) {
-  return url.replace(/^https?:\/\/(www\.)?/i, '').split('/')[0];
-}
-
 /**
  * Prototype : pas de vraie lecture de recette. Chaque mode d'import produit une recette de démo,
  * avec la photo choisie comme vignette pour l'import par photo.

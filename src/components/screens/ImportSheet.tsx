@@ -1,66 +1,59 @@
-import { useCallback, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { AppState, Image, Linking, Platform, StyleSheet, View } from 'react-native';
 
 import { AppText, BottomSheet } from '@/components/ui';
-import { importedRecipe, SOCIAL_LINKS, type ImportRequest, type SocialId } from '@/data/imports';
-import { SOURCES, type Recipe } from '@/data/recipes';
+import { SOCIAL_LINKS, type ImportRequest, type SocialId } from '@/data/imports';
+import { SOURCES } from '@/data/recipes';
 import { space } from '@/theme/tokens';
 
-import { ImportProgress } from './import/ImportProgress';
 import { IconOption, ImportOption } from './import/ImportOption';
 import { PhotoImport } from './import/PhotoImport';
 import { SocialImport } from './import/SocialImport';
 import { WebImport } from './import/WebImport';
 
-type Step = 'menu' | 'social' | 'web' | 'photo' | 'progress';
+type Step = 'menu' | 'social' | 'web' | 'photo';
 
 const TITLES: Record<Step, string> = {
   menu: 'Importer une recette',
   social: 'Importer via',
   web: 'Importer via un lien',
   photo: 'Importer via une photo',
-  progress: 'Import en cours',
 };
 
 type ImportSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Recette prête, une fois la lecture simulée terminée. */
-  onImported: (recipe: Recipe) => void;
+  /** Lien, publication ou photo choisi : la sheet se ferme et l'écran « Import en cours » prend le relais. */
+  onStart: (request: ImportRequest) => void;
 };
 
 const SOCIAL_LOGOS = (['facebook', 'instagram', 'tiktok'] as const).map((id) => SOURCES.find((s) => s.id === id)!);
 
 /**
- * Figma : « Bottom Sheet/ Import » (premier écran) et « Bottom Sheet/ Import/ RS ». Le lien web, la photo
- * et l'import en cours n'ont pas de maquette. Tout se passe dans la même sheet, la flèche revient au début.
+ * Figma : « Bottom Sheet/ Import » (premier écran) et « Bottom Sheet/ Import/ RS ». Le lien web et la photo
+ * n'ont pas de maquette. Tout se passe dans la même sheet, la flèche revient au début.
  */
-export function ImportSheet({ visible, onClose, onImported }: ImportSheetProps) {
+export function ImportSheet({ visible, onClose, onStart }: ImportSheetProps) {
   const [view, setView] = useState<Step>('menu');
   const [network, setNetwork] = useState<SocialId>('instagram');
-  const [request, setRequest] = useState<ImportRequest | null>(null);
   const awaitingShare = useRef<SocialId | null>(null);
 
   // La sheet repart du premier écran à chaque ouverture, pas à la fermeture : son contenu reste pendant
   // l'animation.
-  const open = useRef(visible);
-  open.current = visible;
   useEffect(() => {
     if (visible) setView('menu');
     else awaitingShare.current = null;
   }, [visible]);
 
-  const start = (next: ImportRequest) => {
-    setRequest(next);
-    setView('progress');
-  };
+  const latestStart = useRef(onStart);
+  latestStart.current = onStart;
 
   // Prototype : le partage depuis le réseau ne peut pas revenir dans l'app. Au retour dans Toqué après avoir
   // ouvert le réseau, on fait comme si une publication venait d'être partagée.
   useEffect(() => {
     const sub = AppState.addEventListener('change', (state) => {
       if (state !== 'active' || !awaitingShare.current) return;
-      start({ method: 'social', network: awaitingShare.current });
+      latestStart.current({ method: 'social', network: awaitingShare.current });
       awaitingShare.current = null;
     });
     return () => sub.remove();
@@ -74,12 +67,7 @@ export function ImportSheet({ visible, onClose, onImported }: ImportSheetProps) 
     await Linking.openURL(app).catch(() => Linking.openURL(web));
   };
 
-  const finish = useCallback(() => {
-    // Sheet fermée pendant la lecture : l'import est abandonné.
-    if (request && open.current) onImported(importedRecipe(request));
-  }, [request, onImported]);
-
-  const back = view === 'menu' || view === 'progress' ? undefined : () => setView('menu');
+  const back = view === 'menu' ? undefined : () => setView('menu');
 
   return (
     <BottomSheet visible={visible} onClose={onClose} title={TITLES[view]} onBack={back}>
@@ -100,9 +88,8 @@ export function ImportSheet({ visible, onClose, onImported }: ImportSheetProps) 
         </View>
       )}
       {view === 'social' && <SocialImport network={network} onNetworkChange={setNetwork} onOpen={openNetwork} />}
-      {view === 'web' && <WebImport onImport={(url) => start({ method: 'web', url })} />}
-      {view === 'photo' && <PhotoImport onImport={(uri) => start({ method: 'photo', uri })} />}
-      {view === 'progress' && request && <ImportProgress request={request} onDone={finish} />}
+      {view === 'web' && <WebImport onImport={(url) => onStart({ method: 'web', url })} />}
+      {view === 'photo' && <PhotoImport onImport={(uri) => onStart({ method: 'photo', uri })} />}
     </BottomSheet>
   );
 }

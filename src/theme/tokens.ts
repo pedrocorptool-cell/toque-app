@@ -139,6 +139,8 @@ export const text = {
   display: { fontFamily: font.display, fontSize: 40, lineHeight: 44, letterSpacing: 0.8, textTransform: 'uppercase' },
   title: { fontFamily: font.medium, fontSize: 20 },
   cardTitle: { fontFamily: font.medium, fontSize: 18 },
+  /** Titre des écrans vides et d'attente (« Aucune recette », « Import en cours »). */
+  headline: { fontFamily: font.medium, fontSize: 24, lineHeight: 32 },
   body: { fontFamily: font.regular, fontSize: 16 },
   button: { fontFamily: font.regular, fontSize: 16, lineHeight: 24 },
   label: { fontFamily: font.regular, fontSize: 14 },
