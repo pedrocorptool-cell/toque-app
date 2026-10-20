@@ -2,17 +2,17 @@ import { useEffect, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText, BottomSheet, Button, ColorDot, FilterOptions } from '@/components/ui';
-import { CATEGORIES } from '@/data/recipes';
+import { toHashtag, type CategoryId } from '@/data/recipes';
+import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space, text } from '@/theme/tokens';
-
-type Category = { id: string; label: string; dot: string };
 
 type SaveSheetProps = {
   visible: boolean;
   onClose: () => void;
   /** Catégories de la recette au moment de l'ouverture. */
-  initial: string[];
-  onSave: (labels: string[]) => void;
+  initial: CategoryId[];
+  /** Catégories cochées ; aucune = recette retirée de toutes ses catégories. */
+  onSave: (ids: CategoryId[]) => void;
 };
 
 /** Figma : « Créer une catégorie » — pastilles proposées. */
@@ -29,7 +29,7 @@ const SWATCHES = [
 
 /** Figma : « Enregistrer » et son sous-écran « Créer une catégorie ». */
 export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps) {
-  const [categories, setCategories] = useState<Category[]>(CATEGORIES);
+  const { categories, addCategory } = useRecipes();
   const [selected, setSelected] = useState<string[]>(initial);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
@@ -50,7 +50,7 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
 
   const createCategory = () => {
     const id = `custom-${Date.now()}`;
-    setCategories([...categories, { id, label: name.trim(), dot: swatch }]);
+    addCategory({ id, label: name.trim(), hashtag: toHashtag(name.trim()), dot: swatch });
     setSelected([...selected, id]);
     setCreating(false);
   };
@@ -105,7 +105,7 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
           block
           icon="bookmark"
           label="Enregistrer"
-          onPress={() => onSave(categories.filter((c) => selected.includes(c.id)).map((c) => c.label))}
+          onPress={() => onSave(selected)}
         />
       }>
       <AppText variant="overline" color={color.textSecondary} style={styles.overline}>

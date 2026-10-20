@@ -71,6 +71,11 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`) et la
   pastille blanche glisse d'un onglet à l'autre (250 ms).
 
+- **Catégories enregistrées** (pas de maquette) : quand la recette est classée, « Enregistrer » laisse place à ses
+  hashtags (14 px, 2 lignes au plus puis « … »), « Plat principal » compris (#Platprincipal). Les toucher rouvre la
+  sheet « Enregistrer » ; tout décocher fait revenir « Enregistrer ». Les catégories créées dans la sheet sont
+  partagées avec la home (filtres, hashtags des cartes) jusqu'au redémarrage.
+
 ## Mode étape par étape (étape 3)
 
 - Ouvert par « Démarrer la recette ». Figma : « Recette/ Stepp/ Minuteur off / on ». Transition proposée par

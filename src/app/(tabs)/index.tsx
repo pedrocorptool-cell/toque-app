@@ -21,7 +21,7 @@ import {
   type FilterOption,
 } from '@/components/ui';
 import {
-  CATEGORIES,
+  type Category,
   CREATORS,
   DURATIONS,
   EMPTY_FILTERS,
@@ -52,7 +52,7 @@ const IMPORT_LABEL: Record<ImportMethod, string> = {
 /** Figma : écran « Home » — liste des recettes, recherche et filtres. */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { recipes } = useRecipes();
+  const { recipes, categories } = useRecipes();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
@@ -129,7 +129,7 @@ export default function HomeScreen() {
               title={recipe.title}
               image={recipe.image}
               duration={`${recipe.duration}mn`}
-              hashtags={hashtagsOf(recipe)}
+              hashtags={hashtagsOf(recipe, categories)}
               creator={creatorOf(recipe)}
               onPress={() => router.push(`/recette/${recipe.id}`)}
             />
@@ -178,7 +178,7 @@ export default function HomeScreen() {
           setOpenFilter(null);
         }}>
         <FilterOptions
-          options={optionsFor(shownFilter, creatorQuery)}
+          options={optionsFor(shownFilter, creatorQuery, categories)}
           selected={draft[shownFilter] as string[]}
           onChange={setDraftValues(shownFilter)}
           emptyLabel="Aucun créateur ne correspond."
@@ -197,10 +197,10 @@ export default function HomeScreen() {
   );
 }
 
-function optionsFor(key: FilterKey, creatorQuery: string): FilterOption<string>[] {
+function optionsFor(key: FilterKey, creatorQuery: string, categories: Category[]): FilterOption<string>[] {
   switch (key) {
     case 'category':
-      return CATEGORIES.map((c) => ({ id: c.id, label: c.label, leading: <ColorDot color={c.dot} /> }));
+      return categories.map((c) => ({ id: c.id, label: c.label, leading: <ColorDot color={c.dot} /> }));
     case 'creator':
       return CREATORS.filter((c) => matchesText(c.label, creatorQuery)).map((c) => ({
         id: c.id,

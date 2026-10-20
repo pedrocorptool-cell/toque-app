@@ -5,7 +5,8 @@ import { color } from '@/theme/tokens';
 
 /** Données fictives du prototype : rien n'est encore relié à un back-end. */
 
-export type CategoryId = 'plat' | 'dessert' | 'vege' | 'cheat';
+/** Catégories de départ, plus celles créées depuis la sheet « Enregistrer » (`custom-…`). */
+export type CategoryId = string;
 export type CreatorId = 'marmiton' | 'whoogys' | 'etchebest' | 'jow';
 export type DurationId = '0-10' | '10-20' | '20-30' | '30-60' | '60+';
 export type SourceId = 'instagram' | 'facebook' | 'tiktok' | 'photo' | 'web';
@@ -43,7 +44,15 @@ export type Step = {
 const PASTA = require('@/assets/images/demo/pasta.jpg');
 const NAAN = require('@/assets/images/demo/naan.jpg');
 
-export const CATEGORIES: { id: CategoryId; label: string; hashtag?: string; dot: string }[] = [
+export type Category = {
+  id: CategoryId;
+  label: string;
+  /** Affiché sur les cartes de la home ; « Plat principal » n'en a pas dans Figma. */
+  hashtag?: string;
+  dot: string;
+};
+
+export const CATEGORIES: Category[] = [
   { id: 'plat', label: 'Plat principal', dot: color.accentBlue },
   { id: 'dessert', label: 'Dessert', hashtag: '#Dessert', dot: color.accentOrange },
   { id: 'vege', label: 'Végé', hashtag: '#Végé', dot: color.accentGreen },
@@ -254,9 +263,24 @@ export function formatIngredient(ingredient: Ingredient, servings: number, base:
   return `${String(qty).replace('.', ',')} ${ingredient.name}`;
 }
 
-export function hashtagsOf(recipe: Recipe) {
-  const tags = CATEGORIES.filter((c) => c.hashtag && recipe.categories.includes(c.id)).map((c) => c.hashtag);
+/** Hashtags des cartes de la home. */
+export function hashtagsOf(recipe: Recipe, categories: Category[] = CATEGORIES) {
+  const tags = categories.filter((c) => c.hashtag && recipe.categories.includes(c.id)).map((c) => c.hashtag);
   return tags.length ? tags.sort().join(' ') : undefined;
+}
+
+/** « Cheat Meal » → « #Cheatmeal », dans le style des hashtags de Figma. */
+export function toHashtag(label: string) {
+  const word = label.replace(/\s+/g, '').toLowerCase();
+  return `#${word.charAt(0).toUpperCase()}${word.slice(1)}`;
+}
+
+/** Toutes les catégories où la recette est enregistrée, « Plat principal » compris. */
+export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
+  return categories
+    .filter((c) => recipe.categories.includes(c.id))
+    .map((c) => c.hashtag ?? toHashtag(c.label))
+    .join(' ');
 }
 
 export function creatorOf(recipe: Recipe) {

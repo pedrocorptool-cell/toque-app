@@ -23,7 +23,7 @@ import {
   TimerWidget,
   Toast,
 } from '@/components/ui';
-import { CREATORS, formatIngredient, type Recipe } from '@/data/recipes';
+import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -49,7 +49,7 @@ const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { recipes, removeRecipe, addToShoppingList } = useRecipes();
+  const { recipes, removeRecipe, addToShoppingList, categories, setRecipeCategories } = useRecipes();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -115,6 +115,7 @@ export default function RecipeScreen() {
   }
 
   const creator = CREATORS.find((c) => c.id === recipe.creator)!;
+  const saved = savedHashtagsOf(recipe, categories);
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
   const timers = allTimers.filter((t) => t.recipeId === recipe.id).sort((x, y) => x.step - y.step);
@@ -183,12 +184,27 @@ export default function RecipeScreen() {
             </AppText>
           </View>
           <View style={styles.divider} />
+          {/* Recette déjà classée : ses catégories remplacent « Enregistrer » et ouvrent la même sheet. */}
           <Pressable
             accessibilityRole="button"
+            accessibilityLabel={saved ? `Modifier les catégories : ${saved}` : undefined}
             onPress={() => setSaveOpen(true)}
             style={({ pressed }) => [styles.half, pressed && styles.pressed]}>
-            <Icon name="bookmark" color={color.textOnBrandPrimary} />
-            <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
+            <View style={styles.fixed}>
+              <Icon name="bookmark" color={color.textOnBrandPrimary} />
+            </View>
+            {saved ? (
+              <AppText
+                variant="label"
+                color={color.textOnBrandPrimary}
+                numberOfLines={2}
+                ellipsizeMode="tail"
+                style={styles.hashtags}>
+                {saved}
+              </AppText>
+            ) : (
+              <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
+            )}
           </Pressable>
         </View>
 
@@ -340,9 +356,13 @@ export default function RecipeScreen() {
         visible={saveOpen}
         onClose={() => setSaveOpen(false)}
         initial={recipe.categories}
-        onSave={(labels) => {
+        onSave={(ids) => {
           setSaveOpen(false);
-          setToast(labels.length ? `Recette enregistrée dans ${labels.join(', ')}` : 'Recette enregistrée');
+          setRecipeCategories(recipe.id, ids);
+          const labels = categories.filter((c) => ids.includes(c.id)).map((c) => c.label);
+          setToast(
+            labels.length ? `Recette enregistrée dans ${labels.join(', ')}` : 'Recette retirée de tes catégories',
+          );
         }}
       />
 
@@ -439,6 +459,13 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderBottomWidth: 1,
     borderColor: color.borderOnBrand,
+  },
+  fixed: {
+    flexShrink: 0,
+  },
+  hashtags: {
+    flexShrink: 1,
+    lineHeight: 18,
   },
   half: {
     flex: 1,
