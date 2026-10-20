@@ -77,6 +77,8 @@ export function ToBuyRow(props: ToBuyRowProps) {
           accessibilityRole="button"
           accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}
           onPress={props.onRemove}
+          // Sur le web, l'appui ferait perdre le focus au champ, et la croix disparaîtrait avant le clic.
+          {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
           hitSlop={space[8]}>
           <Icon name="close" color={color.textPrimary} />
         </Pressable>
