@@ -13,6 +13,7 @@ import { useEffect } from 'react';
 
 import { TimerAlert } from '@/components/screens/TimerAlert';
 import { RecipesProvider } from '@/data/RecipesContext';
+import { ShoppingProvider } from '@/data/ShoppingContext';
 import { TimersProvider } from '@/data/TimersContext';
 import { color } from '@/theme/tokens';
 
@@ -35,18 +36,20 @@ export default function RootLayout() {
 
   return (
     <RecipesProvider>
-      <TimersProvider>
-        <StatusBar style="light" />
-        <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }}>
-          {/* Le mode étape par étape s'ouvre par-dessus la fiche, sur fond transparent : il anime lui-même
-              la photo et le flou de la fiche jusqu'à leur place (voir pas-a-pas/[id].tsx). */}
-          <Stack.Screen
-            name="pas-a-pas/[id]"
-            options={{ presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }}
-          />
-        </Stack>
-        <TimerAlert />
-      </TimersProvider>
+      <ShoppingProvider>
+        <TimersProvider>
+          <StatusBar style="light" />
+          <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }}>
+            {/* Le mode étape par étape s'ouvre par-dessus la fiche, sur fond transparent : il anime lui-même
+                la photo et le flou de la fiche jusqu'à leur place (voir pas-a-pas/[id].tsx). */}
+            <Stack.Screen
+              name="pas-a-pas/[id]"
+              options={{ presentation: 'transparentModal', animation: 'none', contentStyle: { backgroundColor: 'transparent' } }}
+            />
+          </Stack>
+          <TimerAlert />
+        </TimersProvider>
+      </ShoppingProvider>
     </RecipesProvider>
   );
 }

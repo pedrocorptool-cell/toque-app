@@ -2,9 +2,6 @@ import { createContext, useContext, useMemo, useState, type ReactNode } from 're
 
 import { CATEGORIES, RECIPES, type Category, type CategoryId, type Recipe } from './recipes';
 
-/** Article de la liste de courses : ingrédient déjà mis à l'échelle (« 300 g de rigatoni »). */
-export type ShoppingItem = { label: string; recipeId: string };
-
 type RecipesState = {
   recipes: Recipe[];
   removeRecipe: (id: string) => void;
@@ -14,8 +11,6 @@ type RecipesState = {
   setRecipeCategories: (id: string, categories: CategoryId[]) => void;
   /** Remplace la vignette par la photo du plat prise en fin de recette. */
   setRecipeImage: (id: string, uri: string) => void;
-  shoppingList: ShoppingItem[];
-  addToShoppingList: (items: ShoppingItem[]) => void;
 };
 
 const RecipesContext = createContext<RecipesState | null>(null);
@@ -23,7 +18,6 @@ const RecipesContext = createContext<RecipesState | null>(null);
 /** État partagé du prototype, en mémoire : tout revient à zéro au redémarrage de l'app. */
 export function RecipesProvider({ children }: { children: ReactNode }) {
   const [recipes, setRecipes] = useState(RECIPES);
-  const [shoppingList, setShoppingList] = useState<ShoppingItem[]>([]);
   const [categories, setCategories] = useState(CATEGORIES);
 
   const value = useMemo<RecipesState>(
@@ -35,11 +29,8 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       setRecipeCategories: (id, ids) =>
         setRecipes((list) => list.map((r) => (r.id === id ? { ...r, categories: ids } : r))),
       setRecipeImage: (id, uri) => setRecipes((list) => list.map((r) => (r.id === id ? { ...r, image: { uri } } : r))),
-      shoppingList,
-      addToShoppingList: (items) =>
-        setShoppingList((list) => [...list, ...items.filter((i) => !list.some((l) => l.label === i.label))]),
     }),
-    [recipes, shoppingList, categories],
+    [recipes, categories],
   );
 
   return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;

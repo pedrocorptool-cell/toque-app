@@ -102,7 +102,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Nom du créateur souligné** : pas de page créateur dans Figma, le lien ne mène nulle part pour l'instant.
 - **« Modifier avec l'IA »** (menu …) : affiche un toast, prévu avec le chat IA de l'étape 3.
 - **Liste de courses** : toutes les cases sont cochées à l'ouverture, les quantités suivent le nombre de
-  parts choisi. Les articles sont gardés en mémoire pour l'onglet Liste, pas encore affichés.
+  parts choisi. Les articles cochés s'ajoutent à l'onglet Liste (sans doublon parmi ceux encore à acheter).
 - **Suppression** : la recette disparaît de la home jusqu'au redémarrage de l'app (données en mémoire).
 
 - **Minuteurs lancés** (maquette d'exploration 442:849) : une fois lancé, le minuteur quitte l'étape et devient une
@@ -120,6 +120,12 @@ l'icône active de la navbar sur `action/secondary/icon`.
   autres titres (Avoin Demo dans Figma). Le timbre est dessiné en SVG (masque de trous de 12 px tous les 24 px).
   Ajouts au DS : `Button` variante `secondary` (blanc, libellé orange), `TextButton` ton `onBrand`, police Kalam
   pour « Fais maison! ».
+
+- **Onglet Liste** (Figma 244:3444) : cinq articles de démo au lancement. Toucher un article le modifie sur place
+  (croix pour le supprimer, « Entrée » crée l'article suivant, un article laissé vide disparaît). Cocher l'envoie en
+  haut des articles cochés, décocher le remet en bas de la liste. La poignée déplace l'article (glisser vertical).
+  Ajouts hors maquette : confirmation avant « Tout supprimer », texte de liste vide, « Tout supprimer » masqué
+  quand la liste est vide.
 
 ## Limites connues
 

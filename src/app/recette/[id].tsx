@@ -25,6 +25,7 @@ import {
 } from '@/components/ui';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
+import { useShopping } from '@/data/ShoppingContext';
 import { isDone, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
@@ -49,7 +50,8 @@ const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
   const { id } = useLocalSearchParams<{ id: string }>();
-  const { recipes, removeRecipe, addToShoppingList, categories, setRecipeCategories } = useRecipes();
+  const { recipes, removeRecipe, categories, setRecipeCategories } = useRecipes();
+  const { addFromRecipe } = useShopping();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
 
@@ -366,7 +368,7 @@ export default function RecipeScreen() {
         onClose={() => setShoppingOpen(false)}
         items={ingredients}
         onAdd={(selected) => {
-          addToShoppingList(selected.map((label) => ({ label, recipeId: recipe.id })));
+          addFromRecipe(selected, recipe.id);
           setShoppingOpen(false);
           setToast(
             selected.length > 1
