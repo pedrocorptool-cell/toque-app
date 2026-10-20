@@ -12,6 +12,8 @@ export const ROW_PITCH = 24 + space[16];
 type ToBuyRowProps = {
   item: ShoppingItem;
   focused: boolean;
+  /** Faux pour la ligne vierge d'une liste vide : pas de croix. */
+  removable: boolean;
   /** Différent de 0 quand la ligne doit passer en saisie ; une nouvelle valeur la refocalise. */
   focusRequest: number;
   /** Décalage de la ligne pendant qu'une autre est déplacée (± une ligne), ou position de celle qu'on déplace. */
@@ -73,7 +75,7 @@ export function ToBuyRow(props: ToBuyRowProps) {
         selectionColor={color.textPrimary}
         style={styles.input}
       />
-      {focused && (
+      {focused && props.removable && (
         <Pressable
           accessibilityRole="button"
           accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}

@@ -125,8 +125,10 @@ l'icône active de la navbar sur `action/secondary/icon`.
   (croix pour le supprimer, la saisie passe alors à la ligne du dessous, ou du dessus pour la dernière ;
   « Entrée » crée l'article suivant, un article laissé vide disparaît). Cocher l'envoie en
   haut des articles cochés, décocher le remet en bas de la liste. La poignée déplace l'article (glisser vertical).
-  Ajouts hors maquette : confirmation avant « Tout supprimer », texte de liste vide, « Tout supprimer » masqué
-  quand la liste est vide.
+  Pas d'écran vide : sans article à acheter, une ligne vierge « Nouvel article » attend la saisie (sans croix,
+  « Ajouter » masqué). Elle passe en saisie, clavier ouvert, à l'arrivée sur l'onglet et après « Tout supprimer »,
+  pas quand on coche le dernier article. Une ligne vierge ne se coche pas. Ajouts hors maquette : confirmation
+  avant « Tout supprimer », masqué quand il n'y a rien à supprimer.
 
 ## Limites connues
 

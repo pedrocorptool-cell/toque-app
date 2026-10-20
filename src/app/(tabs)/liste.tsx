@@ -1,4 +1,5 @@
-import { useRef, useState } from 'react';
+import { useFocusEffect } from 'expo-router';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import {
   Animated,
   Keyboard,
@@ -66,15 +67,42 @@ export default function ListeScreen() {
 
   const startNewItem = () => requestFocus(addItem());
 
+  // Pas d'écran vide : sans article à acheter, une ligne vierge attend la saisie. Elle passe en saisie, clavier
+  // ouvert, quand on arrive sur l'onglet ou après « Tout supprimer », pas quand on coche le dernier article.
+  const blankId = toBuy.length === 1 && !toBuy[0].label.trim() ? toBuy[0].id : null;
+  const focusBlank = useRef(false);
+  const [arrival, setArrival] = useState(0);
+  useEffect(() => {
+    if (toBuy.length === 0) addItem();
+  }, [toBuy.length, addItem]);
+  useFocusEffect(
+    useCallback(() => {
+      focusBlank.current = true;
+      setArrival((n) => n + 1);
+      return () => {
+        focusBlank.current = false;
+      };
+    }, []),
+  );
+  useEffect(() => {
+    if (!focusBlank.current) return;
+    if (blankId) requestFocus(blankId);
+    if (blankId || toBuy.length > 0) focusBlank.current = false;
+  }, [arrival, blankId, toBuy.length]);
+
   /** La croix supprime la ligne et passe la saisie à celle du dessous (du dessus pour la dernière). */
   const removeAndFocusNext = (index: number) => {
     const next = toBuy[index + 1] ?? toBuy[index - 1];
+    if (!next) {
+      // Dernier article : la ligne se vide et reste en saisie.
+      rename(toBuy[index].id, '');
+      return;
+    }
     remove(toBuy[index].id);
-    if (next) requestFocus(next.id);
-    else Keyboard.dismiss();
+    requestFocus(next.id);
   };
 
-  const count = toBuy.length;
+  const count = toBuy.filter((i) => i.label.trim()).length;
 
   return (
     <View style={styles.screen}>
@@ -98,7 +126,7 @@ export default function ListeScreen() {
               <AppText variant="overline" color={color.textSecondary}>
                 {`${count} article${count > 1 ? 's' : ''}`}
               </AppText>
-              {items.length > 0 && (
+              {(count > 0 || checked.length > 0) && (
                 <Pressable
                   accessibilityRole="button"
                   onPress={() => setClearOpen(true)}
@@ -110,27 +138,22 @@ export default function ListeScreen() {
               )}
             </View>
 
-            {items.length === 0 && (
-              <AppText color={color.textSecondary}>
-                Ta liste est vide. Ajoute un article ici, ou depuis les ingrédients d’une recette.
-              </AppText>
-            )}
-
             {toBuy.map((item, index) => (
               <ToBuyRow
                 key={item.id}
                 item={item}
                 focused={focusedId === item.id}
+                removable={item.id !== blankId}
                 focusRequest={focusRequest?.id === item.id ? focusRequest.n : 0}
                 dragging={drag?.id === item.id}
                 offset={drag?.id === item.id ? dragY : shiftOf(index)}
-                onToggle={() => toggle(item.id)}
+                onToggle={() => item.label.trim() && toggle(item.id)}
                 onRename={(label) => rename(item.id, label)}
                 onFocus={() => setFocusedId(item.id)}
                 onBlur={() => {
                   setFocusedId((id) => (id === item.id ? null : id));
-                  // Un article laissé vide disparaît.
-                  if (!item.label.trim()) remove(item.id);
+                  // Un article laissé vide disparaît, sauf la ligne vierge d'une liste vide.
+                  if (!item.label.trim() && toBuy.length > 1) remove(item.id);
                 }}
                 onSubmit={() => (item.label.trim() ? startNewItem() : Keyboard.dismiss())}
                 onRemove={() => removeAndFocusNext(index)}
@@ -140,13 +163,15 @@ export default function ListeScreen() {
               />
             ))}
 
-            <Pressable
-              accessibilityRole="button"
-              onPress={startNewItem}
-              style={({ pressed }) => [styles.add, pressed && styles.pressed]}>
-              <Icon name="plus" color={color.textPrimary} />
-              <AppText>Ajouter</AppText>
-            </Pressable>
+            {!blankId && (
+              <Pressable
+                accessibilityRole="button"
+                onPress={startNewItem}
+                style={({ pressed }) => [styles.add, pressed && styles.pressed]}>
+                <Icon name="plus" color={color.textPrimary} />
+                <AppText>Ajouter</AppText>
+              </Pressable>
+            )}
           </View>
 
           {checked.length > 0 && (
@@ -177,6 +202,11 @@ export default function ListeScreen() {
         onConfirm={() => {
           setClearOpen(false);
           clear();
+          // Après la fermeture du dialogue, qui rend sinon le focus au bouton « Tout supprimer ».
+          setTimeout(() => {
+            focusBlank.current = true;
+            setArrival((n) => n + 1);
+          }, 300);
         }}
       />
     </View>
