@@ -71,6 +71,8 @@ export default function ListeScreen() {
   // ouvert, quand on arrive sur l'onglet ou après « Tout supprimer », pas quand on coche le dernier article.
   const blankId = toBuy.length === 1 && !toBuy[0].label.trim() ? toBuy[0].id : null;
   const focusBlank = useRef(false);
+  const latestToBuy = useRef(toBuy);
+  latestToBuy.current = toBuy;
   const [arrival, setArrival] = useState(0);
   useEffect(() => {
     if (toBuy.length === 0) addItem();
@@ -81,6 +83,8 @@ export default function ListeScreen() {
       setArrival((n) => n + 1);
       return () => {
         focusBlank.current = false;
+        // Les lignes laissées vierges disparaissent quand on quitte l'onglet.
+        latestToBuy.current.filter((i) => !i.label.trim()).forEach((i) => remove(i.id));
       };
     }, []),
   );
@@ -150,11 +154,7 @@ export default function ListeScreen() {
                 onToggle={() => item.label.trim() && toggle(item.id)}
                 onRename={(label) => rename(item.id, label)}
                 onFocus={() => setFocusedId(item.id)}
-                onBlur={() => {
-                  setFocusedId((id) => (id === item.id ? null : id));
-                  // Un article laissé vide disparaît, sauf la ligne vierge d'une liste vide.
-                  if (!item.label.trim() && toBuy.length > 1) remove(item.id);
-                }}
+                onBlur={() => setFocusedId((id) => (id === item.id ? null : id))}
                 onSubmit={() => (item.label.trim() ? startNewItem() : Keyboard.dismiss())}
                 onRemove={() => removeAndFocusNext(index)}
                 onDragStart={() => startDrag(item.id, index)}
@@ -163,15 +163,13 @@ export default function ListeScreen() {
               />
             ))}
 
-            {!blankId && (
-              <Pressable
-                accessibilityRole="button"
-                onPress={startNewItem}
-                style={({ pressed }) => [styles.add, pressed && styles.pressed]}>
-                <Icon name="plus" color={color.textPrimary} />
-                <AppText>Ajouter</AppText>
-              </Pressable>
-            )}
+            <Pressable
+              accessibilityRole="button"
+              onPress={startNewItem}
+              style={({ pressed }) => [styles.add, pressed && styles.pressed]}>
+              <Icon name="plus" color={color.textPrimary} />
+              <AppText>Ajouter</AppText>
+            </Pressable>
           </View>
 
           {checked.length > 0 && (
