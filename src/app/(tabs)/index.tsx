@@ -145,24 +145,25 @@ export default function HomeScreen() {
               onPress={() => router.push(`/recette/${recipe.id}`)}
             />
           ))}
-          {recipes.length === 0 ? (
+          {results.length === 0 && (
             <View style={styles.noRecipe}>
               <Image source={NOTEBOOK} style={styles.notebook} />
-              <View style={styles.noRecipeTexts}>
-                <AppText variant="headline">Aucune recette</AppText>
-                <AppText color={color.textSecondary} style={styles.noRecipeText}>
-                  Tu n’as encore aucune recette enregistrée. Importe ta première recette avec le bouton + !
-                </AppText>
-              </View>
-            </View>
-          ) : results.length === 0 && (
-            <View style={styles.empty}>
-              <Icon name="search" color={color.textSecondary} />
-              <AppText variant="cardTitle">Aucune recette trouvée</AppText>
-              <AppText color={color.textSecondary} style={styles.emptyText}>
-                Essaie un autre mot ou retire un filtre.
-              </AppText>
-              <TextButton label="Tout effacer" onPress={resetAll} />
+              {recipes.length === 0 ? (
+                <View style={styles.noRecipeTexts}>
+                  <AppText variant="headline">Aucune recette</AppText>
+                  <AppText color={color.textSecondary} style={styles.noRecipeText}>
+                    Tu n’as encore aucune recette enregistrée. Importe ta première recette avec le bouton + !
+                  </AppText>
+                </View>
+              ) : (
+                <View style={styles.noRecipeTexts}>
+                  <AppText variant="headline">Aucune recette trouvée</AppText>
+                  <AppText color={color.textSecondary} style={styles.noRecipeText}>
+                    Aucune de tes recettes ne correspond. Essaie un autre mot ou retire un filtre.
+                  </AppText>
+                  <TextButton label="Tout effacer" onPress={resetAll} />
+                </View>
+              )}
             </View>
           )}
         </View>
@@ -296,15 +297,6 @@ const styles = StyleSheet.create({
   noRecipeText: {
     textAlign: 'center',
     lineHeight: 24,
-  },
-  empty: {
-    alignItems: 'center',
-    gap: space[8],
-    paddingVertical: space[48],
-  },
-  emptyText: {
-    textAlign: 'center',
-    marginBottom: space[8],
   },
   fab: {
     position: 'absolute',

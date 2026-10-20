@@ -142,8 +142,9 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Import en cours** (Figma 493:2221) : les trois ingrédients tombent l'un après l'autre dans l'assiette et s'y
   enfoncent, puis la boucle reprend après une pause. L'écran reste un peu plus de 4 s (l'import est simulé).
   « Annuler » revient à la home sans rien importer. Texte corrigé : « elle sera prête d'ici un instant ! ».
-- **Aucune recette** (Figma 493:2104) : affiché quand la home n'a plus aucune recette ; « Aucune recette trouvée »
-  reste pour une recherche ou des filtres sans résultat. Texte passé au tutoiement comme le reste de l'app :
+- **Aucune recette** (Figma 493:2104) : affiché quand la home n'a plus aucune recette. Même illustration pour une
+  recherche ou des filtres sans résultat : « Aucune recette trouvée », « Aucune de tes recettes ne correspond.
+  Essaie un autre mot ou retire un filtre. » et « Tout effacer ». Texte passé au tutoiement comme le reste de l'app :
   « Tu n'as encore aucune recette enregistrée. Importe ta première recette avec le bouton + ! ».
 - Illustrations exportées de Figma en PNG ×3 (grain compris), dans `assets/images/illus`.
 
