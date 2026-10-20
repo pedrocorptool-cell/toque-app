@@ -56,7 +56,7 @@ export const CATEGORIES: Category[] = [
   { id: 'plat', label: 'Plat principal', dot: color.accentBlue },
   { id: 'dessert', label: 'Dessert', hashtag: '#Dessert', dot: color.accentOrange },
   { id: 'vege', label: 'Végé', hashtag: '#Végé', dot: color.accentGreen },
-  { id: 'cheat', label: 'Cheat Meal', hashtag: '#Cheatmeal', dot: color.accentCreme },
+  { id: 'cheat', label: 'Cheat Meal', hashtag: '#CheatMeal', dot: color.accentCreme },
 ];
 
 export const CREATORS: { id: CreatorId; label: string; avatar: ImageSourcePropType }[] = [
@@ -269,18 +269,18 @@ export function hashtagsOf(recipe: Recipe, categories: Category[] = CATEGORIES) 
   return tags.length ? tags.sort().join(' ') : undefined;
 }
 
-/** « Cheat Meal » → « #Cheatmeal », dans le style des hashtags de Figma. */
+/** « Cheat Meal » → « #CheatMeal ». */
 export function toHashtag(label: string) {
-  const word = label.replace(/\s+/g, '').toLowerCase();
-  return `#${word.charAt(0).toUpperCase()}${word.slice(1)}`;
+  return `#${label
+    .split(/\s+/)
+    .map((word) => word.charAt(0).toUpperCase() + word.slice(1))
+    .join('')}`;
 }
 
-/** Toutes les catégories où la recette est enregistrée, « Plat principal » compris. */
+/** Catégories de la recette sur la fiche : comme sur la home, « Plat principal » seulement s'il est seul. */
 export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
-  return categories
-    .filter((c) => recipe.categories.includes(c.id))
-    .map((c) => c.hashtag ?? toHashtag(c.label))
-    .join(' ');
+  const saved = categories.filter((c) => recipe.categories.includes(c.id));
+  return hashtagsOf(recipe, categories) ?? saved.map((c) => c.hashtag ?? toHashtag(c.label)).join(' ');
 }
 
 export function creatorOf(recipe: Recipe) {

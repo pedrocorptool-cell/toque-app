@@ -194,12 +194,7 @@ export default function RecipeScreen() {
               <Icon name="bookmark" color={color.textOnBrandPrimary} />
             </View>
             {saved ? (
-              <AppText
-                variant="label"
-                color={color.textOnBrandPrimary}
-                numberOfLines={2}
-                ellipsizeMode="tail"
-                style={styles.hashtags}>
+              <AppText color={color.textOnBrandPrimary} numberOfLines={1} style={styles.hashtags}>
                 {saved}
               </AppText>
             ) : (
@@ -465,7 +460,6 @@ const styles = StyleSheet.create({
   },
   hashtags: {
     flexShrink: 1,
-    lineHeight: 18,
   },
   half: {
     flex: 1,

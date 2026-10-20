@@ -167,7 +167,7 @@ export default function DesignSystemScreen() {
         <Section title="Carte recette">
           <View style={styles.rowStart}>
             <Tag label="20mn" />
-            <Tag label="#Cheatmeal #Végé" />
+            <Tag label="#CheatMeal #Végé" />
             <ChefTag />
           </View>
           <Creator name="Whoogy’s" avatar={require('@/assets/images/demo/av_whoogys.png')} />
@@ -175,7 +175,7 @@ export default function DesignSystemScreen() {
             title="Pasta alla zozzona"
             image={require('@/assets/images/demo/pasta.jpg')}
             duration="20mn"
-            hashtags="#Cheatmeal #Végé"
+            hashtags="#CheatMeal #Végé"
             creator={{ name: 'Whoogy’s', avatar: require('@/assets/images/demo/av_whoogys.png') }}
           />
           <RecipeCard

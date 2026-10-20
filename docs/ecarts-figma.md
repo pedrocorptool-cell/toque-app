@@ -72,9 +72,10 @@ l'icône active de la navbar sur `action/secondary/icon`.
   pastille blanche glisse d'un onglet à l'autre (250 ms).
 
 - **Catégories enregistrées** (pas de maquette) : quand la recette est classée, « Enregistrer » laisse place à ses
-  hashtags (14 px, 2 lignes au plus puis « … »), « Plat principal » compris (#Platprincipal). Les toucher rouvre la
-  sheet « Enregistrer » ; tout décocher fait revenir « Enregistrer ». Les catégories créées dans la sheet sont
-  partagées avec la home (filtres, hashtags des cartes) jusqu'au redémarrage.
+  hashtags sur une ligne, coupée par « … » (#CheatMeal #Végé). Comme sur la home, « Plat principal » n'apparaît
+  que s'il est la seule catégorie. Les toucher rouvre la sheet « Enregistrer » ; tout décocher fait revenir
+  « Enregistrer ». Les catégories créées dans la sheet sont partagées avec la home (filtres, hashtags des cartes)
+  jusqu'au redémarrage. Hashtag « #CheatMeal » au lieu de « #Cheatmeal » (Figma), à la demande de Pierre.
 
 ## Mode étape par étape (étape 3)
 
