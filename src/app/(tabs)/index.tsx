@@ -4,7 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
-import { ImportSheet, type ImportMethod } from '@/components/screens/ImportSheet';
+import { ImportSheet } from '@/components/screens/ImportSheet';
 import {
   AppText,
   ChefButton,
@@ -43,16 +43,10 @@ const FILTERS: { key: FilterKey; chip: string; title: string }[] = [
   { key: 'source', chip: 'Importé via', title: 'Importé via' },
 ];
 
-const IMPORT_LABEL: Record<ImportMethod, string> = {
-  social: 'L’import depuis les réseaux sociaux',
-  photo: 'L’import par photo',
-  web: 'L’import par lien web',
-};
-
 /** Figma : écran « Home » — liste des recettes, recherche et filtres. */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { recipes, categories } = useRecipes();
+  const { recipes, categories, addRecipe } = useRecipes();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
@@ -188,9 +182,10 @@ export default function HomeScreen() {
       <ImportSheet
         visible={importOpen}
         onClose={() => setImportOpen(false)}
-        onPick={(method) => {
+        onImported={(recipe) => {
+          addRecipe(recipe);
           setImportOpen(false);
-          setToast(`${IMPORT_LABEL[method]} arrive à l’étape suivante`);
+          router.push({ pathname: '/recette/[id]', params: { id: recipe.id, importee: '1' } });
         }}
       />
     </View>

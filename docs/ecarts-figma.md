@@ -129,6 +129,16 @@ l'icône active de la navbar sur `action/secondary/icon`.
   pas quand on coche le dernier article. Une ligne vierge ne se coche pas. Ajouts hors maquette : confirmation
   avant « Tout supprimer », masqué quand il n'y a rien à supprimer.
 
+- **Import de recette** (Figma 257:257 et 257:373) : tout se passe dans la même sheet, la flèche revient au premier
+  écran. Réseaux sociaux : les trois vignettes du tutoriel (image de démo dans Figma) sont dessinées en code et
+  défilent seules ; « Ouvrir … » ouvre l'app du réseau (ou son site, dans un nouvel onglet sur le web). Le partage
+  vers Toqué ne peut pas exister dans le prototype : au retour dans l'app, on fait comme si une publication venait
+  d'être partagée. Lien web et photo n'ont pas de maquette : champ de lien avec « Coller » et message d'erreur,
+  appareil photo ou galerie. Puis « Import en cours » (lecture, ingrédients, étapes cochés un à un) et ouverture de
+  la recette importée avec un toast. Chaque mode crée une recette de démo (la photo choisie sert de vignette pour
+  l'import par photo). Icônes réseaux, partage, coller, galerie et coche prises chez Phosphor (famille des icônes
+  Figma). La poignée apparaît aussi au-dessus des en-têtes avec flèche retour, comme dans Figma.
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

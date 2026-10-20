@@ -1,5 +1,17 @@
 import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Animated, Easing, Modal, Pressable, ScrollView, StyleSheet, View, type StyleProp, type ViewStyle } from 'react-native';
+import {
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Modal,
+  Platform,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+  type StyleProp,
+  type ViewStyle,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
@@ -15,7 +27,8 @@ type BottomSheetProps = {
   children: ReactNode;
   /** Pied fixe (CTA principal, « Footer de filtre »…). */
   footer?: ReactNode;
-  /** Sous-écran (« Créer une catégorie ») : flèche retour à gauche du titre, croix à droite, sans poignée. */
+  /** Sous-écran (« Créer une catégorie », « Importer via ») : flèche retour à gauche du titre, croix à
+   *  droite. */
   onBack?: () => void;
 };
 
@@ -53,7 +66,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
-      <View style={styles.sheetRoot}>
+      <KeyboardAvoidingView style={styles.sheetRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
         <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, { opacity: progress }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
         </Animated.View>
@@ -62,7 +75,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
           style={[styles.sheet, sheetStyle, { transform: [{ translateY }] }]}>
           {children}
         </Animated.View>
-      </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 }
@@ -72,6 +85,7 @@ export function BottomSheet({ visible, onClose, title, children, footer, onBack 
   const insets = useSafeAreaInsets();
   return (
     <SheetModal visible={visible} onClose={onClose} sheetStyle={{ paddingBottom: space[16] + insets.bottom }}>
+      <View style={styles.grip} />
       {onBack ? (
         <View style={styles.dialogHeader}>
           <Pressable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
@@ -81,14 +95,11 @@ export function BottomSheet({ visible, onClose, title, children, footer, onBack 
           <CloseButton onPress={onClose} />
         </View>
       ) : (
-        <>
-          <View style={styles.grip} />
-          {title && (
-            <AppText variant="title" style={styles.center}>
-              {title}
-            </AppText>
-          )}
-        </>
+        title && (
+          <AppText variant="title" style={styles.center}>
+            {title}
+          </AppText>
+        )
       )}
       {children}
       {footer}

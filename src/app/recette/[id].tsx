@@ -49,7 +49,7 @@ const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
 
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
-  const { id } = useLocalSearchParams<{ id: string }>();
+  const { id, importee } = useLocalSearchParams<{ id: string; importee?: string }>();
   const { recipes, removeRecipe, categories, setRecipeCategories } = useRecipes();
   const { addFromRecipe } = useShopping();
   const insets = useSafeAreaInsets();
@@ -97,7 +97,7 @@ export default function RecipeScreen() {
   const [deleteOpen, setDeleteOpen] = useState(false);
   const [saveOpen, setSaveOpen] = useState(false);
   const [shoppingOpen, setShoppingOpen] = useState(false);
-  const [toast, setToast] = useState<string | null>(null);
+  const [toast, setToast] = useState<string | null>(importee ? 'Recette importée dans tes recettes' : null);
   const photoRef = useRef<Image>(null);
   const blurRef = useRef<View>(null);
 

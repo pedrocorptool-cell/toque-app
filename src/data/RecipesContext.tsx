@@ -4,6 +4,8 @@ import { CATEGORIES, RECIPES, type Category, type CategoryId, type Recipe } from
 
 type RecipesState = {
   recipes: Recipe[];
+  /** Recette importée : ajoutée en tête de liste. */
+  addRecipe: (recipe: Recipe) => void;
   removeRecipe: (id: string) => void;
   /** Catégories de départ et celles créées par l'utilisateur. */
   categories: Category[];
@@ -23,6 +25,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   const value = useMemo<RecipesState>(
     () => ({
       recipes,
+      addRecipe: (recipe) => setRecipes((list) => [recipe, ...list]),
       removeRecipe: (id) => setRecipes((list) => list.filter((r) => r.id !== id)),
       categories,
       addCategory: (category) => setCategories((list) => [...list, category]),
