@@ -148,6 +148,13 @@ l'icône active de la navbar sur `action/secondary/icon`.
   « Tu n'as encore aucune recette enregistrée. Importe ta première recette avec le bouton + ! ».
 - Illustrations exportées de Figma en PNG ×3 (grain compris), dans `assets/images/illus`.
 
+- **Profil** (pas de maquette) : construit avec les composants existants, même en-tête brun que Liste. Identité de
+  démo (« Alex Martin »), compteurs réels (recettes, catégories, articles à acheter : touchés, ils mènent à l'onglet
+  correspondant), carte Toqué Chef, réglages « Cuisine » et « Application » (l'interrupteur des alertes de minuteur
+  ne change rien pour l'instant ; les autres lignes affichent un toast), lien vers le design system, déconnexion
+  avec confirmation. Icônes utilisateurs, balance, cloche, aide, nuancier et sortie prises chez Phosphor.
+- **Import en cours** : avec « Réduire les animations » activé, les ingrédients restent posés comme dans Figma.
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

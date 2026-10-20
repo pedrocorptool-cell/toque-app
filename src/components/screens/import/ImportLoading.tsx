@@ -1,5 +1,5 @@
-import { useEffect, useRef } from 'react';
-import { Animated, Easing, Image, Modal, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { AccessibilityInfo, Animated, Easing, Image, Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, TextButton } from '@/components/ui';
@@ -64,8 +64,14 @@ export function ImportLoading({ visible, onCancel }: { visible: boolean; onCance
 
 function FallingIngredients() {
   const progress = useRef(INGREDIENTS.map(() => new Animated.Value(0))).current;
+  // « Réduire les animations » : les ingrédients restent posés comme dans la maquette, sans boucle.
+  const [reduceMotion, setReduceMotion] = useState(false);
+  useEffect(() => {
+    AccessibilityInfo.isReduceMotionEnabled().then(setReduceMotion, () => {});
+  }, []);
 
   useEffect(() => {
+    if (reduceMotion) return;
     const cycle = Animated.sequence([
       Animated.parallel(
         progress.map((value, i) =>
@@ -95,7 +101,11 @@ function FallingIngredients() {
     const loop = Animated.loop(cycle);
     loop.start();
     return () => loop.stop();
-  }, [progress]);
+  }, [progress, reduceMotion]);
+
+  if (reduceMotion) {
+    return INGREDIENTS.map(({ image, box }, i) => <Image key={i} source={image} style={[styles.abs, box]} />);
+  }
 
   return INGREDIENTS.map(({ image, box, spin }, i) => {
     const value = progress[i];
