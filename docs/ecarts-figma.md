@@ -122,7 +122,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   pour « Fais maison! ».
 
 - **Onglet Liste** (Figma 244:3444) : cinq articles de démo au lancement. Toucher un article le modifie sur place
-  (croix pour le supprimer, « Entrée » crée l'article suivant, un article laissé vide disparaît). Cocher l'envoie en
+  (croix pour le supprimer, la saisie passe alors à la ligne du dessous, ou du dessus pour la dernière ;
+  « Entrée » crée l'article suivant, un article laissé vide disparaît). Cocher l'envoie en
   haut des articles cochés, décocher le remet en bas de la liste. La poignée déplace l'article (glisser vertical).
   Ajouts hors maquette : confirmation avant « Tout supprimer », texte de liste vide, « Tout supprimer » masqué
   quand la liste est vide.

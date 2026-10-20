@@ -27,7 +27,9 @@ export default function ListeScreen() {
   const checked = items.filter((i) => i.checked);
 
   const [focusedId, setFocusedId] = useState<string | null>(null);
-  const [newId, setNewId] = useState<string | null>(null);
+  // Ligne à mettre en saisie : n change à chaque demande, pour refocaliser une ligne déjà ciblée.
+  const [focusRequest, setFocusRequest] = useState<{ id: string; n: number } | null>(null);
+  const requestFocus = (id: string) => setFocusRequest((r) => ({ id, n: (r?.n ?? 0) + 1 }));
   const [clearOpen, setClearOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
 
@@ -62,7 +64,15 @@ export default function ListeScreen() {
     return 0;
   };
 
-  const startNewItem = () => setNewId(addItem());
+  const startNewItem = () => requestFocus(addItem());
+
+  /** La croix supprime la ligne et passe la saisie à celle du dessous (du dessus pour la dernière). */
+  const removeAndFocusNext = (index: number) => {
+    const next = toBuy[index + 1] ?? toBuy[index - 1];
+    remove(toBuy[index].id);
+    if (next) requestFocus(next.id);
+    else Keyboard.dismiss();
+  };
 
   const count = toBuy.length;
 
@@ -111,7 +121,7 @@ export default function ListeScreen() {
                 key={item.id}
                 item={item}
                 focused={focusedId === item.id}
-                autoFocus={newId === item.id}
+                focusRequest={focusRequest?.id === item.id ? focusRequest.n : 0}
                 dragging={drag?.id === item.id}
                 offset={drag?.id === item.id ? dragY : shiftOf(index)}
                 onToggle={() => toggle(item.id)}
@@ -123,7 +133,7 @@ export default function ListeScreen() {
                   if (!item.label.trim()) remove(item.id);
                 }}
                 onSubmit={() => (item.label.trim() ? startNewItem() : Keyboard.dismiss())}
-                onRemove={() => remove(item.id)}
+                onRemove={() => removeAndFocusNext(index)}
                 onDragStart={() => startDrag(item.id, index)}
                 onDragMove={moveDrag}
                 onDragEnd={endDrag}

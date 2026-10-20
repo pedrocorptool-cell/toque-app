@@ -12,7 +12,8 @@ export const ROW_PITCH = 24 + space[16];
 type ToBuyRowProps = {
   item: ShoppingItem;
   focused: boolean;
-  autoFocus: boolean;
+  /** Différent de 0 quand la ligne doit passer en saisie ; une nouvelle valeur la refocalise. */
+  focusRequest: number;
   /** Décalage de la ligne pendant qu'une autre est déplacée (± une ligne), ou position de celle qu'on déplace. */
   offset: Animated.Value | number;
   dragging: boolean;
@@ -29,7 +30,7 @@ type ToBuyRowProps = {
 
 /** Figma « Liste » : poignée, case à cocher, texte modifiable sur place, croix quand la ligne est en saisie. */
 export function ToBuyRow(props: ToBuyRowProps) {
-  const { item, focused, autoFocus, offset, dragging } = props;
+  const { item, focused, focusRequest, offset, dragging } = props;
   // Les rappels changent à chaque rendu ; le PanResponder, créé une fois, passe par cette référence.
   const latest = useRef(props);
   latest.current = props;
@@ -48,8 +49,8 @@ export function ToBuyRow(props: ToBuyRowProps) {
 
   const input = useRef<TextInput>(null);
   useEffect(() => {
-    if (autoFocus) input.current?.focus();
-  }, [autoFocus]);
+    if (focusRequest) input.current?.focus();
+  }, [focusRequest]);
 
   return (
     <Animated.View style={[styles.row, dragging && styles.dragging, { transform: [{ translateY: offset }] }]}>
