@@ -148,11 +148,20 @@ l'icône active de la navbar sur `action/secondary/icon`.
   « Tu n'as encore aucune recette enregistrée. Importe ta première recette avec le bouton + ! ».
 - Illustrations exportées de Figma en PNG ×3 (grain compris), dans `assets/images/illus`.
 
-- **Profil** (pas de maquette) : construit avec les composants existants, même en-tête brun que Liste. Identité de
-  démo (« Alex Martin »), compteurs réels (recettes, catégories, articles à acheter : touchés, ils mènent à l'onglet
-  correspondant), carte Toqué Chef, réglages « Cuisine » et « Application » (l'interrupteur des alertes de minuteur
-  ne change rien pour l'instant ; les autres lignes affichent un toast), lien vers le design system, déconnexion
-  avec confirmation. Icônes utilisateurs, balance, cloche, aide, nuancier et sortie prises chez Phosphor.
+- **Profil** (Figma, section « Profil » 536:7387) : écrans Profil, Compte, choix d'avatar, Mes catégories,
+  Parts par défaut, Son des minuteurs et leurs sheets. Écarts :
+  - Les sous-écrans gardent tous le bouton retour rond, y compris « Compte » qui n'en a pas dans la maquette.
+  - Icônes « Guide d'import » (livre ouvert) et « Ajouter le raccourci » (éclair) : la maquette reprend celles de
+    « Mes catégories » et « Parts par défaut ». Onde du son en cours, livre et éclair pris chez Phosphor.
+  - « Guide d'import » ouvre le tutoriel « Importer via » ; « Ajouter le raccourci » affiche un toast.
+  - Textes corrigés : « Choisis un avatar Toqué ! », « choisis une couleur de fond », « galerie »,
+    « florent.outan@exemple.fr », « Ajouter le raccourci ».
+  - Choix d'avatar : « Enregistrer » est le bouton blanc existant, libellé orange (sombre dans la maquette).
+  - Le champ et les pastilles de « Créer une catégorie » suivent la nouvelle maquette (liseré, écart de 16) : la
+    sheet « Enregistrer » de la fiche recette en profite aussi.
+  - Parts personnalisées de 1 à 12, les bornes de la fiche recette, qui s'ouvre désormais sur ce nombre de parts.
+  - Le prototype n'embarque pas les sons : toucher un son le choisit et affiche l'onde pendant 2,4 s.
+  - Le lien vers le design system a disparu de la page (toujours sur /design-system en web).
 - **Import en cours** : avec « Réduire les animations » activé, les ingrédients restent posés comme dans Figma.
 
 ## Limites connues

@@ -4,7 +4,8 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
-import { ImportLoading, IMPORT_DURATION } from '@/components/screens/import/ImportLoading';
+import { ImportLoading } from '@/components/screens/import/ImportLoading';
+import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import {
   AppText,
@@ -34,7 +35,6 @@ import {
   type FilterKey,
   type Filters,
 } from '@/data/recipes';
-import { importedRecipe, type ImportRequest } from '@/data/imports';
 import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space } from '@/theme/tokens';
 
@@ -50,7 +50,7 @@ const FILTERS: { key: FilterKey; chip: string; title: string }[] = [
 /** Figma : écran « Home » — liste des recettes, recherche et filtres. */
 export default function HomeScreen() {
   const insets = useSafeAreaInsets();
-  const { recipes, categories, addRecipe } = useRecipes();
+  const { recipes, categories } = useRecipes();
   const [query, setQuery] = useState('');
   const [filters, setFilters] = useState<Filters>(EMPTY_FILTERS);
   const [openFilter, setOpenFilter] = useState<FilterKey | null>(null);
@@ -59,7 +59,7 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
-  const [importing, setImporting] = useState<ImportRequest | null>(null);
+  const [importing, setImporting] = useSimulatedImport();
   const [toast, setToast] = useState<string | null>(null);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
@@ -67,18 +67,6 @@ export default function HomeScreen() {
     () => filterRecipes(recipes, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
     [recipes, shownFilter, draft, filters, query],
   );
-
-  // Import simulé : l'écran d'attente reste le temps de voir l'animation, puis la recette s'ouvre.
-  useEffect(() => {
-    if (!importing) return;
-    const id = setTimeout(() => {
-      const recipe = importedRecipe(importing);
-      addRecipe(recipe);
-      setImporting(null);
-      router.push({ pathname: '/recette/[id]', params: { id: recipe.id, importee: '1' } });
-    }, IMPORT_DURATION);
-    return () => clearTimeout(id);
-  }, [importing, addRecipe]);
 
   useEffect(() => {
     if (!toast) return;

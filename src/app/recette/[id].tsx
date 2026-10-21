@@ -23,6 +23,7 @@ import {
   TimerWidget,
   Toast,
 } from '@/components/ui';
+import { useProfile } from '@/data/ProfileContext';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { useShopping } from '@/data/ShoppingContext';
@@ -62,7 +63,9 @@ export default function RecipeScreen() {
   const recipe = last.current;
 
   const [tab, setTab] = useState<Tab>('ingredients');
-  const [servings, setServings] = useState(recipe?.servings ?? 2);
+  // La fiche s'ouvre sur les parts par défaut du profil ; les quantités sont recalculées depuis la recette.
+  const { defaultServings } = useProfile();
+  const [servings, setServings] = useState(defaultServings);
   const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
   const [timersOpen, setTimersOpen] = useState(false);
 

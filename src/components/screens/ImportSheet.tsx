@@ -11,7 +11,7 @@ import { PhotoImport } from './import/PhotoImport';
 import { SocialImport } from './import/SocialImport';
 import { WebImport } from './import/WebImport';
 
-type Step = 'menu' | 'social' | 'web' | 'photo';
+export type Step = 'menu' | 'social' | 'web' | 'photo';
 
 const TITLES: Record<Step, string> = {
   menu: 'Importer une recette',
@@ -25,6 +25,8 @@ type ImportSheetProps = {
   onClose: () => void;
   /** Lien, publication ou photo choisi : la sheet se ferme et l'écran « Import en cours » prend le relais. */
   onStart: (request: ImportRequest) => void;
+  /** Écran d'ouverture : « social » pour le guide d'import du profil. */
+  initialStep?: Step;
 };
 
 const SOCIAL_LOGOS = (['facebook', 'instagram', 'tiktok'] as const).map((id) => SOURCES.find((s) => s.id === id)!);
@@ -33,7 +35,7 @@ const SOCIAL_LOGOS = (['facebook', 'instagram', 'tiktok'] as const).map((id) => 
  * Figma : « Bottom Sheet/ Import » (premier écran) et « Bottom Sheet/ Import/ RS ». Le lien web et la photo
  * n'ont pas de maquette. Tout se passe dans la même sheet, la flèche revient au début.
  */
-export function ImportSheet({ visible, onClose, onStart }: ImportSheetProps) {
+export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }: ImportSheetProps) {
   const [view, setView] = useState<Step>('menu');
   const [network, setNetwork] = useState<SocialId>('instagram');
   const awaitingShare = useRef<SocialId | null>(null);
@@ -41,9 +43,9 @@ export function ImportSheet({ visible, onClose, onStart }: ImportSheetProps) {
   // La sheet repart du premier écran à chaque ouverture, pas à la fermeture : son contenu reste pendant
   // l'animation.
   useEffect(() => {
-    if (visible) setView('menu');
+    if (visible) setView(initialStep);
     else awaitingShare.current = null;
-  }, [visible]);
+  }, [visible, initialStep]);
 
   const latestStart = useRef(onStart);
   latestStart.current = onStart;

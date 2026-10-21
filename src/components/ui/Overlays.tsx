@@ -30,6 +30,8 @@ type BottomSheetProps = {
   /** Sous-écran (« Créer une catégorie », « Importer via ») : flèche retour à gauche du titre, croix à
    *  droite. */
   onBack?: () => void;
+  /** Croix de fermeture à droite du titre centré, sans flèche retour (« Créer une catégorie » du profil). */
+  closable?: boolean;
 };
 
 const SHEET_DURATION = 250;
@@ -81,17 +83,23 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
 }
 
 /** Figma : « Bottom sheet » — poignée, en-tête et contenu. */
-export function BottomSheet({ visible, onClose, title, children, footer, onBack }: BottomSheetProps) {
+export function BottomSheet({ visible, onClose, title, children, footer, onBack, closable }: BottomSheetProps) {
   const insets = useSafeAreaInsets();
   return (
     <SheetModal visible={visible} onClose={onClose} sheetStyle={{ paddingBottom: space[16] + insets.bottom }}>
       <View style={styles.grip} />
-      {onBack ? (
+      {onBack || closable ? (
         <View style={styles.dialogHeader}>
-          <Pressable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
-            <Icon name="arrowLeft" />
-          </Pressable>
-          <AppText variant="title">{title}</AppText>
+          {onBack ? (
+            <Pressable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
+              <Icon name="arrowLeft" />
+            </Pressable>
+          ) : (
+            <View style={styles.headerSpacer} />
+          )}
+          <AppText variant="title" style={styles.sheetTitle}>
+            {title}
+          </AppText>
           <CloseButton onPress={onClose} />
         </View>
       ) : (
@@ -285,6 +293,11 @@ const styles = StyleSheet.create({
   },
   headerSpacer: {
     width: 24,
+  },
+  sheetTitle: {
+    flexShrink: 1,
+    lineHeight: 28,
+    textAlign: 'center',
   },
   message: {
     alignSelf: 'center',

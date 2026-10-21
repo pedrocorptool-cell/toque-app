@@ -10,6 +10,9 @@ type RecipesState = {
   /** Catégories de départ et celles créées par l'utilisateur. */
   categories: Category[];
   addCategory: (category: Category) => void;
+  updateCategory: (category: Category) => void;
+  /** Retire la catégorie et la décoche des recettes, qui restent enregistrées. */
+  removeCategory: (id: CategoryId) => void;
   setRecipeCategories: (id: string, categories: CategoryId[]) => void;
   /** Remplace la vignette par la photo du plat prise en fin de recette. */
   setRecipeImage: (id: string, uri: string) => void;
@@ -29,6 +32,11 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       removeRecipe: (id) => setRecipes((list) => list.filter((r) => r.id !== id)),
       categories,
       addCategory: (category) => setCategories((list) => [...list, category]),
+      updateCategory: (category) => setCategories((list) => list.map((c) => (c.id === category.id ? category : c))),
+      removeCategory: (id) => {
+        setCategories((list) => list.filter((c) => c.id !== id));
+        setRecipes((list) => list.map((r) => ({ ...r, categories: r.categories.filter((c) => c !== id) })));
+      },
       setRecipeCategories: (id, ids) =>
         setRecipes((list) => list.map((r) => (r.id === id ? { ...r, categories: ids } : r))),
       setRecipeImage: (id, uri) => setRecipes((list) => list.map((r) => (r.id === id ? { ...r, image: { uri } } : r))),
