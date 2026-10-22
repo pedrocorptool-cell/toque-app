@@ -1,10 +1,13 @@
 import { useEffect, useState } from 'react';
-import { StyleSheet, View } from 'react-native';
+import { Image, StyleSheet, View } from 'react-native';
 
 import { CategoryFields, SWATCHES } from '@/components/screens/CategoryFields';
 import { AppText, BottomSheet, Button, TextButton } from '@/components/ui';
 import { toHashtag, type Category } from '@/data/recipes';
-import { color, space } from '@/theme/tokens';
+import { color, space, text } from '@/theme/tokens';
+
+/** Figma « Sheet/Suppréssion confirmation » (599:13739) : bouteille renversée de 242 × 115. */
+const BOTTLE = require('@/assets/images/illus/bottle.png');
 
 type CategorySheetProps = {
   visible: boolean;
@@ -17,7 +20,8 @@ type CategorySheetProps = {
 
 /**
  * Figma : « Sheet/New catégorie », « Sheet/Modifier catégorie » et « Sheet/Suppréssion confirmation ».
- * La confirmation de suppression remplace le formulaire dans la même sheet, la flèche y revient.
+ * La confirmation de suppression remplace le formulaire dans la même sheet : flèche retour et croix, illustration,
+ * titre et texte centrés.
  */
 export function CategorySheet({ visible, onClose, category, onSave, onDelete }: CategorySheetProps) {
   const [name, setName] = useState('');
@@ -33,11 +37,11 @@ export function CategorySheet({ visible, onClose, category, onSave, onDelete }: 
 
   if (category && confirming) {
     return (
-      <BottomSheet
-        visible={visible}
-        onClose={onClose}
-        onBack={() => setConfirming(false)}
-        title={`Supprimer la catégorie ${category.label} ?`}>
+      <BottomSheet visible={visible} onClose={onClose} onBack={() => setConfirming(false)}>
+        <Image source={BOTTLE} style={styles.illustration} accessibilityIgnoresInvertColors />
+        <AppText style={styles.confirmTitle} accessibilityRole="header">
+          {`Supprimer la catégorie ${category.label} ?`}
+        </AppText>
         <AppText color={color.textSecondary} style={styles.message}>
           {`Les recettes présentes dans ${category.label} seront conservées. Seule la catégorie est retirée.`}
         </AppText>
@@ -78,6 +82,17 @@ export function CategorySheet({ visible, onClose, category, onSave, onDelete }: 
 }
 
 const styles = StyleSheet.create({
+  illustration: {
+    alignSelf: 'center',
+    width: 242,
+    height: 115,
+  },
+  // Figma : Zalando Sans Medium 20 / 28, centré.
+  confirmTitle: {
+    ...text.title,
+    lineHeight: 28,
+    textAlign: 'center',
+  },
   message: {
     textAlign: 'center',
     lineHeight: 24,
