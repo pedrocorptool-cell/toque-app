@@ -44,6 +44,7 @@ export default function RootLayout() {
             <Stack screenOptions={{ headerShown: false, contentStyle: { backgroundColor: color.bgPage } }}>
               {/* Le mode étape par étape s'ouvre par-dessus la fiche, sur fond transparent : il anime lui-même
                   la photo et le flou de la fiche jusqu'à leur place (voir pas-a-pas/[id].tsx). */}
+              <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
               <Stack.Screen
                 name="pas-a-pas/[id]"
                 options={{

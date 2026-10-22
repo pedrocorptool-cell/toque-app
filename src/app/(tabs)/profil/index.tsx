@@ -70,6 +70,7 @@ export default function ProfilScreen() {
             label="Ajouter le raccourci"
             onPress={() => toast.show('Le raccourci de partage arrive bientôt')}
           />
+          <SettingRow icon="magic" label="Revoir la présentation" onPress={() => router.push('/onboarding')} />
         </ListCard>
 
         <View style={styles.footer}>

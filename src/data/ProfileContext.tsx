@@ -16,6 +16,9 @@ type ProfileState = {
   setDefaultServings: (count: number) => void;
   timerSound: TimerSoundId;
   setTimerSound: (id: TimerSoundId) => void;
+  /** Présentation de l'app vue : l'onboarding ne s'ouvre qu'au premier lancement. */
+  onboarded: boolean;
+  setOnboarded: (onboarded: boolean) => void;
 };
 
 const ProfileContext = createContext<ProfileState | null>(null);
@@ -28,10 +31,22 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [avatar, setAvatar] = useState<Avatar>({ kind: 'toque', id: 'onion', background: color.accentCreme });
   const [defaultServings, setDefaultServings] = useState(2);
   const [timerSound, setTimerSound] = useState<TimerSoundId>('ringbell');
+  const [onboarded, setOnboarded] = useState(false);
 
   const value = useMemo<ProfileState>(
-    () => ({ account, setAccount, avatar, setAvatar, defaultServings, setDefaultServings, timerSound, setTimerSound }),
-    [account, avatar, defaultServings, timerSound],
+    () => ({
+      account,
+      setAccount,
+      avatar,
+      setAvatar,
+      defaultServings,
+      setDefaultServings,
+      timerSound,
+      setTimerSound,
+      onboarded,
+      setOnboarded,
+    }),
+    [account, avatar, defaultServings, timerSound, onboarded],
   );
 
   return <ProfileContext.Provider value={value}>{children}</ProfileContext.Provider>;
