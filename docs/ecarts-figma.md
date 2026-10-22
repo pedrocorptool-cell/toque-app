@@ -46,7 +46,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Champ de recherche du filtre Créateur** : fond blanc sans loupe, ajouté comme variante `surface` de `SearchField`.
 - **Bouton effacer** dans les champs de recherche : croix ajoutée dès qu'un texte est saisi (absente de Figma).
 - **État vide** (aucune recette ne correspond) : pas d'écran Figma, proposé dans le code
-  (loupe, « Aucune recette trouvée », bouton « Tout effacer »).
+  (illustration, « Aucune recette trouvée », bouton « Réinitialiser les filtres »).
 - **Créateur** : la carte Figma écrit « Marmitton », le filtre « Marmiton ». Le code garde « Marmiton ».
 
 ## Fiche recette (étape 2b)
@@ -143,8 +143,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   enfoncent, puis la boucle reprend après une pause. L'écran reste un peu plus de 4 s (l'import est simulé).
   « Annuler » revient à la home sans rien importer. Texte corrigé : « elle sera prête d'ici un instant ! ».
 - **Aucune recette** (Figma 493:2104) : affiché quand la home n'a plus aucune recette. Même illustration pour une
-  recherche ou des filtres sans résultat : « Aucune recette trouvée », « Aucune de tes recettes ne correspond.
-  Essaie un autre mot ou retire un filtre. » et « Tout effacer ». Texte passé au tutoiement comme le reste de l'app :
+  recherche ou des filtres sans résultat : « Aucune recette trouvée », « Nous n'avons trouvé aucune recette.
+  Modifie les filtres ou essaye un autre mot clé. » et « Réinitialiser les filtres » (efface aussi la recherche). Texte passé au tutoiement comme le reste de l'app :
   « Tu n'as encore aucune recette enregistrée. Importe ta première recette avec le bouton + ! ».
 - Illustrations exportées de Figma en PNG ×3 (grain compris), dans `assets/images/illus`.
 

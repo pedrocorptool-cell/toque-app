@@ -147,9 +147,9 @@ export default function HomeScreen() {
                 <View style={styles.noRecipeTexts}>
                   <AppText variant="headline">Aucune recette trouvée</AppText>
                   <AppText color={color.textSecondary} style={styles.noRecipeText}>
-                    Aucune de tes recettes ne correspond. Essaie un autre mot ou retire un filtre.
+                    Nous n’avons trouvé aucune recette. Modifie les filtres ou essaye un autre mot clé.
                   </AppText>
-                  <TextButton label="Tout effacer" onPress={resetAll} />
+                  <TextButton label="Réinitialiser les filtres" onPress={resetAll} />
                 </View>
               )}
             </View>
