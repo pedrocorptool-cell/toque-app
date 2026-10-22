@@ -245,8 +245,8 @@ export default function RecipeScreen() {
                   accessibilityRole="button"
                   onPress={() => setShoppingOpen(true)}
                   style={({ pressed }) => [styles.footerAction, pressed && styles.pressed]}>
-                  <Icon name="plus" size={16} />
-                  <AppText>Ajouter à la liste de course</AppText>
+                  <Icon name="basket" color={color.actionSecondaryIcon} />
+                  <AppText>Ajouter à la liste de courses</AppText>
                 </Pressable>
               }>
               {ingredients.map((line) => (
