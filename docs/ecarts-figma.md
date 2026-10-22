@@ -157,6 +157,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   - Textes corrigés : « Choisis un avatar Toqué ! », « choisis une couleur de fond », « galerie »,
     « florent.outan@exemple.fr », « Ajouter le raccourci ».
   - Choix d'avatar : « Enregistrer » est le bouton blanc existant, libellé orange (sombre dans la maquette).
+  - Avatars de la page « Avatar » (1:4) : oignon, tomate, olive, biscuit (la tarte a disparu). Le carrousel
+    tourne en boucle : un avatar sorti par la gauche revient par la droite. Il est partagé avec l'onboarding.
   - Le champ et les pastilles de « Créer une catégorie » suivent la nouvelle maquette (liseré, écart de 16) : la
     sheet « Enregistrer » de la fiche recette en profite aussi.
   - Parts personnalisées de 1 à 12, les bornes de la fiche recette, qui s'ouvre désormais sur ce nombre de parts.
@@ -168,6 +170,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   Une 3e et une 4e coche ont été ajoutées pour l'animation ; au repos, seules les deux de la maquette restent.
   « filtres » corrigé en « filtre ». Montré au lancement de chaque session du prototype (rien n'est sauvegardé),
   rejouable depuis Profil > Revoir la présentation. Sans paywall.
+  4e étape : choix de l'avatar Toqué, même carrousel et mêmes couleurs que le profil. « Valider » l'enregistre,
+  « Ignorer » garde l'avatar actuel. Le CTA « Importer ma première recette » a disparu avec cette étape.
 
 ## Limites connues
 

@@ -4,18 +4,33 @@ import { AccessibilityInfo, Animated, BackHandler, StyleSheet, View, useWindowDi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ART, OnboardingArt, type ArtName } from '@/components/screens/onboarding/OnboardingArt';
+import { AvatarChooser } from '@/components/screens/profile/AvatarChooser';
 import { AppText, Button, IconButton, Logo, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
+import type { AvatarId } from '@/data/profile';
 import { color, font, radius, space } from '@/theme/tokens';
 
 // Espaces insécables devant « : » et « ! » : la ponctuation ne part pas seule à la ligne.
-const STEPS: { art: ArtName; text: string }[] = [
-  { art: 'import', text: 'Ne scrolle plus dans tes favoris sans fin : importe toutes tes recettes dans Toqué !' },
-  { art: 'sorter', text: 'Organise tes catégories, filtre tes recettes par créateur ou temps de préparation !' },
+type Step = { key: string; art: ArtName; text: string } | { key: 'avatar'; text: string };
+
+const STEPS: Step[] = [
   {
+    key: 'import',
+    art: 'import',
+    text: 'Ne scrolle plus dans tes favoris sans fin : importe toutes tes recettes dans Toqué !',
+  },
+  {
+    key: 'sorter',
+    art: 'sorter',
+    text: 'Organise tes catégories, filtre tes recettes par créateur ou temps de préparation !',
+  },
+  {
+    key: 'list',
     art: 'list',
     text: 'Fini les vidéos sur pause et les allers-retours entre apps. Suis chaque étape, minuteur en main.',
   },
+  // Dernière étape : le choix de l'avatar, enregistré au « Valider ».
+  { key: 'avatar', text: 'Pour commencer, choisis ton avatar Toqué' },
 ];
 
 const LAST = STEPS.length - 1;
@@ -27,14 +42,16 @@ const TEXT_HEIGHT = 4 * 38;
 const ART_GAP = space[40];
 
 /**
- * Figma « Onbarding » (578:7999) : trois écrans sur le fond brun, au premier lancement et depuis le profil.
+ * Figma « Onbarding » (578:7999) : quatre écrans sur le fond brun, au premier lancement et depuis le profil.
  * Retour, logo et « Ignorer » en haut ; progression et CTA en bas ; on avance au bouton ou en faisant glisser.
- * Chaque illustration s'anime quand son étape est affichée.
+ * Chaque illustration s'anime quand son étape est affichée ; la dernière étape fait choisir l'avatar Toqué.
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { setOnboarded } = useProfile();
+  const { avatar, setAvatar, setOnboarded } = useProfile();
+  const [avatarId, setAvatarId] = useState<AvatarId>(avatar.kind === 'toque' ? avatar.id : 'onion');
+  const [background, setBackground] = useState(avatar.kind === 'toque' ? avatar.background : color.accentCreme);
   const [index, setIndex] = useState(0);
   // Hauteur du carrousel, pour réduire l'illustration sur les petits écrans.
   const [pageHeight, setPageHeight] = useState(0);
@@ -55,9 +72,11 @@ export default function OnboardingScreen() {
     AccessibilityInfo.announceForAccessibility(`Étape ${i + 1} sur ${STEPS.length}`);
   };
 
-  const finish = (importFirst: boolean) => {
+  /** « Ignorer » garde l'avatar actuel ; « Valider » enregistre celui choisi. */
+  const finish = (saveAvatar: boolean) => {
+    if (saveAvatar) setAvatar({ kind: 'toque', id: avatarId, background });
     setOnboarded(true);
-    router.dismissTo(importFirst ? { pathname: '/', params: { importer: '1' } } : '/');
+    router.dismissTo('/');
   };
 
   // Android : le bouton retour du système revient à l'étape précédente.
@@ -89,7 +108,7 @@ export default function OnboardingScreen() {
         <Animated.FlatList
           ref={pager}
           data={STEPS}
-          keyExtractor={(step) => step.art}
+          keyExtractor={(step) => step.key}
           horizontal
           pagingEnabled
           bounces={false}
@@ -103,14 +122,32 @@ export default function OnboardingScreen() {
             },
           })}
           scrollEventThrottle={16}
-          renderItem={({ item, index: i }) => (
-            <View style={[styles.page, { width, height: pageHeight }]}>
-              <OnboardingArt name={item.art} playing={i === index && !reduceMotion} scale={artScale} />
-              <AppText color={color.textOnBrandPrimary} style={styles.text} accessibilityRole="header">
-                {item.text}
-              </AppText>
-            </View>
-          )}
+          renderItem={({ item, index: i }) =>
+            'art' in item ? (
+              <View style={[styles.page, { width, height: pageHeight }]}>
+                <OnboardingArt name={item.art} playing={i === index && !reduceMotion} scale={artScale} />
+                <AppText color={color.textOnBrandPrimary} style={styles.text} accessibilityRole="header">
+                  {item.text}
+                </AppText>
+              </View>
+            ) : (
+              // Pas de marge latérale : le carrousel d'avatars prend toute la largeur de l'écran.
+              <View style={[styles.avatarPage, { width, height: pageHeight }]}>
+                <AvatarChooser
+                  avatarId={avatarId}
+                  onAvatarChange={setAvatarId}
+                  background={background}
+                  onBackgroundChange={setBackground}>
+                  <AppText
+                    color={color.textOnBrandPrimary}
+                    style={[styles.text, styles.avatarText]}
+                    accessibilityRole="header">
+                    {item.text}
+                  </AppText>
+                </AvatarChooser>
+              </View>
+            )
+          }
         />
       </View>
 
@@ -119,7 +156,7 @@ export default function OnboardingScreen() {
         <Button
           block
           variant="secondary"
-          label={index === LAST ? 'Importer ma première recette' : 'Continuer'}
+          label={index === LAST ? 'Valider' : 'Continuer'}
           onPress={() => (index === LAST ? finish(true) : goTo(index + 1))}
         />
       </View>
@@ -140,7 +177,7 @@ function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: numbe
         const range = [(i - 1) * width, i * width, (i + 1) * width];
         return (
           <Animated.View
-            key={step.art}
+            key={step.key}
             style={[
               styles.dot,
               {
@@ -200,6 +237,9 @@ const styles = StyleSheet.create({
     gap: ART_GAP,
     paddingHorizontal: space[16],
   },
+  avatarPage: {
+    justifyContent: 'center',
+  },
   // Figma : Zalando Sans Regular 28 / 38, sans style de texte partagé.
   text: {
     alignSelf: 'stretch',
@@ -207,6 +247,12 @@ const styles = StyleSheet.create({
     fontFamily: font.regular,
     fontSize: 28,
     lineHeight: 38,
+  },
+  // Figma : deux lignes centrées entre le carrousel et les couleurs.
+  avatarText: {
+    minHeight: 0,
+    paddingHorizontal: space[16],
+    textAlign: 'center',
   },
   bottom: {
     gap: space[24],

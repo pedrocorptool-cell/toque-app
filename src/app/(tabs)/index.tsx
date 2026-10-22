@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from 'react';
-import { router, useLocalSearchParams } from 'expo-router';
+import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -61,14 +61,6 @@ export default function HomeScreen() {
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting] = useSimulatedImport();
   const [toast, setToast] = useState<string | null>(null);
-
-  // Fin de l'onboarding : « Importer ma première recette » arrive ici avec ?importer=1.
-  const { importer } = useLocalSearchParams<{ importer?: string }>();
-  useEffect(() => {
-    if (importer !== '1') return;
-    setImportOpen(true);
-    router.setParams({ importer: undefined });
-  }, [importer]);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
   const draftCount = useMemo(

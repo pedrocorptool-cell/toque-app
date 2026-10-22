@@ -2,13 +2,14 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { color } from '@/theme/tokens';
 
-export type AvatarId = 'tomato' | 'onion' | 'tart';
+export type AvatarId = 'onion' | 'tomato' | 'olive' | 'biscuit';
 
-/** Figma « Profil/ Compte » : avatars Toqué, dans l'ordre du carrousel. */
+/** Figma « 🚀 Design » (avatars à côté de l'onboarding), dans l'ordre du carrousel, qui boucle. */
 export const AVATARS: { id: AvatarId; label: string; image: ImageSourcePropType }[] = [
-  { id: 'tomato', label: 'Tomate', image: require('@/assets/images/avatars/tomato.png') },
   { id: 'onion', label: 'Oignon', image: require('@/assets/images/avatars/onion.png') },
-  { id: 'tart', label: 'Tarte', image: require('@/assets/images/avatars/tart.png') },
+  { id: 'tomato', label: 'Tomate', image: require('@/assets/images/avatars/tomato.png') },
+  { id: 'olive', label: 'Olive', image: require('@/assets/images/avatars/olive.png') },
+  { id: 'biscuit', label: 'Biscuit', image: require('@/assets/images/avatars/biscuit.png') },
 ];
 
 /** Couleurs de fond proposées sous le carrousel. */
