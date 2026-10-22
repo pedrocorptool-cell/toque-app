@@ -1,51 +1,34 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import {
-  AccessibilityInfo,
-  Animated,
-  BackHandler,
-  Easing,
-  Image,
-  StyleSheet,
-  View,
-  useWindowDimensions,
-  type LayoutChangeEvent,
-} from 'react-native';
+import { AccessibilityInfo, Animated, BackHandler, Image, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import {
-  ART,
-  FORK,
-  FORK_BOX,
-  INGREDIENTS,
-  KNIFE,
-  KNIFE_BOX,
-  PLATE,
-  PLATE_BOX,
-} from '@/components/screens/import/ImportLoading';
 import { AppText, Button, IconButton, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
 import { color, radius, space } from '@/theme/tokens';
 
-const NOTEBOOK = require('@/assets/images/illus/notebook.png');
-const JAM = require('@/assets/images/illus/jam.png');
-
-type Art = 'plate' | 'notebook' | 'jam';
+/** Figma « Illustrations > Onboarding » : les trois exports partagent le même cadre de 587 × 614. */
+const ART = {
+  import: require('@/assets/images/illus/onb-import.png'),
+  carnet: require('@/assets/images/illus/onb-carnet.png'),
+  cuisine: require('@/assets/images/illus/onb-cuisine.png'),
+};
+const ART_RATIO = 587 / 614;
 
 /** Les trois temps forts de l'app : récupérer une recette, la retrouver, la cuisiner. */
-const STEPS: { art: Art; title: string; message: string }[] = [
+const STEPS: { art: keyof typeof ART; title: string; message: string }[] = [
   {
-    art: 'plate',
+    art: 'import',
     title: 'Garde toutes tes recettes',
     message: 'Une vidéo Instagram ou TikTok, un site, une photo de livre : partage-la à Toqué, on en tire la recette.',
   },
   {
-    art: 'notebook',
+    art: 'carnet',
     title: 'Range ton carnet',
     message: 'Classe tes recettes par catégorie et retrouve-les en un instant avec la recherche et les filtres.',
   },
   {
-    art: 'jam',
+    art: 'cuisine',
     title: 'Cuisine sereinement',
     message: 'Suis les étapes une à une, lance tes minuteurs et envoie les ingrédients dans ta liste de courses.',
   },
@@ -148,9 +131,7 @@ export default function OnboardingScreen() {
             return (
               <View style={[styles.page, { width, height: pageHeight }]}>
                 <Animated.View style={[styles.artArea, { height: pageHeight * ART_SHARE }, artStyle]}>
-                  {item.art === 'plate' && <PlateArt active={i === index} reduceMotion={reduceMotion} />}
-                  {item.art === 'notebook' && <Image source={NOTEBOOK} style={styles.notebook} resizeMode="contain" />}
-                  {item.art === 'jam' && <Image source={JAM} style={styles.jam} resizeMode="contain" />}
+                  <Image source={ART[item.art]} style={styles.art} resizeMode="contain" />
                 </Animated.View>
                 <View style={styles.texts}>
                   <AppText variant="display" color={color.textOnBrandPrimary} accessibilityRole="header">
@@ -211,58 +192,6 @@ function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: numbe
   );
 }
 
-/** Figma « Composition 2 » : assiette et couverts ; les ingrédients y tombent à l'arrivée sur l'étape. */
-function PlateArt({ active, reduceMotion }: { active: boolean; reduceMotion: boolean }) {
-  const [scale, setScale] = useState(1);
-  const drops = useRef(INGREDIENTS.map(() => new Animated.Value(reduceMotion ? 1 : 0))).current;
-
-  useEffect(() => {
-    if (!active || reduceMotion) return;
-    drops.forEach((value) => value.setValue(0));
-    const fall = Animated.stagger(
-      180,
-      drops.map((value) =>
-        Animated.timing(value, { toValue: 1, duration: 700, easing: Easing.bounce, useNativeDriver: true }),
-      ),
-    );
-    fall.start();
-    return () => fall.stop();
-  }, [active, reduceMotion, drops]);
-
-  // L'illustration de 352 × 285 se réduit pour tenir dans la place laissée par les textes.
-  const fit = (e: LayoutChangeEvent) => {
-    const { width, height } = e.nativeEvent.layout;
-    setScale(Math.min(1, width / ART.width, height / ART.height));
-  };
-
-  return (
-    <View style={styles.fill} onLayout={fit}>
-      <View style={[styles.plateArt, { transform: [{ scale }] }]}>
-        <Image source={FORK} style={[styles.abs, FORK_BOX]} />
-        <Image source={KNIFE} style={[styles.abs, KNIFE_BOX]} />
-        <Image source={PLATE} style={[styles.abs, PLATE_BOX]} />
-        {INGREDIENTS.map(({ image, box, spin }, i) => (
-          <Animated.Image
-            key={i}
-            source={image}
-            style={[
-              styles.abs,
-              box,
-              {
-                opacity: drops[i].interpolate({ inputRange: [0, 0.2, 1], outputRange: [0, 1, 1] }),
-                transform: [
-                  { translateY: drops[i].interpolate({ inputRange: [0, 1], outputRange: [-160, 0] }) },
-                  { rotate: drops[i].interpolate({ inputRange: [0, 1], outputRange: [`${-spin}deg`, '0deg'] }) },
-                ],
-              },
-            ]}
-          />
-        ))}
-      </View>
-    </View>
-  );
-}
-
 function useReduceMotion() {
   const [reduceMotion, setReduceMotion] = useState(false);
   useEffect(() => {
@@ -316,28 +245,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  fill: {
-    alignSelf: 'stretch',
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  plateArt: {
-    width: ART.width,
-    height: ART.height,
-  },
-  abs: {
-    position: 'absolute',
-  },
-  notebook: {
-    width: 280,
-    maxHeight: '100%',
-    aspectRatio: 672 / 612,
-  },
-  jam: {
-    width: '100%',
-    maxWidth: 360,
-    aspectRatio: 833 / 531,
+  art: {
+    height: '100%',
+    maxWidth: '100%',
+    aspectRatio: ART_RATIO,
   },
   texts: {
     gap: space[16],

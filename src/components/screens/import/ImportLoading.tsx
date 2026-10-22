@@ -8,20 +8,19 @@ import { color, space } from '@/theme/tokens';
 /** Durée de l'import simulé : de quoi voir l'animation tourner deux fois. */
 export const IMPORT_DURATION = 4200;
 
-export const PLATE = require('@/assets/images/illus/plate.png');
-export const FORK = require('@/assets/images/illus/fork.png');
-export const KNIFE = require('@/assets/images/illus/knife.png');
+const PLATE = require('@/assets/images/illus/plate.png');
+const FORK = require('@/assets/images/illus/fork.png');
+const KNIFE = require('@/assets/images/illus/knife.png');
 
 // Figma « Import en cours » (493:2221) : positions dans le groupe d'illustration de 352 × 285.
-// Reprises par l'onboarding, où les ingrédients se posent dans l'assiette.
-export const ART = { width: 352, height: 285 };
-export const PLATE_BOX = { left: 52, top: 134, width: 258, height: 151 };
-export const FORK_BOX = { left: 0, top: 129, width: 81, height: 113 };
-export const KNIFE_BOX = { left: 268, top: 130, width: 83, height: 138 };
+const ART = { width: 352, height: 285 };
+const PLATE_BOX = { left: 52, top: 134, width: 258, height: 151 };
+const FORK_BOX = { left: 0, top: 129, width: 81, height: 113 };
+const KNIFE_BOX = { left: 268, top: 130, width: 83, height: 138 };
 /** Centre du creux de l'assiette, où les ingrédients disparaissent. */
 const WELL = { x: 188, y: 196 };
 
-export const INGREDIENTS = [
+const INGREDIENTS = [
   { image: require('@/assets/images/illus/olive.png'), box: { left: 138, top: 0, width: 61, height: 73 }, spin: 40 },
   { image: require('@/assets/images/illus/onion.png'), box: { left: 191, top: 55, width: 78, height: 82 }, spin: -30 },
   { image: require('@/assets/images/illus/tomato.png'), box: { left: 113, top: 91, width: 82, height: 87 }, spin: 25 },
