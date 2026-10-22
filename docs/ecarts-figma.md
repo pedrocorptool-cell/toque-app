@@ -175,8 +175,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 
 - **Animations ajoutées** (analyse « find-animation-opportunities », absentes de Figma) : toast qui monte en fondu
   et repart par le même chemin, articles de la liste de courses qui changent de section en fondu (iOS et Android),
-  coche qui grandit en 140 ms, timbre de l'écran de fin qui se pose avec un léger rebond puis « Fais maison! »
-  souligné au stylo, fondu enchaîné quand la photo prise remplace la vignette. Avec « Réduire les animations » :
+  coche qui grandit en 140 ms, trait qui barre l'article coché tracé de gauche à droite, timbre de l'écran de fin
+  qui se pose avec un léger rebond puis « Fais maison! » souligné au stylo, fondu enchaîné quand la photo prise remplace la vignette. Avec « Réduire les animations » :
   fondus seulement.
 
 ## Limites connues

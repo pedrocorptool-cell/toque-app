@@ -33,8 +33,11 @@ export default function ListeScreen() {
   const reduceMotion = useReduceMotion();
 
   // Un article coché ou décoché change de section : les lignes se resserrent au lieu de sauter.
+  // Dernier article coché : son trait se trace en arrivant dans « Articles cochés ».
+  const [justChecked, setJustChecked] = useState<string | null>(null);
   const toggleSmoothly = (id: string) => {
     if (!reduceMotion) LayoutAnimation.configureNext(SECTION_CHANGE);
+    setJustChecked(!reduceMotion && items.some((i) => i.id === id && !i.checked) ? id : null);
     toggle(id);
   };
 
@@ -186,7 +189,12 @@ export default function ListeScreen() {
                 {`Articles cochés (${checked.length})`}
               </AppText>
               {checked.map((item) => (
-                <CheckedRow key={item.id} item={item} onToggle={() => toggleSmoothly(item.id)} />
+                <CheckedRow
+                  key={item.id}
+                  item={item}
+                  animateStrike={item.id === justChecked}
+                  onToggle={() => toggleSmoothly(item.id)}
+                />
               ))}
             </View>
           )}

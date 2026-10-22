@@ -1,9 +1,10 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Animated, PanResponder, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { AppText, Checkbox } from '@/components/ui';
 import type { ShoppingItem } from '@/data/ShoppingContext';
+import { motion } from '@/theme/motion';
 import { color, space, text } from '@/theme/tokens';
 
 /** Hauteur d'une ligne (24 px) plus l'écart entre deux lignes (16 px) : le pas du glisser-déposer. */
@@ -91,13 +92,46 @@ export function ToBuyRow(props: ToBuyRowProps) {
 }
 
 /** Figma « Liste » : article coché, barré et grisé, aligné sous les cases des articles à acheter. */
-export function CheckedRow({ item, onToggle }: { item: ShoppingItem; onToggle: () => void }) {
+/** Le trait qui barre l'article qu'on vient de cocher se trace de gauche à droite. */
+const STRIKE_DELAY = 120;
+const STRIKE_DURATION = 280;
+
+type CheckedRowProps = {
+  item: ShoppingItem;
+  onToggle: () => void;
+  /** Article qu'on vient de cocher : le trait se trace au lieu d'être déjà là. */
+  animateStrike?: boolean;
+};
+
+export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRowProps) {
+  // Trait dessiné par-dessus le texte pendant l'animation, puis barré du texte comme les autres lignes.
+  const [drawing, setDrawing] = useState(animateStrike);
+  const strike = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (!drawing) return;
+    const draw = Animated.sequence([
+      Animated.delay(STRIKE_DELAY),
+      Animated.timing(strike, { toValue: 1, duration: STRIKE_DURATION, easing: motion.easeOut, useNativeDriver: true }),
+    ]);
+    draw.start(({ finished }) => finished && setDrawing(false));
+    return () => draw.stop();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   return (
     <View style={[styles.row, styles.checkedRow]}>
       <Checkbox checked onChange={onToggle} />
-      <AppText color={color.textSecondary} style={styles.checkedText}>
-        {item.label}
-      </AppText>
+      <View style={styles.checkedLabel}>
+        <AppText
+          color={color.textSecondary}
+          style={!drawing && styles.struck}
+          // Sur plusieurs lignes, un seul trait ne suffit pas : barré direct.
+          onTextLayout={(e) => e.nativeEvent.lines.length > 1 && setDrawing(false)}>
+          {item.label}
+        </AppText>
+        {drawing && <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />}
+      </View>
     </View>
   );
 }
@@ -131,8 +165,20 @@ const styles = StyleSheet.create({
   checkedRow: {
     paddingLeft: 24 + space[8],
   },
-  checkedText: {
-    flex: 1,
+  checkedLabel: {
+    flexShrink: 1,
+  },
+  struck: {
     textDecorationLine: 'line-through',
+  },
+  // Même place et même épaisseur que le barré du texte.
+  strike: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    top: '55%',
+    height: 1,
+    backgroundColor: color.textSecondary,
+    transformOrigin: 'left',
   },
 });
