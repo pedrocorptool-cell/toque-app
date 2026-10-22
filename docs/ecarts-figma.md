@@ -173,6 +173,12 @@ l'icône active de la navbar sur `action/secondary/icon`.
   4e étape : choix de l'avatar Toqué, même carrousel et mêmes couleurs que le profil. « Valider » l'enregistre,
   « Ignorer » garde l'avatar actuel. Le CTA « Importer ma première recette » a disparu avec cette étape.
 
+- **Animations ajoutées** (analyse « find-animation-opportunities », absentes de Figma) : toast qui monte en fondu
+  et repart par le même chemin, articles de la liste de courses qui changent de section en fondu (iOS et Android),
+  coche qui grandit en 140 ms, timbre de l'écran de fin qui se pose avec un léger rebond puis « Fais maison! »
+  souligné au stylo, fondu enchaîné quand la photo prise remplace la vignette. Avec « Réduire les animations » :
+  fondus seulement.
+
 ## Limites connues
 
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.

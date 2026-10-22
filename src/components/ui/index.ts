@@ -17,3 +17,4 @@ export { Avatar } from './Avatar';
 export { ListCard, ListRow } from './ListCard';
 export { Radio } from './Radio';
 export { useToast, type ToastState } from './useToast';
+export { useReduceMotion } from './useReduceMotion';

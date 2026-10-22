@@ -325,40 +325,36 @@ export default function StepByStepScreen() {
             </Animated.View>
           </ScrollView>
 
-            <Animated.View
-              style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
-              <View style={styles.nav}>
-                <RoundButton
-                  icon="magic"
-                  label="Modifier avec l’IA"
-                  onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
-                />
-                {nextTimer && (
-                  <View ref={chipRef}>
-                    <Animated.View style={flying && { opacity: chipOpacity }}>
-                      <TimerChip
-                        count={timers.length}
-                        remaining={nextTimer.remaining}
-                        onPress={() => setTimersOpen(true)}
-                      />
-                    </Animated.View>
-                  </View>
-                )}
-              </View>
-              <View style={styles.nav}>
-                <RoundButton
-                  icon="caretLeft"
-                  label="Étape précédente"
-                  disabled={index === 0}
-                  onPress={() => goTo(index - 1)}
-                />
-                <RoundButton
-                  icon="caretRight"
-                  label="Étape suivante"
-                  onPress={() => goTo(index + 1)}
-                />
-              </View>
-            </Animated.View>
+          <Animated.View
+            style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
+            <View style={styles.nav}>
+              <RoundButton
+                icon="magic"
+                label="Modifier avec l’IA"
+                onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
+              />
+              {nextTimer && (
+                <View ref={chipRef}>
+                  <Animated.View style={flying && { opacity: chipOpacity }}>
+                    <TimerChip
+                      count={timers.length}
+                      remaining={nextTimer.remaining}
+                      onPress={() => setTimersOpen(true)}
+                    />
+                  </Animated.View>
+                </View>
+              )}
+            </View>
+            <View style={styles.nav}>
+              <RoundButton
+                icon="caretLeft"
+                label="Étape précédente"
+                disabled={index === 0}
+                onPress={() => goTo(index - 1)}
+              />
+              <RoundButton icon="caretRight" label="Étape suivante" onPress={() => goTo(index + 1)} />
+            </View>
+          </Animated.View>
         </>
       )}
 
@@ -382,11 +378,11 @@ export default function StepByStepScreen() {
         <FlyingCard flight={flight} from={flying.from} to={flying.to ?? flying.from} remaining={flying.remaining} />
       )}
 
-      {toast && (
-        <View style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom }]}>
-          <Toast message={toast} onClose={() => setToast(null)} />
-        </View>
-      )}
+      <Toast
+        message={toast}
+        onClose={() => setToast(null)}
+        style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom }]}
+      />
 
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
     </Animated.View>

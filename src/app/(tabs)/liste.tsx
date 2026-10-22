@@ -4,6 +4,7 @@ import {
   Animated,
   Keyboard,
   KeyboardAvoidingView,
+  LayoutAnimation,
   Platform,
   Pressable,
   ScrollView,
@@ -14,11 +15,14 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
-import { AppText, ChefButton, Dialog, Logo, Toast } from '@/components/ui';
+import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion } from '@/components/ui';
 import { useShopping } from '@/data/ShoppingContext';
 import { color, radius, space } from '@/theme/tokens';
 
 type Drag = { id: string; from: number; to: number };
+
+/** Passage d'un article entre « À acheter » et « Articles cochés » : fondu et resserrement en 200 ms. */
+const SECTION_CHANGE = LayoutAnimation.create(200, 'easeInEaseOut', 'opacity');
 
 /** Figma : « Liste » (244:3444) — liste de courses, articles à acheter puis articles cochés. */
 export default function ListeScreen() {
@@ -26,6 +30,13 @@ export default function ListeScreen() {
   const { items, addItem, rename, toggle, remove, clear, move } = useShopping();
   const toBuy = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
+  const reduceMotion = useReduceMotion();
+
+  // Un article coché ou décoché change de section : les lignes se resserrent au lieu de sauter.
+  const toggleSmoothly = (id: string) => {
+    if (!reduceMotion) LayoutAnimation.configureNext(SECTION_CHANGE);
+    toggle(id);
+  };
 
   const [focusedId, setFocusedId] = useState<string | null>(null);
   // Ligne à mettre en saisie : n change à chaque demande, pour refocaliser une ligne déjà ciblée.
@@ -121,10 +132,7 @@ export default function ListeScreen() {
       </View>
 
       <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView
-          contentContainerStyle={styles.content}
-          keyboardShouldPersistTaps="handled"
-          scrollEnabled={!drag}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" scrollEnabled={!drag}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <AppText variant="overline" color={color.textSecondary}>
@@ -151,7 +159,7 @@ export default function ListeScreen() {
                 focusRequest={focusRequest?.id === item.id ? focusRequest.n : 0}
                 dragging={drag?.id === item.id}
                 offset={drag?.id === item.id ? dragY : shiftOf(index)}
-                onToggle={() => item.label.trim() && toggle(item.id)}
+                onToggle={() => item.label.trim() && toggleSmoothly(item.id)}
                 onRename={(label) => rename(item.id, label)}
                 onFocus={() => setFocusedId(item.id)}
                 onBlur={() => setFocusedId((id) => (id === item.id ? null : id))}
@@ -178,18 +186,14 @@ export default function ListeScreen() {
                 {`Articles cochés (${checked.length})`}
               </AppText>
               {checked.map((item) => (
-                <CheckedRow key={item.id} item={item} onToggle={() => toggle(item.id)} />
+                <CheckedRow key={item.id} item={item} onToggle={() => toggleSmoothly(item.id)} />
               ))}
             </View>
           )}
         </ScrollView>
       </KeyboardAvoidingView>
 
-      {toast && (
-        <View style={styles.toast}>
-          <Toast message={toast} onClose={() => setToast(null)} />
-        </View>
-      )}
+      <Toast message={toast} onClose={() => setToast(null)} style={styles.toast} />
 
       <Dialog
         visible={clearOpen}

@@ -38,11 +38,7 @@ export function ProfileScreen({ title, back, toast, children }: ProfileScreenPro
         {children}
       </ScrollView>
 
-      {toast.message && (
-        <View style={styles.toast}>
-          <Toast message={toast.message} onClose={toast.hide} />
-        </View>
-      )}
+      <Toast message={toast.message} onClose={toast.hide} style={styles.toast} />
     </View>
   );
 }

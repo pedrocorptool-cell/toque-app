@@ -1,10 +1,20 @@
-import { Image, Pressable, StyleSheet, useWindowDimensions, View, type ImageSourcePropType } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Image,
+  Pressable,
+  StyleSheet,
+  useWindowDimensions,
+  View,
+  type ImageSourcePropType,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import Svg, { Circle, Defs, Mask, Path, Rect } from 'react-native-svg';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon } from '@/components/icons/Icon';
-import { AppText, Button, TextButton } from '@/components/ui';
+import { AppText, Button, TextButton, useReduceMotion } from '@/components/ui';
+import { motion } from '@/theme/motion';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
 /** Figma « Recette/ Stepp/ Fin » (452:1752) : timbre de 265 × 307, photo de 220 × 200. */
@@ -13,6 +23,20 @@ const STAMP_HEIGHT = 307;
 /** Dentelure : trous de 12 px tous les 24 px, centrés sur les bords. */
 const HOLE = 6;
 const PITCH = 24;
+
+/** Le timbre se pose après le fondu de l'écran : un peu agrandi et penché, il se remet en place avec un léger rebond. */
+const STAMP_DELAY = 150;
+const STAMP_SPRING = { stiffness: 160, damping: 20, mass: 1 };
+const STAMP_SCALE = 1.08;
+const STAMP_TILT = '-6deg';
+/** Puis « Fais maison! » se souligne comme au stylo. */
+const UNDERLINE_LENGTH = 90;
+const UNDERLINE_DELAY = 450;
+const UNDERLINE_DURATION = 300;
+/** Fondu enchaîné entre l'ancienne vignette et la photo prise. */
+const PHOTO_FADE = 250;
+
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 type FinishStepProps = {
   /** Vignette actuelle de la recette (la photo prise, une fois remplacée). */
@@ -29,6 +53,43 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
   const { width: screenWidth } = useWindowDimensions();
   // Figma : titre à 80 px du haut de l'écran, barre d'état comprise.
   const paddingTop = Math.max(space[80], insets.top + space[24]);
+  const reduceMotion = useReduceMotion();
+  const landing = useRef(new Animated.Value(0)).current;
+  const underline = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (reduceMotion) {
+      landing.setValue(1);
+      underline.setValue(1);
+      return;
+    }
+    const intro = Animated.parallel([
+      Animated.sequence([
+        Animated.delay(STAMP_DELAY),
+        Animated.spring(landing, { toValue: 1, ...STAMP_SPRING, useNativeDriver: true }),
+      ]),
+      Animated.sequence([
+        Animated.delay(UNDERLINE_DELAY),
+        // Le tracé SVG n'est pas animable par le driver natif.
+        Animated.timing(underline, {
+          toValue: 1,
+          duration: UNDERLINE_DURATION,
+          easing: motion.easeOut,
+          useNativeDriver: false,
+        }),
+      ]),
+    ]);
+    intro.start();
+    return () => intro.stop();
+  }, [reduceMotion, landing, underline]);
+
+  const stampMotion = {
+    opacity: landing.interpolate({ inputRange: [0, 0.4, 1], outputRange: [0, 1, 1], extrapolate: 'clamp' }),
+    transform: [
+      { scale: landing.interpolate({ inputRange: [0, 1], outputRange: [STAMP_SCALE, 1] }) },
+      { rotate: landing.interpolate({ inputRange: [0, 1], outputRange: [STAMP_TILT, '0deg'] }) },
+    ],
+  };
   return (
     <View style={[styles.screen, { paddingTop, paddingBottom: insets.bottom + space[24] }]}>
       <View style={styles.main}>
@@ -41,13 +102,13 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
           <View style={[styles.glow, { left: -(screenWidth - STAMP_WIDTH) / 2 }]} pointerEvents="none">
             <BlurGlow source={image} width={screenWidth} height={STAMP_HEIGHT} blur={blur.glow} />
           </View>
-          <View style={styles.stamp}>
+          <Animated.View style={[styles.stamp, stampMotion]}>
             <StampPaper />
             <Pressable
               accessibilityRole="button"
               accessibilityLabel={photoTaken ? 'Reprendre la photo' : 'Prendre une photo'}
               onPress={onTakePhoto}>
-              <Image source={image} style={styles.photo} />
+              <CrossfadePhoto source={image} instant={reduceMotion} />
             </Pressable>
             <View style={styles.stampFooter}>
               <View style={styles.homemade}>
@@ -55,7 +116,9 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
                   Fais maison!
                 </AppText>
                 <Svg width={86} height={4} style={styles.underline}>
-                  <Path
+                  <AnimatedPath
+                    strokeDasharray={UNDERLINE_LENGTH}
+                    strokeDashoffset={underline.interpolate({ inputRange: [0, 1], outputRange: [UNDERLINE_LENGTH, 0] })}
                     d="M0 3C0.1 3 0.2 3 3.86 2.52C7.5 2.04 14.66 1.1 28.78 0.55C42.9 0.01 63.75 -0.11 85.66 0.09"
                     stroke={color.accentBlue}
                     strokeWidth={2.2}
@@ -72,7 +135,7 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
                 <Icon name="camera" color={color.actionPrimaryText} />
               </Pressable>
             </View>
-          </View>
+          </Animated.View>
         </View>
 
         <AppText variant="body" color={color.textOnBrandPrimary} style={[styles.center, styles.message]}>
@@ -86,6 +149,32 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
         <TextButton tone="onBrand" label="Retour" onPress={onBack} />
         <Button variant="secondary" label="Terminer" onPress={onDone} block />
       </View>
+    </View>
+  );
+}
+
+/** Vignette du timbre : la nouvelle photo apparaît en fondu par-dessus l'ancienne. */
+function CrossfadePhoto({ source, instant }: { source: ImageSourcePropType; instant: boolean }) {
+  const [current, setCurrent] = useState(source);
+  const [previous, setPrevious] = useState<ImageSourcePropType | null>(null);
+  const fade = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (source === current) return;
+    setPrevious(instant ? null : current);
+    setCurrent(source);
+    if (instant) return;
+    fade.setValue(0);
+    Animated.timing(fade, { toValue: 1, duration: PHOTO_FADE, easing: motion.easeOut, useNativeDriver: true }).start(
+      ({ finished }) => finished && setPrevious(null),
+    );
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [source]);
+
+  return (
+    <View style={styles.photo}>
+      {previous && <Image source={previous} style={[StyleSheet.absoluteFill, styles.photo]} />}
+      <Animated.Image source={current} style={[StyleSheet.absoluteFill, styles.photo, { opacity: fade }]} />
     </View>
   );
 }

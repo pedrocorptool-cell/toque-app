@@ -137,7 +137,14 @@ export default function RecipeScreen() {
   const startStepByStep = () => {
     photoRef.current?.measureInWindow((px, py, ps) => {
       blurRef.current?.measureInWindow((_bx, by, _bw, bh) => {
-        const params = { id: recipe.id, px: String(px), py: String(py), ps: String(ps), by: String(by), bh: String(bh) };
+        const params = {
+          id: recipe.id,
+          px: String(px),
+          py: String(py),
+          ps: String(ps),
+          by: String(by),
+          bh: String(bh),
+        };
         router.push({ pathname: '/pas-a-pas/[id]', params });
       });
     });
@@ -297,14 +304,23 @@ export default function RecipeScreen() {
         </View>
       )}
 
-      {toast && (
-        <View style={[styles.toast, { bottom: (tab === 'steps' || nextTimer ? CTA_SPACE : space[16]) + insets.bottom }]}>
-          <Toast message={toast} onClose={() => setToast(null)} />
-        </View>
-      )}
+      <Toast
+        message={toast}
+        onClose={() => setToast(null)}
+        style={[styles.toast, { bottom: (tab === 'steps' || nextTimer ? CTA_SPACE : space[16]) + insets.bottom }]}
+      />
 
-      <Modal visible={menuOpen} transparent animationType="fade" onRequestClose={() => setMenuOpen(false)} statusBarTranslucent>
-        <Pressable style={StyleSheet.absoluteFill} onPress={() => setMenuOpen(false)} accessibilityLabel="Fermer le menu" />
+      <Modal
+        visible={menuOpen}
+        transparent
+        animationType="fade"
+        onRequestClose={() => setMenuOpen(false)}
+        statusBarTranslucent>
+        <Pressable
+          style={StyleSheet.absoluteFill}
+          onPress={() => setMenuOpen(false)}
+          accessibilityLabel="Fermer le menu"
+        />
         <View style={[styles.menu, { top: insets.top + space[16] + 40 + space[8] }]}>
           <ActionMenu
             items={[
@@ -340,8 +356,7 @@ export default function RecipeScreen() {
         title="Supprimer la recette"
         message={
           <>
-            Es-tu sûr de vouloir supprimer la recette{' '}
-            <AppText style={styles.strong}>{recipe.title}</AppText> ?
+            Es-tu sûr de vouloir supprimer la recette <AppText style={styles.strong}>{recipe.title}</AppText> ?
           </>
         }
         confirmLabel="Oui, supprimer"

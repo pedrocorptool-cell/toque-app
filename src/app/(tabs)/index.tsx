@@ -161,11 +161,7 @@ export default function HomeScreen() {
         <Fab onPress={() => setImportOpen(true)} />
       </View>
 
-      {toast && (
-        <View style={styles.toast}>
-          <Toast message={toast} onClose={() => setToast(null)} />
-        </View>
-      )}
+      <Toast message={toast} onClose={() => setToast(null)} style={styles.toast} />
 
       <FilterSheet
         visible={openFilter !== null}

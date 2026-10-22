@@ -15,9 +15,11 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
+import { motion } from '@/theme/motion';
 import { color, radius, shadow, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { useReduceMotion } from './useReduceMotion';
 import { Button, TextButton } from './Button';
 
 type BottomSheetProps = {
@@ -182,7 +184,15 @@ export function DialogFrame({ visible, onClose, title, children }: DialogFramePr
 }
 
 /** Figma : « Dialogue » — titre, texte et deux actions. */
-export function Dialog({ visible, onClose, title, message, confirmLabel, onConfirm, cancelLabel = 'Annuler' }: DialogProps) {
+export function Dialog({
+  visible,
+  onClose,
+  title,
+  message,
+  confirmLabel,
+  onConfirm,
+  cancelLabel = 'Annuler',
+}: DialogProps) {
   return (
     <DialogFrame visible={visible} onClose={onClose} title={title}>
       <AppText color={color.textSecondary} style={[styles.center, styles.message]}>
@@ -205,18 +215,54 @@ function CloseButton({ onPress }: { onPress: () => void }) {
 }
 
 /** Figma : « Toast » — confirmation éphémère. */
-export function Toast({ message, onClose }: { message: string; onClose?: () => void }) {
+type ToastProps = {
+  /** `null` : le toast repart par où il est arrivé, puis disparaît. */
+  message: string | null;
+  onClose?: () => void;
+  /** Placement à l'écran (position absolue de l'écran qui l'affiche). */
+  style?: StyleProp<ViewStyle>;
+};
+
+const TOAST_IN = 220;
+const TOAST_OUT = 160;
+/** Décalage vers le bas au départ et à l'arrivée. */
+const TOAST_SHIFT = 16;
+
+/** Figma : « Toast ». Monte en fondu depuis le bas et repart par le même chemin. */
+export function Toast({ message, onClose, style }: ToastProps) {
+  const reduceMotion = useReduceMotion();
+  // Garde le dernier message affiché pendant l'animation de sortie.
+  const [shown, setShown] = useState(message);
+  const progress = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (message) setShown(message);
+    Animated.timing(progress, {
+      toValue: message ? 1 : 0,
+      duration: message ? TOAST_IN : TOAST_OUT,
+      easing: message ? motion.easeOut : motion.easeIn,
+      useNativeDriver: true,
+    }).start(({ finished }) => {
+      if (finished && !message) setShown(null);
+    });
+  }, [message, progress]);
+
+  if (!shown) return null;
+  const translateY = reduceMotion ? 0 : progress.interpolate({ inputRange: [0, 1], outputRange: [TOAST_SHIFT, 0] });
+
   return (
-    <View style={styles.toast} accessibilityRole="alert" accessibilityLiveRegion="polite">
-      <AppText variant="label" style={styles.toastText}>
-        {message}
-      </AppText>
-      {onClose && (
-        <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
-          <Icon name="close" />
-        </Pressable>
-      )}
-    </View>
+    <Animated.View style={[style, { opacity: progress, transform: [{ translateY }] }]} pointerEvents="box-none">
+      <View style={styles.toast} accessibilityRole="alert" accessibilityLiveRegion="polite">
+        <AppText variant="label" style={styles.toastText}>
+          {shown}
+        </AppText>
+        {onClose && (
+          <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
+            <Icon name="close" />
+          </Pressable>
+        )}
+      </View>
+    </Animated.View>
   );
 }
 
