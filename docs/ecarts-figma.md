@@ -178,9 +178,6 @@ l'icône active de la navbar sur `action/secondary/icon`.
   coche qui grandit en 140 ms, timbre de l'écran de fin qui se pose avec un léger rebond puis « Fais maison! »
   souligné au stylo, fondu enchaîné quand la photo prise remplace la vignette. Avec « Réduire les animations » :
   fondus seulement.
-  Icônes de la barre du bas redessinées en traits (même rendu) : au clic sur un onglet, son icône se retrace
-  (livre, panier puis ses lattes, tête puis épaules), 480 ms. Le skill déconseille d'animer la navigation
-  principale ; demandé quand même, l'animation ne retarde pas le changement d'écran.
 
 ## Limites connues
 

@@ -1,15 +1,13 @@
-import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TabIcon, type TabIconName } from '@/components/icons/TabIcon';
+import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
-import { useReduceMotion } from './useReduceMotion';
 
-const TABS: Record<string, { label: string; icon: TabIconName }> = {
+const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Recettes', icon: 'book' },
   liste: { label: 'Liste', icon: 'basket' },
   profil: { label: 'Profil', icon: 'profile' },
@@ -18,9 +16,6 @@ const TABS: Record<string, { label: string; icon: TabIconName }> = {
 /** Figma : « Navbar » (Recettes / Liste / Profil), branchée comme barre d'onglets. */
 export function Navbar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
-  const reduceMotion = useReduceMotion();
-  // Compteur de clics par onglet : l'icône se redessine quand on arrive sur son onglet en le touchant.
-  const [plays, setPlays] = useState<Record<string, number>>({});
   return (
     <View style={[styles.bar, { paddingBottom: space[8] + insets.bottom }]}>
       {state.routes.map((route, index) => {
@@ -34,17 +29,10 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
             accessibilityState={{ selected: focused }}
             onPress={() => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (focused || event.defaultPrevented) return;
-              setPlays((p) => ({ ...p, [route.key]: (p[route.key] ?? 0) + 1 }));
-              navigation.navigate(route.name, route.params);
+              if (!focused && !event.defaultPrevented) navigation.navigate(route.name, route.params);
             }}
             style={styles.item}>
-            <TabIcon
-              name={tab.icon}
-              color={focused ? color.actionSecondaryIcon : color.textSecondary}
-              play={plays[route.key] ?? 0}
-              reduceMotion={reduceMotion}
-            />
+            <Icon name={tab.icon} color={focused ? color.actionSecondaryIcon : color.textSecondary} />
             <AppText variant="label" color={focused ? color.textPrimary : color.textSecondary}>
               {tab.label}
             </AppText>
