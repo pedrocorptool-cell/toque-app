@@ -1,66 +1,58 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, BackHandler, Image, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { AccessibilityInfo, Animated, BackHandler, StyleSheet, View, useWindowDimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, Button, IconButton, TextButton } from '@/components/ui';
+import { ART, OnboardingArt, type ArtName } from '@/components/screens/onboarding/OnboardingArt';
+import { AppText, Button, IconButton, Logo, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
-import { color, radius, space } from '@/theme/tokens';
+import { color, font, radius, space } from '@/theme/tokens';
 
-/** Figma « Illustrations > Onboarding » : les trois exports partagent le même cadre de 587 × 614. */
-const ART = {
-  import: require('@/assets/images/illus/onb-import.png'),
-  carnet: require('@/assets/images/illus/onb-carnet.png'),
-  cuisine: require('@/assets/images/illus/onb-cuisine.png'),
-};
-const ART_RATIO = 587 / 614;
-
-/** Les trois temps forts de l'app : récupérer une recette, la retrouver, la cuisiner. */
-const STEPS: { art: keyof typeof ART; title: string; message: string }[] = [
+// Espaces insécables devant « : » et « ! » : la ponctuation ne part pas seule à la ligne.
+const STEPS: { art: ArtName; text: string }[] = [
+  { art: 'import', text: 'Ne scrolle plus dans tes favoris sans fin : importe toutes tes recettes dans Toqué !' },
+  { art: 'sorter', text: 'Organise tes catégories, filtre tes recettes par créateur ou temps de préparation !' },
   {
-    art: 'import',
-    title: 'Garde toutes tes recettes',
-    message: 'Une vidéo Instagram ou TikTok, un site, une photo de livre : partage-la à Toqué, on en tire la recette.',
-  },
-  {
-    art: 'carnet',
-    title: 'Range ton carnet',
-    message: 'Classe tes recettes par catégorie et retrouve-les en un instant avec la recherche et les filtres.',
-  },
-  {
-    art: 'cuisine',
-    title: 'Cuisine sereinement',
-    message: 'Suis les étapes une à une, lance tes minuteurs et envoie les ingrédients dans ta liste de courses.',
+    art: 'list',
+    text: 'Fini les vidéos sur pause et les allers-retours entre apps. Suis chaque étape, minuteur en main.',
   },
 ];
 
 const LAST = STEPS.length - 1;
-/** Pastille de l'étape en cours, allongée ; les autres restent rondes. */
+/** Figma : pastille de l'étape en cours de 16 × 8, les autres de 8 × 8. */
 const DOT = 8;
-const DOT_ACTIVE = 24;
-/** Part de l'étape laissée à l'illustration : les titres commencent à la même hauteur d'une étape à l'autre. */
-const ART_SHARE = 0.55;
+const DOT_ACTIVE = 16;
+/** Figma : texte sur 4 lignes de 38 px, à 40 px sous l'illustration. */
+const TEXT_HEIGHT = 4 * 38;
+const ART_GAP = space[40];
 
 /**
- * Onboarding : trois écrans de présentation sur le fond brun de la marque, au premier lancement et depuis le profil.
- * Retour en haut à gauche, progression au centre, « Passer » à droite ; on avance au bouton ou en faisant glisser.
- * La dernière étape propose d'importer tout de suite une première recette ; « Passer » mène aux recettes.
+ * Figma « Onbarding » (578:7999) : trois écrans sur le fond brun, au premier lancement et depuis le profil.
+ * Retour, logo et « Ignorer » en haut ; progression et CTA en bas ; on avance au bouton ou en faisant glisser.
+ * Chaque illustration s'anime quand son étape est affichée.
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
   const { setOnboarded } = useProfile();
   const [index, setIndex] = useState(0);
-  // Hauteur du carrousel : chaque étape la prend toute, pour garder textes et illustrations alignés d'une étape à l'autre.
+  // Hauteur du carrousel, pour réduire l'illustration sur les petits écrans.
   const [pageHeight, setPageHeight] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const pager = useRef<Animated.FlatList<(typeof STEPS)[number]>>(null);
   const reduceMotion = useReduceMotion();
 
+  const contentWidth = width - space[16] * 2;
+  const artScale = Math.min(
+    1,
+    contentWidth / ART.width,
+    pageHeight ? (pageHeight - TEXT_HEIGHT - ART_GAP - space[24]) / ART.height : 1,
+  );
+
   const goTo = (i: number) => {
     setIndex(i);
     pager.current?.scrollToOffset({ offset: i * width, animated: !reduceMotion });
-    AccessibilityInfo.announceForAccessibility(`Étape ${i + 1} sur ${STEPS.length} : ${STEPS[i].title}`);
+    AccessibilityInfo.announceForAccessibility(`Étape ${i + 1} sur ${STEPS.length}`);
   };
 
   const finish = (importFirst: boolean) => {
@@ -80,16 +72,16 @@ export default function OnboardingScreen() {
   }, [index]);
 
   return (
-    <View style={[styles.screen, { paddingTop: insets.top + space[16], paddingBottom: insets.bottom + space[16] }]}>
+    <View style={[styles.screen, { paddingTop: insets.top + space[24], paddingBottom: insets.bottom + space[24] }]}>
       <View style={styles.topRow}>
         <View style={styles.side}>
           {index > 0 && (
             <IconButton icon="chevronLeft" accessibilityLabel="Étape précédente" onPress={() => goTo(index - 1)} />
           )}
         </View>
-        <Dots scrollX={scrollX} width={width} index={index} />
+        <Logo />
         <View style={[styles.side, styles.sideEnd]}>
-          <TextButton tone="onBrand" label="Passer" onPress={() => finish(false)} />
+          <TextButton tone="onBrand" label="Ignorer" onPress={() => finish(false)} />
         </View>
       </View>
 
@@ -111,47 +103,22 @@ export default function OnboardingScreen() {
             },
           })}
           scrollEventThrottle={16}
-          renderItem={({ item, index: i }) => {
-            // Parallaxe : l'illustration glisse moins vite que le texte et s'efface entre deux étapes.
-            const range = [(i - 1) * width, i * width, (i + 1) * width];
-            const artStyle = reduceMotion
-              ? undefined
-              : {
-                  opacity: scrollX.interpolate({ inputRange: range, outputRange: [0, 1, 0], extrapolate: 'clamp' }),
-                  transform: [
-                    {
-                      translateX: scrollX.interpolate({
-                        inputRange: range,
-                        outputRange: [width * 0.4, 0, -width * 0.4],
-                        extrapolate: 'clamp',
-                      }),
-                    },
-                  ],
-                };
-            return (
-              <View style={[styles.page, { width, height: pageHeight }]}>
-                <Animated.View style={[styles.artArea, { height: pageHeight * ART_SHARE }, artStyle]}>
-                  <Image source={ART[item.art]} style={styles.art} resizeMode="contain" />
-                </Animated.View>
-                <View style={styles.texts}>
-                  <AppText variant="display" color={color.textOnBrandPrimary} accessibilityRole="header">
-                    {item.title}
-                  </AppText>
-                  <AppText color={color.textOnBrandSecondary} style={styles.message}>
-                    {item.message}
-                  </AppText>
-                </View>
-              </View>
-            );
-          }}
+          renderItem={({ item, index: i }) => (
+            <View style={[styles.page, { width, height: pageHeight }]}>
+              <OnboardingArt name={item.art} playing={i === index && !reduceMotion} scale={artScale} />
+              <AppText color={color.textOnBrandPrimary} style={styles.text} accessibilityRole="header">
+                {item.text}
+              </AppText>
+            </View>
+          )}
         />
       </View>
 
-      <View style={styles.actions}>
+      <View style={styles.bottom}>
+        <Dots scrollX={scrollX} width={width} index={index} />
         <Button
           block
           variant="secondary"
-          icon={index === LAST ? 'plus' : undefined}
           label={index === LAST ? 'Importer ma première recette' : 'Continuer'}
           onPress={() => (index === LAST ? finish(true) : goTo(index + 1))}
         />
@@ -160,7 +127,7 @@ export default function OnboardingScreen() {
   );
 }
 
-/** Progression : une pastille par étape, celle en cours s'allonge en suivant le glissé. */
+/** Progression : une pastille par étape, celle en cours s'allonge et passe au bleu en suivant le glissé. */
 function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: number; index: number }) {
   return (
     <View
@@ -182,7 +149,11 @@ function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: numbe
                   outputRange: [DOT, DOT_ACTIVE, DOT],
                   extrapolate: 'clamp',
                 }),
-                opacity: scrollX.interpolate({ inputRange: range, outputRange: [0.4, 1, 0.4], extrapolate: 'clamp' }),
+                backgroundColor: scrollX.interpolate({
+                  inputRange: range,
+                  outputRange: [color.textPrimary, color.accentBlue, color.textPrimary],
+                  extrapolate: 'clamp',
+                }),
               },
             ]}
           />
@@ -210,8 +181,7 @@ const styles = StyleSheet.create({
   topRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    height: 48,
+    height: 40,
     paddingHorizontal: space[16],
   },
   side: {
@@ -221,44 +191,34 @@ const styles = StyleSheet.create({
   sideEnd: {
     justifyContent: 'flex-end',
   },
-  dots: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[8],
-  },
-  dot: {
-    height: DOT,
-    borderRadius: radius.pill,
-    backgroundColor: color.textOnBrandPrimary,
-  },
   pager: {
     flex: 1,
   },
   page: {
-    flex: 1,
-    paddingHorizontal: space[16],
-    paddingTop: space[24],
-    paddingBottom: space[32],
-    gap: space[32],
-  },
-  artArea: {
     alignItems: 'center',
     justifyContent: 'center',
+    gap: ART_GAP,
+    paddingHorizontal: space[16],
   },
-  art: {
-    height: '100%',
-    maxWidth: '100%',
-    aspectRatio: ART_RATIO,
+  // Figma : Zalando Sans Regular 28 / 38, sans style de texte partagé.
+  text: {
+    alignSelf: 'stretch',
+    minHeight: TEXT_HEIGHT,
+    fontFamily: font.regular,
+    fontSize: 28,
+    lineHeight: 38,
   },
-  texts: {
-    gap: space[16],
-  },
-  message: {
-    lineHeight: 24,
-  },
-  actions: {
-    alignItems: 'center',
+  bottom: {
     gap: space[24],
     paddingHorizontal: space[16],
+  },
+  dots: {
+    flexDirection: 'row',
+    alignSelf: 'center',
+    gap: space[4],
+  },
+  dot: {
+    height: DOT,
+    borderRadius: radius.pill,
   },
 });

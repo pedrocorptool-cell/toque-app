@@ -163,11 +163,11 @@ l'icône active de la navbar sur `action/secondary/icon`.
   - Le prototype n'embarque pas les sons : toucher un son le choisit et affiche l'onde pendant 2,4 s.
   - Le lien vers le design system a disparu de la page (toujours sur /design-system en web).
 - **Import en cours** : avec « Réduire les animations » activé, les ingrédients restent posés comme dans Figma.
-- **Onboarding** : pas encore de maquette. Trois étapes sur le fond brun, illustrations dessinées pour l'occasion
-  dans « Illustrations > Onboarding » (vidéo vers carnet, onglets et loupe, liste de courses et minuteur) ;
-  mise en page d'après la référence de Pierre (retour, progression, « Passer », CTA en bas). Montré au
-  lancement de chaque session du prototype (rien n'est sauvegardé), et rejouable depuis
-  Profil > Revoir la présentation. Sans paywall.
+- **Onboarding** (« Onbarding », 578:7999) : illustrations exportées en calques pour les animer pendant que
+  l'étape est affichée (icônes qui tombent dans l'assiette, fiches qui entrent dans le trieur, cases cochées une à une).
+  Une 3e et une 4e coche ont été ajoutées pour l'animation ; au repos, seules les deux de la maquette restent.
+  « filtres » corrigé en « filtre ». Montré au lancement de chaque session du prototype (rien n'est sauvegardé),
+  rejouable depuis Profil > Revoir la présentation. Sans paywall.
 
 ## Limites connues
 
