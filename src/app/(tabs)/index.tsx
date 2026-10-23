@@ -7,6 +7,7 @@ import { Icon } from '@/components/icons/Icon';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
+import { TimerDock } from '@/components/screens/TimerDock';
 import {
   AppText,
   ChefButton,
@@ -157,6 +158,8 @@ export default function HomeScreen() {
         </View>
       </ScrollView>
 
+      <TimerDock style={styles.timerDock} />
+
       <View style={styles.fab}>
         <Fab onPress={() => setImportOpen(true)} />
       </View>
@@ -281,6 +284,11 @@ const styles = StyleSheet.create({
   noRecipeText: {
     textAlign: 'center',
     lineHeight: 24,
+  },
+  // À gauche du bouton +, centrée sur lui (pastille de 48, bouton de 56).
+  timerDock: {
+    right: space[16] + 56 + space[8],
+    bottom: space[16] + 4,
   },
   fab: {
     position: 'absolute',

@@ -1,3 +1,4 @@
+import { router } from 'expo-router';
 import { useRef } from 'react';
 
 import { TimerList } from '@/components/screens/TimerList';
@@ -7,11 +8,11 @@ import { isDone, useTimers, type Timer } from '@/data/TimersContext';
 type TimerSheetProps = {
   visible: boolean;
   onClose: () => void;
-  /** Minuteurs d'une recette, triés par étape. */
+  /** Minuteurs d'une recette triés par étape, ou ceux de toutes les recettes hors fiche. */
   timers: Timer[];
 };
 
-/** Figma : sheet « Minuteur » — les minuteurs lancés d'une recette, pilotables. */
+/** Figma : sheet « Minuteur » — les minuteurs lancés, pilotables ; le chevron d'une carte ouvre sa recette. */
 export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
   const { remove } = useTimers();
   // Fige les cartes dès la fermeture : la sheet descend telle quelle, sans se redimensionner quand
@@ -31,7 +32,14 @@ export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
   return (
     <BottomSheet visible={visible && timers.length > 0} onClose={close} title="Minuteur">
       {/* Arrêter un minuteur terminé referme la sheet, les autres minuteurs continuent. */}
-      <TimerList timers={shown.current} onStop={close} />
+      <TimerList
+        timers={shown.current}
+        onStop={close}
+        onOpenRecipe={(id) => {
+          close();
+          router.push(`/recette/${id}`);
+        }}
+      />
     </BottomSheet>
   );
 }

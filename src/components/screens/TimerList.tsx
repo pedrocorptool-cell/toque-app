@@ -2,39 +2,60 @@ import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { AppText, Blink, formatDuration } from '@/components/ui';
+import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers, type Timer } from '@/data/TimersContext';
-import { color, radius, space } from '@/theme/tokens';
+import { color, font, radius, space } from '@/theme/tokens';
 
 type TimerListProps = {
   timers: Timer[];
   /** Après « Arrêter » sur un minuteur terminé. */
   onStop?: () => void;
+  /** Chevron de la carte : ouvre la fiche de la recette (absent pour la recette déjà à l'écran). */
+  onOpenRecipe?: (recipeId: string) => void;
 };
 
-/** Figma : cartes « Etape n » de « Bottom Sheet/ Minuteur » et « Dialogue/ Minuteur ». */
-export function TimerList({ timers, onStop }: TimerListProps) {
+/** Figma (639:17832) : cartes de « Bottom Sheet/ Minuteur », nom de la recette au-dessus de l'étape. */
+export function TimerList({ timers, onStop, onOpenRecipe }: TimerListProps) {
   return (
     <View style={styles.list}>
       {timers.map((t) => (
-        <TimerRow key={t.id} timer={t} onStop={onStop} />
+        <TimerRow key={t.id} timer={t} onStop={onStop} onOpenRecipe={onOpenRecipe} />
       ))}
     </View>
   );
 }
 
-function TimerRow({ timer, onStop }: { timer: Timer; onStop?: () => void }) {
-  const { toggle, reset, remove } = useTimers();
+function TimerRow({ timer, onStop, onOpenRecipe }: { timer: Timer } & Omit<TimerListProps, 'timers'>) {
+  const { toggle, reset, remove, focusedRecipeId } = useTimers();
+  const { recipes } = useRecipes();
+  const title = recipes.find((r) => r.id === timer.recipeId)?.title;
+  const canOpen = onOpenRecipe && timer.recipeId !== focusedRecipeId;
   return (
     <View style={styles.card}>
-      <View style={styles.header}>
-        <AppText variant="label" color={color.textSecondary} style={styles.step}>
-          {`Étape ${timer.step + 1}`}
-        </AppText>
-        <Blink active={isDone(timer)}>
-          <AppText variant="timer" style={styles.time}>
-            {formatDuration(timer.remaining)}
+      <View>
+        {title && <AppText style={styles.recipe}>{title}</AppText>}
+        <View style={styles.header}>
+          <AppText variant="label" color={color.textSecondary} style={styles.step}>
+            {`Étape ${timer.step + 1}`}
           </AppText>
-        </Blink>
+          <View style={styles.headerRight}>
+            <Blink active={isDone(timer)}>
+              <AppText variant="timer" style={styles.time}>
+                {formatDuration(timer.remaining)}
+              </AppText>
+            </Blink>
+            {canOpen && (
+              <Pressable
+                accessibilityRole="button"
+                accessibilityLabel={`Voir la recette ${title ?? ''}`.trim()}
+                hitSlop={space[12]}
+                onPress={() => onOpenRecipe(timer.recipeId)}
+                style={({ pressed }) => pressed && styles.pressedIcon}>
+                <Icon name="caretRight" />
+              </Pressable>
+            )}
+          </View>
+        </View>
       </View>
       {isDone(timer) ? (
         <View style={styles.controls}>
@@ -88,6 +109,19 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  headerRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
+  recipe: {
+    fontFamily: font.medium,
+    fontSize: 14,
+    lineHeight: 24,
+  },
+  pressedIcon: {
+    opacity: 0.6,
   },
   step: {
     lineHeight: 24,

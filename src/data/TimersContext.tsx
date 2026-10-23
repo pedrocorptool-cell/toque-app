@@ -23,6 +23,9 @@ type TimersState = {
   /** Fiche recette à l'écran : ses minuteurs terminés s'affichent dans sa sheet, pas dans le dialogue. */
   focusedRecipeId: string | null;
   setFocusedRecipeId: (id: string | null) => void;
+  /** Sheet « Minuteur » hors fiche recette : ouverte par la pastille ou quand un minuteur sonne. */
+  sheetOpen: boolean;
+  setSheetOpen: (open: boolean) => void;
 };
 
 const TimersContext = createContext<TimersState | null>(null);
@@ -32,6 +35,7 @@ const timerId = (recipeId: string, step: number) => `${recipeId}:${step}`;
 export function TimersProvider({ children }: { children: ReactNode }) {
   const [timers, setTimers] = useState<Timer[]>([]);
   const [focusedRecipeId, setFocusedRecipeId] = useState<string | null>(null);
+  const [sheetOpen, setSheetOpen] = useState(false);
 
   const anyRunning = timers.some((t) => t.running);
   useEffect(() => {
@@ -65,8 +69,10 @@ export function TimersProvider({ children }: { children: ReactNode }) {
       remove: (id) => setTimers((list) => list.filter((t) => t.id !== id)),
       focusedRecipeId,
       setFocusedRecipeId,
+      sheetOpen,
+      setSheetOpen,
     }),
-    [timers, focusedRecipeId],
+    [timers, focusedRecipeId, sheetOpen],
   );
 
   return <TimersContext.Provider value={value}>{children}</TimersContext.Provider>;

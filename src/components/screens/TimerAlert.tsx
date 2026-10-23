@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef } from 'react';
 
 import { useProfile } from '@/data/ProfileContext';
 import { isDone, useTimers } from '@/data/TimersContext';
@@ -13,21 +13,28 @@ import { TimerSheet } from './TimerSheet';
  * fiche de la recette.
  */
 export function TimerAlert() {
-  const { timers, focusedRecipeId } = useTimers();
+  const { timers, focusedRecipeId, sheetOpen: open, setSheetOpen: setOpen } = useTimers();
   const { timerSound } = useProfile();
   useTimerSound(timerSound, timers.some(isDone) ? 'loop' : 'off');
-  const [open, setOpen] = useState(false);
   // Sur la fiche de la recette concernée, c'est sa sheet qui s'ouvre.
   const doneCount = timers.filter((t) => isDone(t) && t.recipeId !== focusedRecipeId).length;
   const previous = useRef(doneCount);
 
   useEffect(() => {
     if (doneCount > previous.current) setOpen(true);
-    if (doneCount === 0) setOpen(false);
+    if (doneCount === 0 && previous.current > 0) setOpen(false);
     previous.current = doneCount;
-  }, [doneCount]);
+  }, [doneCount, setOpen]);
 
-  const sorted = [...timers].sort((a, b) => Number(isDone(b)) - Number(isDone(a)) || a.step - b.step);
+  // Plus aucun minuteur : la sheet ne doit pas se rouvrir toute seule au prochain lancement.
+  const hasTimers = timers.length > 0;
+  useEffect(() => {
+    if (!hasTimers) setOpen(false);
+  }, [hasTimers, setOpen]);
+
+  const sorted = [...timers].sort(
+    (a, b) => Number(isDone(b)) - Number(isDone(a)) || a.recipeId.localeCompare(b.recipeId) || a.step - b.step,
+  );
 
   // La sheet arrête elle-même les minuteurs terminés quand on la ferme.
   return <TimerSheet visible={open} onClose={() => setOpen(false)} timers={sorted} />;

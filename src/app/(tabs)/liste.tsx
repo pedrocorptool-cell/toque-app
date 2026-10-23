@@ -15,8 +15,10 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
+import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion } from '@/components/ui';
 import { useShopping } from '@/data/ShoppingContext';
+import { useTimers } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
 
 type Drag = { id: string; from: number; to: number };
@@ -27,6 +29,7 @@ const SECTION_CHANGE = LayoutAnimation.create(200, 'easeInEaseOut', 'opacity');
 /** Figma : « Liste » (244:3444) — liste de courses, articles à acheter puis articles cochés. */
 export default function ListeScreen() {
   const insets = useSafeAreaInsets();
+  const docked = useTimers().timers.length > 0;
   const { items, addItem, rename, toggle, remove, clear, move } = useShopping();
   const toBuy = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
@@ -135,7 +138,10 @@ export default function ListeScreen() {
       </View>
 
       <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" scrollEnabled={!drag}>
+        <ScrollView
+          contentContainerStyle={[styles.content, docked && { paddingBottom: space[16] + TIMER_DOCK_SPACE }]}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={!drag}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <AppText variant="overline" color={color.textSecondary}>
@@ -201,7 +207,13 @@ export default function ListeScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <Toast message={toast} onClose={() => setToast(null)} style={styles.toast} />
+      <TimerDock />
+
+      <Toast
+        message={toast}
+        onClose={() => setToast(null)}
+        style={[styles.toast, docked && { bottom: space[16] + TIMER_DOCK_SPACE }]}
+      />
 
       <Dialog
         visible={clearOpen}
