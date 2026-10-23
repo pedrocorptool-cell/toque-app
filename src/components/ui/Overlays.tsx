@@ -219,6 +219,8 @@ type ToastProps = {
   /** `null` : le toast repart par où il est arrivé, puis disparaît. */
   message: string | null;
   onClose?: () => void;
+  /** Action texte à droite du message (« Voir »). */
+  action?: { label: string; onPress: () => void };
   /** Placement à l'écran (position absolue de l'écran qui l'affiche). */
   style?: StyleProp<ViewStyle>;
 };
@@ -229,14 +231,18 @@ const TOAST_OUT = 160;
 const TOAST_SHIFT = 16;
 
 /** Figma : « Toast ». Monte en fondu depuis le bas et repart par le même chemin. */
-export function Toast({ message, onClose, style }: ToastProps) {
+export function Toast({ message, onClose, action, style }: ToastProps) {
   const reduceMotion = useReduceMotion();
-  // Garde le dernier message affiché pendant l'animation de sortie.
+  // Garde le dernier message (et son action) affiché pendant l'animation de sortie.
   const [shown, setShown] = useState(message);
+  const [shownAction, setShownAction] = useState(action);
   const progress = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    if (message) setShown(message);
+    if (message) {
+      setShown(message);
+      setShownAction(action);
+    }
     Animated.timing(progress, {
       toValue: message ? 1 : 0,
       duration: message ? TOAST_IN : TOAST_OUT,
@@ -256,6 +262,7 @@ export function Toast({ message, onClose, style }: ToastProps) {
         <AppText variant="label" style={styles.toastText}>
           {shown}
         </AppText>
+        {shownAction && <TextButton label={shownAction.label} onPress={shownAction.onPress} />}
         {onClose && (
           <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
             <Icon name="close" />

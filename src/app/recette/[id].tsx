@@ -38,6 +38,8 @@ const TABS = [
   { value: 'steps', label: 'Recette', icon: 'recipe' },
 ] as const;
 
+/** Fin du toast d'ajout à la liste de courses, qui porte l'action « Voir ». */
+const LIST_TOAST_END = 'à la liste';
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
 /** Bouton flottant « Démarrer la recette » : 48 px de haut, à 32 px du bas de l'écran. */
@@ -307,6 +309,17 @@ export default function RecipeScreen() {
       <Toast
         message={toast}
         onClose={() => setToast(null)}
+        action={
+          toast?.endsWith(LIST_TOAST_END)
+            ? {
+                label: 'Voir',
+                onPress: () => {
+                  setToast(null);
+                  router.navigate('/liste');
+                },
+              }
+            : undefined
+        }
         style={[styles.toast, { bottom: (tab === 'steps' || nextTimer ? CTA_SPACE : space[16]) + insets.bottom }]}
       />
 
@@ -390,8 +403,8 @@ export default function RecipeScreen() {
           setShoppingOpen(false);
           setToast(
             selected.length > 1
-              ? `${selected.length} ingrédients ajoutés à ta liste de courses`
-              : '1 ingrédient ajouté à ta liste de courses',
+              ? `${selected.length} ingrédients ajoutés ${LIST_TOAST_END}`
+              : `1 ingrédient ajouté ${LIST_TOAST_END}`,
           );
         }}
       />
