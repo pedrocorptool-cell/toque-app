@@ -1,19 +1,19 @@
 import { useEffect, useRef, useState } from 'react';
 
-import { DialogFrame } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
 import { isDone, useTimers } from '@/data/TimersContext';
 import { useTimerSound } from '@/data/useTimerSound';
 
-import { TimerList } from './TimerList';
+import { TimerSheet } from './TimerSheet';
 
 /**
- * Figma : « Dialogue/ Minuteur ». Monté à la racine de l'app : s'ouvre où que l'on soit
- * dès qu'un minuteur arrive à zéro, avec ceux qui tournent encore en dessous. La sonnerie choisie dans le
- * profil boucle tant qu'un minuteur terminé n'a pas été arrêté, y compris sur la fiche de la recette.
+ * Sheet « Minuteur » montée à la racine de l'app : s'ouvre où que l'on soit dès qu'un minuteur arrive à
+ * zéro, avec ceux qui tournent encore en dessous (la même sheet que sur la fiche, à la place du dialogue).
+ * La sonnerie choisie dans le profil boucle tant qu'un minuteur terminé n'a pas été arrêté, y compris sur la
+ * fiche de la recette.
  */
 export function TimerAlert() {
-  const { timers, remove, focusedRecipeId } = useTimers();
+  const { timers, focusedRecipeId } = useTimers();
   const { timerSound } = useProfile();
   useTimerSound(timerSound, timers.some(isDone) ? 'loop' : 'off');
   const [open, setOpen] = useState(false);
@@ -27,20 +27,8 @@ export function TimerAlert() {
     previous.current = doneCount;
   }, [doneCount]);
 
-  const close = () => {
-    // Fermer vaut « Arrêter » pour les minuteurs terminés ; les autres continuent.
-    timers.filter(isDone).forEach((t) => remove(t.id));
-    setOpen(false);
-  };
-
   const sorted = [...timers].sort((a, b) => Number(isDone(b)) - Number(isDone(a)) || a.step - b.step);
-  // Garde la liste affichée pendant le fondu de fermeture.
-  const shown = useRef(sorted);
-  if (open) shown.current = sorted;
 
-  return (
-    <DialogFrame visible={open} onClose={close} title="Minuteurs">
-      <TimerList timers={shown.current} />
-    </DialogFrame>
-  );
+  // La sheet arrête elle-même les minuteurs terminés quand on la ferme.
+  return <TimerSheet visible={open} onClose={() => setOpen(false)} timers={sorted} />;
 }

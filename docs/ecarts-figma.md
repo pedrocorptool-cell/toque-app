@@ -60,14 +60,15 @@ l'icône active de la navbar sur `action/secondary/icon`.
   Rendu avec Skia sur mobile (le `blurRadius` natif garde des bords nets) et le filtre CSS `blur()` sur le web.
   Le rendu varie un peu entre iOS, Android et le web.
 - **Pastille d'étape et minuteur** : un appui lance ou met en pause le compte à rebours (icône lecture /
-  pause). La fin est signalée par la sheet ou le dialogue « Minuteurs » (voir plus bas).
+  pause). La fin est signalée par la sheet « Minuteur » (voir plus bas).
   L'étape 3 de « Pasta alla zozzona » a un minuteur de 10 s pour tester.
 - **Minuteurs** (section Figma « Feature minuteur ») : le premier appui sur une pastille lance le minuteur,
   les suivants ouvrent « Bottom Sheet/ Minuteur » (pause, recommencer, supprimer). Les minuteurs tournent
-  même hors de la fiche. Quand l'un arrive à zéro, « Dialogue/ Minuteur » s'ouvre où que l'on soit
-  (« Arrêter » le retire ; la croix arrête les minuteurs terminés et laisse tourner les autres).
+  même hors de la fiche. Quand l'un arrive à zéro, la sheet « Minuteur » s'ouvre où que l'on soit, à la place
+  de « Dialogue/ Minuteur » (décision de Pierre, pour garder un seul composant d'alarme) ; « Arrêter » le
+  retire, la croix arrête les minuteurs terminés et laisse tourner les autres.
   Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres
-  pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet, le dialogue et la pastille d'étape.
+  pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet et la pastille d'étape.
 - **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`) et la
   pastille blanche glisse d'un onglet à l'autre (250 ms).
 
@@ -90,7 +91,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - Bouton IA (baguette) : gardé en V1 comme point d'entrée de « Modifier avec l'IA », sans action pour
   l'instant (message d'attente), sur décision de Pierre.
 - Le minuteur de l'étape est le même que sur la fiche (lancé ici, il apparaît aussi dans la sheet).
-  Quand il arrive à zéro dans ce mode, le dialogue « Minuteurs » s'ouvre.
+  Quand il arrive à zéro dans ce mode, la sheet « Minuteur » s'ouvre.
 - Icônes ajoutées depuis Figma : `magic`, `caretLeft`, `caretRight`.
   Sur l'onglet Ingrédients, le rappel « Minuteurs (n) » ouvre la même sheet. Pas de son ni de
   notification système dans le prototype.
@@ -108,8 +109,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Minuteurs lancés** (maquette d'exploration 442:849) : une fois lancé, le minuteur quitte l'étape et devient une
   pastille parmi les actions du bas (icône réveil, temps du minuteur qui sonne le plus tôt, « (n) » à partir de deux,
   clignote à zéro). Elle ouvre la sheet « Minuteur » avec tous les minuteurs de la recette. Arrêté depuis la sheet,
-  le minuteur revient sur son étape. Un minuteur de la recette qui se termine ouvre cette sheet, comme sur la fiche,
-  au lieu du dialogue global. Au lancement depuis l'étape, la carte se resserre et glisse jusqu'à la pastille
+  le minuteur revient sur son étape. Un minuteur de la recette qui se termine ouvre cette sheet, comme partout
+  ailleurs. Au lancement depuis l'étape, la carte se resserre et glisse jusqu'à la pastille
   (450 ms), seulement si aucun minuteur ne tourne déjà. « Arrêter » sur un minuteur terminé referme la sheet.
 
 - **Écran de fin** (Figma 452:1752) : la flèche suivante de la dernière étape l'ouvre. Toucher la photo du timbre
