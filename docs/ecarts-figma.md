@@ -153,6 +153,10 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Profil** (Figma, section « Profil » 536:7387) : écrans Profil, Compte, choix d'avatar, Mes catégories,
   Parts par défaut, Son des minuteurs et leurs sheets. Écarts :
   - Les sous-écrans gardent tous le bouton retour rond, y compris « Compte » qui n'en a pas dans la maquette.
+  - Son des minuteurs (Figma 536:7644) : Timer, Den-Den, Ultra Instinct, Outro, fichiers de Pierre dans
+    `assets/sounds` (expo-audio). Toucher une ligne la choisit et joue le son une fois, l'onde reste pendant la
+    lecture. « Timer » est le son par défaut (Den-Den est coché dans la maquette). Quand un minuteur arrive à
+    zéro, le son choisi boucle avec 1,5 s de silence entre deux passages, jusqu'à ce qu'il soit arrêté.
   - Icône « Guide d'import » (livre ouvert) : la maquette reprend celle de « Mes catégories ». Onde du son en
     cours et livre pris chez Phosphor.
   - « Guide d'import » ouvre le tutoriel « Importer via ». « Ajouter le raccourci » est retiré (pas faisable

@@ -9,6 +9,7 @@
     "@expo/ui": "~57.0.25",
     "@shopify/react-native-skia": "2.6.2",
     "expo": "~57.0.30",
+    "expo-audio": "~57.0.5",
     "expo-clipboard": "~57.0.2",
     "expo-constants": "~57.0.22",
     "expo-device": "~57.0.2",

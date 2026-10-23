@@ -30,7 +30,7 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const [account, setAccount] = useState(DEMO_ACCOUNT);
   const [avatar, setAvatar] = useState<Avatar>({ kind: 'toque', id: 'onion', background: color.accentCreme });
   const [defaultServings, setDefaultServings] = useState(2);
-  const [timerSound, setTimerSound] = useState<TimerSoundId>('ringbell');
+  const [timerSound, setTimerSound] = useState<TimerSoundId>('timer');
   const [onboarded, setOnboarded] = useState(false);
 
   const value = useMemo<ProfileState>(

@@ -17,14 +17,14 @@ export const AVATAR_BACKGROUNDS = [color.accentBlue, color.accentCreme, color.ac
 
 export type Avatar = { kind: 'toque'; id: AvatarId; background: string } | { kind: 'photo'; uri: string };
 
-export type TimerSoundId = 'ringbell' | 'monroo' | 'solo-jazz' | 'condensed';
+export type TimerSoundId = 'timer' | 'den-den' | 'ultra-instinct' | 'outro';
 
-/** Figma « Profil/ Sonneries ». */
-export const TIMER_SOUNDS: { id: TimerSoundId; label: string }[] = [
-  { id: 'ringbell', label: 'Ringbell' },
-  { id: 'monroo', label: 'Monroo' },
-  { id: 'solo-jazz', label: 'Solo jazz' },
-  { id: 'condensed', label: 'Condensed' },
+/** Figma « Profil/ Sonneries » (536:7644), fichiers fournis par Pierre dans `assets/sounds`. */
+export const TIMER_SOUNDS: { id: TimerSoundId; label: string; file: number }[] = [
+  { id: 'timer', label: 'Timer', file: require('@/assets/sounds/timer.mp3') },
+  { id: 'den-den', label: 'Den-Den', file: require('@/assets/sounds/den-den.mp3') },
+  { id: 'ultra-instinct', label: 'Ultra Instinct', file: require('@/assets/sounds/ultra-instinct.mp3') },
+  { id: 'outro', label: 'Outro', file: require('@/assets/sounds/outro.mp3') },
 ];
 
 /** Figma « Profil/ Parts » : choix proposés avant « Personnaliser ». */
