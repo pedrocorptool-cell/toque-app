@@ -70,10 +70,11 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
     await Linking.openURL(app).catch(() => Linking.openURL(web));
   };
 
-  const back = view === 'menu' ? undefined : () => setView('menu');
+  // Ouverte directement sur un sous-écran (guide d'import du profil) : pas de retour, juste la croix.
+  const back = view === 'menu' || initialStep !== 'menu' ? undefined : () => setView('menu');
 
   return (
-    <BottomSheet visible={visible} onClose={onClose} title={TITLES[view]} onBack={back}>
+    <BottomSheet visible={visible} onClose={onClose} title={TITLES[view]} onBack={back} closable={view !== 'menu'}>
       {view === 'menu' && (
         <View style={styles.options}>
           <View style={styles.row}>

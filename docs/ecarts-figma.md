@@ -131,8 +131,9 @@ l'icône active de la navbar sur `action/secondary/icon`.
 
 - **Import de recette** (Figma 260:563, 257:373 et 622:15535) : tout se passe dans la même sheet, la flèche revient
   au premier écran. Chaque réseau a sa carte dans le premier écran et ouvre « Importer via » sur ce réseau. Réseaux
-  sociaux : les trois vignettes du tutoriel (image de démo dans Figma) sont dessinées en code et
-  défilent seules ; « Ouvrir … » ouvre l'app du réseau (ou son site, dans un nouvel onglet sur le web). Le partage
+  sociaux (Figma 622:16535) : les trois captures du tutoriel (« Insta 01 » à « TikTok 03 », exportées en
+  ×3 dans `assets/images/guide`) défilent seules, et le bouton orange à toucher clignote par-dessus (fixe si
+  « Réduire les animations » est activé) ; ouvert depuis le profil, l'écran n'a que la croix ; « Ouvrir … » ouvre l'app du réseau (ou son site, dans un nouvel onglet sur le web). Le partage
   vers Toqué ne peut pas exister dans le prototype : au retour dans l'app, on fait comme si une publication venait
   d'être partagée. Lien web : le CTA reste grisé tant que le champ est vide, et un message d'erreur (hors maquette)
   apparaît si le texte n'est pas une adresse web. La photo n'a pas de maquette : appareil photo ou galerie. Puis l'écran plein écran « Import en cours » (Figma 493:2221) et ouverture de la
@@ -152,11 +153,12 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Profil** (Figma, section « Profil » 536:7387) : écrans Profil, Compte, choix d'avatar, Mes catégories,
   Parts par défaut, Son des minuteurs et leurs sheets. Écarts :
   - Les sous-écrans gardent tous le bouton retour rond, y compris « Compte » qui n'en a pas dans la maquette.
-  - Icônes « Guide d'import » (livre ouvert) et « Ajouter le raccourci » (éclair) : la maquette reprend celles de
-    « Mes catégories » et « Parts par défaut ». Onde du son en cours, livre et éclair pris chez Phosphor.
-  - « Guide d'import » ouvre le tutoriel « Importer via » ; « Ajouter le raccourci » affiche un toast.
+  - Icône « Guide d'import » (livre ouvert) : la maquette reprend celle de « Mes catégories ». Onde du son en
+    cours et livre pris chez Phosphor.
+  - « Guide d'import » ouvre le tutoriel « Importer via ». « Ajouter le raccourci » est retiré (pas faisable
+    sur Android pour l'instant).
   - Textes corrigés : « Choisis un avatar Toqué ! », « choisis une couleur de fond », « galerie »,
-    « florent.outan@exemple.fr », « Ajouter le raccourci ».
+    « florent.outan@exemple.fr ».
   - Choix d'avatar : « Enregistrer » est le bouton blanc existant, libellé orange (sombre dans la maquette).
   - Avatars de la page « Avatar » (1:4) : oignon, tomate, olive, biscuit (la tarte a disparu). Le carrousel
     tourne en boucle : un avatar sorti par la gauche revient par la droite. Il est partagé avec l'onboarding.

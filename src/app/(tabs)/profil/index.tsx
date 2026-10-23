@@ -65,11 +65,6 @@ export default function ProfilScreen() {
 
         <ListCard title="Import" divider="line">
           <SettingRow icon="bookOpen" label="Guide d’import" onPress={() => setGuideOpen(true)} />
-          <SettingRow
-            icon="lightning"
-            label="Ajouter le raccourci"
-            onPress={() => toast.show('Le raccourci de partage arrive bientôt')}
-          />
           <SettingRow icon="magic" label="Revoir la présentation" onPress={() => router.push('/onboarding')} />
         </ListCard>
 

@@ -1,8 +1,16 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  type ImageSourcePropType,
+  Pressable,
+  ScrollView,
+  StyleSheet,
+  View,
+} from 'react-native';
 
-import { Icon } from '@/components/icons/Icon';
-import { AppText, Button, Logo } from '@/components/ui';
+import { AppText, Button, useReduceMotion } from '@/components/ui';
 import { SOCIALS, type SocialId } from '@/data/imports';
 import { SOURCES } from '@/data/recipes';
 import { color, radius, space } from '@/theme/tokens';
@@ -10,6 +18,8 @@ import { color, radius, space } from '@/theme/tokens';
 const SLIDE_W = 210;
 const SLIDE_H = 240;
 const AUTOPLAY = 3500;
+/** Demi-période du clignotement du bouton à toucher. */
+const BLINK = 600;
 
 type SocialImportProps = {
   network: SocialId;
@@ -17,16 +27,58 @@ type SocialImportProps = {
   onOpen: () => void;
 };
 
+/** Capture d'écran du réseau ; `cta` : l'élément à toucher, posé par-dessus pour clignoter (32 × 32). */
+type Slide = { image: ImageSourcePropType; cta?: { image: ImageSourcePropType; x: number; y: number } };
+
+const SHARE_MENU: Slide = {
+  image: require('@/assets/images/guide/menu-partage.jpg'),
+  cta: { image: require('@/assets/images/guide/menu-partage-cta.png'), x: 170, y: 200 },
+};
+const CHOOSE_TOQUE: Slide = { image: require('@/assets/images/guide/choisir-toque.jpg') };
+
+/** Figma « Insta 01 » à « TikTok 03 » : publication, menu de partage, choix de Toqué. */
+const SLIDES: Record<SocialId, Slide[]> = {
+  instagram: [
+    {
+      image: require('@/assets/images/guide/instagram-1.jpg'),
+      cta: { image: require('@/assets/images/guide/instagram-1-cta.png'), x: 166, y: 196 },
+    },
+    {
+      image: require('@/assets/images/guide/instagram-2.jpg'),
+      cta: { image: require('@/assets/images/guide/instagram-2-cta.png'), x: 89, y: 200 },
+    },
+    CHOOSE_TOQUE,
+  ],
+  facebook: [
+    {
+      image: require('@/assets/images/guide/facebook-1.jpg'),
+      cta: { image: require('@/assets/images/guide/facebook-1-cta.png'), x: 146, y: 196 },
+    },
+    SHARE_MENU,
+    CHOOSE_TOQUE,
+  ],
+  tiktok: [
+    {
+      image: require('@/assets/images/guide/tiktok-1.jpg'),
+      cta: { image: require('@/assets/images/guide/tiktok-1-cta.png'), x: 165, y: 200 },
+    },
+    SHARE_MENU,
+    CHOOSE_TOQUE,
+  ],
+};
+
 const sourceOf = (id: SocialId) => SOURCES.find((s) => s.id === id)!;
 
 /**
- * Figma « Bottom Sheet/ Import/ RS » : choix du réseau, tutoriel en trois vignettes (une image de démo
- * dans Figma) et CTA qui ouvre l'app du réseau.
+ * Figma « Sheet/Import » du guide d'import : tutoriel en trois captures, choix du réseau et CTA qui ouvre l'app
+ * du réseau. Sur chaque capture, le bouton orange à toucher clignote.
  */
 export function SocialImport({ network, onNetworkChange, onOpen }: SocialImportProps) {
-  const { label, logo } = sourceOf(network);
+  const { label } = sourceOf(network);
   return (
-    <>
+    <View style={styles.content}>
+      <Tutorial key={network} slides={SLIDES[network]} />
+
       <View style={styles.tabs}>
         {SOCIALS.map((id) => {
           const active = id === network;
@@ -44,34 +96,10 @@ export function SocialImport({ network, onNetworkChange, onOpen }: SocialImportP
         })}
       </View>
 
-      <Tutorial
-        key={network}
-        slides={[
-          {
-            visual: <Image source={logo!} style={styles.slideLogo} />,
-            text: `Ouvre la publication de la recette sur ${label}`,
-          },
-          {
-            visual: (
-              <View style={styles.slideIcon}>
-                <Icon name="export" color={color.actionSecondaryIcon} />
-              </View>
-            ),
-            text: 'Touche « Partager »',
-          },
-          {
-            visual: <Logo color={color.aiStrong} />,
-            text: 'Choisis Toqué : la recette arrive dans tes recettes',
-          },
-        ]}
-      />
-
       <Button block icon={network} label={`Ouvrir ${label}`} onPress={onOpen} />
-    </>
+    </View>
   );
 }
-
-type Slide = { visual: ReactNode; text: string };
 
 /** Vignettes qui défilent seules ; un glissement du doigt prend la main. */
 function Tutorial({ slides }: { slides: Slide[] }) {
@@ -103,13 +131,8 @@ function Tutorial({ slides }: { slides: Slide[] }) {
         style={styles.slides}>
         {slides.map((slide, i) => (
           <View key={i} style={styles.slide}>
-            {slide.visual}
-            <View style={styles.slideText}>
-              <AppText variant="overline" color={color.textSecondary}>
-                {`Étape ${i + 1}`}
-              </AppText>
-              <AppText style={styles.center}>{slide.text}</AppText>
-            </View>
+            <Image source={slide.image} style={styles.slideImage} />
+            {slide.cta && <BlinkingCta {...slide.cta} />}
           </View>
         ))}
       </ScrollView>
@@ -122,7 +145,31 @@ function Tutorial({ slides }: { slides: Slide[] }) {
   );
 }
 
+/** Bouton orange de la capture, qui s'éteint et se rallume en boucle (fixe si « Réduire les animations »). */
+function BlinkingCta({ image, x, y }: NonNullable<Slide['cta']>) {
+  const reduceMotion = useReduceMotion();
+  const opacity = useRef(new Animated.Value(1)).current;
+
+  useEffect(() => {
+    if (reduceMotion) return;
+    const fade = (toValue: number) =>
+      Animated.timing(opacity, { toValue, duration: BLINK, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
+    const loop = Animated.loop(Animated.sequence([fade(0.2), fade(1)]));
+    loop.start();
+    return () => {
+      loop.stop();
+      opacity.setValue(1);
+    };
+  }, [reduceMotion, opacity]);
+
+  return <Animated.Image source={image} style={[styles.cta, { left: x, top: y, opacity }]} />;
+}
+
 const styles = StyleSheet.create({
+  content: {
+    gap: space[32],
+    marginTop: space[8],
+  },
   tabs: {
     flexDirection: 'row',
     gap: space[8],
@@ -155,34 +202,20 @@ const styles = StyleSheet.create({
     height: SLIDE_H,
     flexGrow: 0,
     borderRadius: radius.xl,
-    backgroundColor: color.bgSurface,
+    overflow: 'hidden',
   },
   slide: {
     width: SLIDE_W,
     height: SLIDE_H,
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: space[24],
-    padding: space[16],
   },
-  slideLogo: {
-    width: 56,
-    height: 56,
+  slideImage: {
+    width: SLIDE_W,
+    height: SLIDE_H,
   },
-  slideIcon: {
-    width: 56,
-    height: 56,
-    alignItems: 'center',
-    justifyContent: 'center',
-    borderRadius: radius.pill,
-    backgroundColor: color.chipBg,
-  },
-  slideText: {
-    alignItems: 'center',
-    gap: space[8],
-  },
-  center: {
-    textAlign: 'center',
+  cta: {
+    position: 'absolute',
+    width: 32,
+    height: 32,
   },
   dots: {
     flexDirection: 'row',
