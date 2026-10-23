@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { AppState, Image, Linking, Platform, StyleSheet, View } from 'react-native';
 
 import { AppText, BottomSheet } from '@/components/ui';
-import { SOCIAL_LINKS, type ImportRequest, type SocialId } from '@/data/imports';
+import { SOCIAL_LINKS, SOCIALS, type ImportRequest, type SocialId } from '@/data/imports';
 import { SOURCES } from '@/data/recipes';
 import { space } from '@/theme/tokens';
 
@@ -16,7 +16,7 @@ export type Step = 'menu' | 'social' | 'web' | 'photo';
 const TITLES: Record<Step, string> = {
   menu: 'Importer une recette',
   social: 'Importer via',
-  web: 'Importer via un lien',
+  web: 'Importer via lien',
   photo: 'Importer via une photo',
 };
 
@@ -29,11 +29,12 @@ type ImportSheetProps = {
   initialStep?: Step;
 };
 
-const SOCIAL_LOGOS = (['facebook', 'instagram', 'tiktok'] as const).map((id) => SOURCES.find((s) => s.id === id)!);
+const SOCIAL_SOURCES = SOCIALS.map((id) => ({ ...SOURCES.find((s) => s.id === id)!, id }));
 
 /**
- * Figma : « Bottom Sheet/ Import » (premier écran) et « Bottom Sheet/ Import/ RS ». Le lien web et la photo
- * n'ont pas de maquette. Tout se passe dans la même sheet, la flèche revient au début.
+ * Figma : « Bottom Sheet/ Import/ Global » (premier écran), « Bottom Sheet/ Import/ RS » et « Bottom Sheet/
+ * Enregistrer/ New » (lien web). La photo n'a pas de maquette. Tout se passe dans la même sheet, la flèche
+ * revient au début.
  */
 export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }: ImportSheetProps) {
   const [view, setView] = useState<Step>('menu');
@@ -75,14 +76,20 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
     <BottomSheet visible={visible} onClose={onClose} title={TITLES[view]} onBack={back}>
       {view === 'menu' && (
         <View style={styles.options}>
-          <ImportOption onPress={() => setView('social')} style={styles.social}>
-            <View style={styles.logos}>
-              {SOCIAL_LOGOS.map((s, i) => (
-                <Image key={s.id} source={s.logo!} style={[styles.logo, i > 0 && styles.logoOverlap]} />
-              ))}
-            </View>
-            <AppText>Réseaux sociaux</AppText>
-          </ImportOption>
+          <View style={styles.row}>
+            {SOCIAL_SOURCES.map((s) => (
+              <ImportOption
+                key={s.id}
+                onPress={() => {
+                  setNetwork(s.id);
+                  setView('social');
+                }}
+                style={styles.social}>
+                <Image source={s.logo!} style={styles.logo} />
+                <AppText>{s.label}</AppText>
+              </ImportOption>
+            ))}
+          </View>
           <View style={styles.row}>
             <IconOption icon="camera" label="Photo" onPress={() => setView('photo')} />
             <IconOption icon="link" label="Lien Web" onPress={() => setView('web')} />
@@ -101,18 +108,13 @@ const styles = StyleSheet.create({
     gap: space[16],
   },
   social: {
+    flex: 1,
     gap: space[8],
-    paddingVertical: space[16],
-  },
-  logos: {
-    flexDirection: 'row',
+    padding: space[12],
   },
   logo: {
-    width: 24,
-    height: 24,
-  },
-  logoOverlap: {
-    marginLeft: -space[8],
+    width: 32,
+    height: 32,
   },
   row: {
     flexDirection: 'row',

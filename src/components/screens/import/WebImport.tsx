@@ -1,13 +1,11 @@
-import * as Clipboard from 'expo-clipboard';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
-import { Icon } from '@/components/icons/Icon';
 import { AppText, Button } from '@/components/ui';
 import { normalizeUrl } from '@/data/imports';
 import { color, radius, space, text } from '@/theme/tokens';
 
-/** Hors maquette : champ de lien, bouton « Coller » et CTA d'import. */
+/** Figma « Bottom Sheet/ Enregistrer/ New » : champ de lien et CTA d'import. Message d'erreur hors maquette. */
 export function WebImport({ onImport }: { onImport: (url: string) => void }) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
@@ -18,22 +16,10 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
     else setError(true);
   };
 
-  const paste = async () => {
-    const pasted = (await Clipboard.getStringAsync().catch(() => '')).trim();
-    if (!pasted) return;
-    setValue(pasted);
-    setError(false);
-  };
-
   return (
     <>
-      <AppText color={color.textSecondary}>
-        Colle le lien d’une recette trouvée sur un blog ou un site de cuisine, Toqué s’occupe du reste.
-      </AppText>
-
       <View style={styles.block}>
         <View style={[styles.field, error && styles.fieldError]}>
-          <Icon name="link" size={16} color={color.textSecondary} />
           <TextInput
             value={value}
             onChangeText={(v) => {
@@ -41,7 +27,7 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
               setError(false);
             }}
             onSubmitEditing={() => submit()}
-            placeholder="https://"
+            placeholder="www.toque.fr"
             placeholderTextColor={color.textSecondary}
             keyboardType="url"
             autoCapitalize="none"
@@ -50,14 +36,6 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
             returnKeyType="go"
             style={styles.input}
           />
-          <Pressable
-            accessibilityRole="button"
-            onPress={paste}
-            hitSlop={space[8]}
-            style={({ pressed }) => [styles.paste, pressed && styles.pressed]}>
-            <Icon name="clipboard" size={16} color={color.actionSecondaryIcon} />
-            <AppText variant="label">Coller</AppText>
-          </Pressable>
         </View>
         {error && (
           <AppText variant="label" color={color.feedbackDanger}>
@@ -77,9 +55,7 @@ const styles = StyleSheet.create({
   },
   field: {
     height: 48,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[8],
+    justifyContent: 'center',
     paddingHorizontal: space[16],
     borderRadius: radius.pill,
     borderWidth: 1,
@@ -91,18 +67,9 @@ const styles = StyleSheet.create({
   },
   input: {
     ...text.body,
-    flex: 1,
     height: '100%',
     padding: 0,
     color: color.textPrimary,
     ...(Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)),
-  },
-  paste: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: space[4],
-  },
-  pressed: {
-    opacity: 0.7,
   },
 });
