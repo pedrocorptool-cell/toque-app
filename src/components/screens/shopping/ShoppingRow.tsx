@@ -91,7 +91,6 @@ export function ToBuyRow(props: ToBuyRowProps) {
   );
 }
 
-/** Figma « Liste » : article coché, barré et grisé, aligné sous les cases des articles à acheter. */
 /** Le trait qui barre l'article qu'on vient de cocher se trace de gauche à droite. */
 const STRIKE_DELAY = 120;
 const STRIKE_DURATION = 280;
@@ -103,18 +102,22 @@ type CheckedRowProps = {
   animateStrike?: boolean;
 };
 
+/**
+ * Figma « Liste » : article coché, barré et grisé, aligné sous les cases des articles à acheter.
+ * Le barré est un trait dessiné, le même sur toutes les lignes, pendant et après l'animation : passer au barré du
+ * texte à la fin le ferait changer d'épaisseur et de hauteur. Un article sur plusieurs lignes garde le barré du texte.
+ */
 export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRowProps) {
-  // Trait dessiné par-dessus le texte pendant l'animation, puis barré du texte comme les autres lignes.
-  const [drawing, setDrawing] = useState(animateStrike);
-  const strike = useRef(new Animated.Value(0)).current;
+  const [multiline, setMultiline] = useState(false);
+  const strike = useRef(new Animated.Value(animateStrike ? 0 : 1)).current;
 
   useEffect(() => {
-    if (!drawing) return;
+    if (!animateStrike) return;
     const draw = Animated.sequence([
       Animated.delay(STRIKE_DELAY),
       Animated.timing(strike, { toValue: 1, duration: STRIKE_DURATION, easing: motion.easeOut, useNativeDriver: true }),
     ]);
-    draw.start(({ finished }) => finished && setDrawing(false));
+    draw.start();
     return () => draw.stop();
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -125,12 +128,13 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
       <View style={styles.checkedLabel}>
         <AppText
           color={color.textSecondary}
-          style={!drawing && styles.struck}
-          // Sur plusieurs lignes, un seul trait ne suffit pas : barré direct.
-          onTextLayout={(e) => e.nativeEvent.lines.length > 1 && setDrawing(false)}>
+          style={multiline && styles.struck}
+          onTextLayout={(e) => setMultiline(e.nativeEvent.lines.length > 1)}>
           {item.label}
         </AppText>
-        {drawing && <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />}
+        {!multiline && (
+          <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />
+        )}
       </View>
     </View>
   );
@@ -171,13 +175,13 @@ const styles = StyleSheet.create({
   struck: {
     textDecorationLine: 'line-through',
   },
-  // Même place et même épaisseur que le barré du texte.
+  // Au milieu des minuscules, 1,5 px comme le barré du texte.
   strike: {
     position: 'absolute',
     left: 0,
     right: 0,
-    top: '55%',
-    height: 1,
+    top: '52%',
+    height: 1.5,
     backgroundColor: color.textSecondary,
     transformOrigin: 'left',
   },
