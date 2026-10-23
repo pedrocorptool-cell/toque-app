@@ -5,7 +5,7 @@ import { AppText, Button } from '@/components/ui';
 import { normalizeUrl } from '@/data/imports';
 import { color, radius, space, text } from '@/theme/tokens';
 
-/** Figma « Bottom Sheet/ Enregistrer/ New » : champ de lien et CTA d'import. Message d'erreur hors maquette. */
+/** Figma « Bottom Sheet/ Enregistrer/ New » (622:16839) : phrase d'accroche, champ de lien et CTA d'import. Message d'erreur hors maquette. */
 export function WebImport({ onImport }: { onImport: (url: string) => void }) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
@@ -18,6 +18,10 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
 
   return (
     <>
+      <AppText color={color.textSecondary} style={styles.intro}>
+        Colle ton lien ci-dessous, on s’occupe du reste !
+      </AppText>
+
       <View style={styles.block}>
         <View style={[styles.field, error && styles.fieldError]}>
           <TextInput
@@ -50,6 +54,9 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
 }
 
 const styles = StyleSheet.create({
+  intro: {
+    textAlign: 'center',
+  },
   block: {
     gap: space[8],
   },

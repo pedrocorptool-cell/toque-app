@@ -129,7 +129,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
   pas quand on coche le dernier article. Une ligne vierge ne se coche pas. Ajouts hors maquette : confirmation
   avant « Tout supprimer », masqué quand il n'y a rien à supprimer.
 
-- **Import de recette** (Figma 260:563, 257:373 et 622:15535) : tout se passe dans la même sheet, la flèche revient
+- **Import de recette** (Figma 260:563, 257:373 et 622:16839) : tout se passe dans la même sheet, la flèche revient
   au premier écran. Chaque réseau a sa carte dans le premier écran et ouvre « Importer via » sur ce réseau. Réseaux
   sociaux (Figma 622:16535) : les trois captures du tutoriel (« Insta 01 » à « TikTok 03 », exportées en
   ×3 dans `assets/images/guide`) défilent seules, et le bouton orange à toucher clignote par-dessus (fixe si
