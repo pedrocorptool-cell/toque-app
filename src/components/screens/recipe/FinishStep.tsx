@@ -30,13 +30,11 @@ const STAMP_SPRING = { stiffness: 160, damping: 20, mass: 1 };
 const STAMP_SCALE = 1.08;
 const STAMP_TILT = '-6deg';
 /** Puis « Fais maison! » se souligne comme au stylo. */
-const UNDERLINE_LENGTH = 90;
+const UNDERLINE_WIDTH = 86;
 const UNDERLINE_DELAY = 450;
 const UNDERLINE_DURATION = 300;
 /** Fondu enchaîné entre l'ancienne vignette et la photo prise. */
 const PHOTO_FADE = 250;
-
-const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 type FinishStepProps = {
   /** Vignette actuelle de la recette (la photo prise, une fois remplacée). */
@@ -70,7 +68,7 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
       ]),
       Animated.sequence([
         Animated.delay(UNDERLINE_DELAY),
-        // Le tracé SVG n'est pas animable par le driver natif.
+        // La largeur révélée n'est pas animable par le driver natif.
         Animated.timing(underline, {
           toValue: 1,
           duration: UNDERLINE_DURATION,
@@ -115,17 +113,22 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
                 <AppText style={styles.homemadeText} color={color.tagText}>
                   Fais maison!
                 </AppText>
-                <Svg width={86} height={4} style={styles.underline}>
-                  <AnimatedPath
-                    strokeDasharray={UNDERLINE_LENGTH}
-                    strokeDashoffset={underline.interpolate({ inputRange: [0, 1], outputRange: [UNDERLINE_LENGTH, 0] })}
-                    d="M0 3C0.1 3 0.2 3 3.86 2.52C7.5 2.04 14.66 1.1 28.78 0.55C42.9 0.01 63.75 -0.11 85.66 0.09"
-                    stroke={color.accentBlue}
-                    strokeWidth={2.2}
-                    fill="none"
-                    transform="translate(0 1)"
-                  />
-                </Svg>
+                {/* Trait dévoilé de gauche à droite : un tracé SVG animé déclenche un avertissement sur le web. */}
+                <Animated.View
+                  style={[
+                    styles.underline,
+                    { width: underline.interpolate({ inputRange: [0, 1], outputRange: [0, UNDERLINE_WIDTH] }) },
+                  ]}>
+                  <Svg width={UNDERLINE_WIDTH} height={4}>
+                    <Path
+                      d="M0 3C0.1 3 0.2 3 3.86 2.52C7.5 2.04 14.66 1.1 28.78 0.55C42.9 0.01 63.75 -0.11 85.66 0.09"
+                      stroke={color.accentBlue}
+                      strokeWidth={2.2}
+                      fill="none"
+                      transform="translate(0 1)"
+                    />
+                  </Svg>
+                </Animated.View>
               </View>
               <Pressable
                 accessibilityRole="button"
@@ -257,6 +260,8 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 41,
     bottom: -2,
+    height: 4,
+    overflow: 'hidden',
   },
   camera: {
     width: 40,
