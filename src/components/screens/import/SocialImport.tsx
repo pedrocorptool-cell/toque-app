@@ -127,12 +127,17 @@ function Tutorial({ slides }: { slides: Slide[] }) {
         pagingEnabled
         showsHorizontalScrollIndicator={false}
         onScrollBeginDrag={() => setManual(true)}
-        onMomentumScrollEnd={(e) => setIndex(Math.round(e.nativeEvent.contentOffset.x / SLIDE_W))}
+        // La vignette la plus visible devient l'active dès le glissement, sans attendre la fin du défilement.
+        scrollEventThrottle={16}
+        onScroll={(e) => {
+          const next = Math.round(e.nativeEvent.contentOffset.x / SLIDE_W);
+          setIndex((i) => (i === next ? i : Math.max(0, Math.min(slides.length - 1, next))));
+        }}
         style={styles.slides}>
         {slides.map((slide, i) => (
           <View key={i} style={styles.slide}>
             <Image source={slide.image} style={styles.slideImage} />
-            {slide.cta && <BlinkingCta {...slide.cta} />}
+            {slide.cta && <BlinkingCta {...slide.cta} active={i === index} />}
           </View>
         ))}
       </ScrollView>
@@ -145,13 +150,17 @@ function Tutorial({ slides }: { slides: Slide[] }) {
   );
 }
 
-/** Bouton orange de la capture, qui s'éteint et se rallume en boucle (fixe si « Réduire les animations »). */
-function BlinkingCta({ image, x, y }: NonNullable<Slide['cta']>) {
+/**
+ * Bouton orange de la capture, qui s'éteint et se rallume en boucle tant que sa vignette est affichée (fixe si
+ * « Réduire les animations »). Chaque arrivée sur la vignette relance le clignotement depuis le début.
+ */
+function BlinkingCta({ image, x, y, active }: NonNullable<Slide['cta']> & { active: boolean }) {
   const reduceMotion = useReduceMotion();
   const opacity = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
-    if (reduceMotion) return;
+    opacity.setValue(1);
+    if (reduceMotion || !active) return;
     const fade = (toValue: number) =>
       Animated.timing(opacity, { toValue, duration: BLINK, easing: Easing.inOut(Easing.ease), useNativeDriver: true });
     const loop = Animated.loop(Animated.sequence([fade(0.2), fade(1)]));
@@ -160,7 +169,7 @@ function BlinkingCta({ image, x, y }: NonNullable<Slide['cta']>) {
       loop.stop();
       opacity.setValue(1);
     };
-  }, [reduceMotion, opacity]);
+  }, [reduceMotion, active, opacity]);
 
   return <Animated.Image source={image} style={[styles.cta, { left: x, top: y, opacity }]} />;
 }
