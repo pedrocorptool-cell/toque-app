@@ -68,7 +68,7 @@ l'icône active de la navbar sur `action/secondary/icon`.
   de « Dialogue/ Minuteur » (décision de Pierre, pour garder un seul composant d'alarme) ; « Arrêter » le
   retire, la croix arrête les minuteurs terminés et laisse tourner les autres.
 - **Minuteurs entre recettes** (règles de Pierre, maquette 639:17832) : une seule pastille compacte, toujours
-  en bas à gauche (au-dessus de « Démarrer la recette » sur l'onglet Recette ; dans sa barre en pas à pas), qui
+  en bas à gauche dans les onglets (absente de la fiche recette ; dans sa barre en pas à pas), qui
   ouvre la sheet avec tous les minuteurs. Sur la fiche de l'unique recette en cours : étapes seules. Ailleurs, ou
   dès que plusieurs recettes ont des minuteurs : nom de la recette + chevron ; un appui sur la carte rouvre la
   fiche sur l'onglet Recette, à l'étape du minuteur (pas de chevron pour la recette à l'écran).

@@ -12,17 +12,7 @@ import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
 import { TipCard } from '@/components/screens/recipe/TipCard';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import {
-  ActionMenu,
-  AppText,
-  Button,
-  Dialog,
-  IconButton,
-  SegmentedTabs,
-  TimerChip,
-  TimerPill,
-  Toast,
-} from '@/components/ui';
+import { ActionMenu, AppText, Button, Dialog, IconButton, SegmentedTabs, TimerPill, Toast } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -49,8 +39,6 @@ const CTA_BOTTOM = space[32];
 const CTA_SLOT = 48 + space[16];
 /** Hauteur occupée par le bouton, pour poser toast et rappel au-dessus. */
 const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
-/** Pastille des minuteurs (48 px) et son écart, posée au-dessus du bouton sur l'onglet Recette. */
-const TIMER_SPACE = 48 + space[16];
 
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
@@ -145,8 +133,6 @@ export default function RecipeScreen() {
 
   // Les minuteurs suivent d'une recette à l'autre : ceux de cette fiche en premier, puis ceux des autres recettes.
   const timers = orderTimers(allTimers, recipe.id);
-  // Le minuteur qui sonnera le plus tôt, pour le rappel « Minuteurs (n) ».
-  const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 
   /** Premier appui : lance le minuteur. Ensuite : ouvre la sheet pour le piloter. */
   const pressTimer = (index: number, seconds: number) => {
@@ -312,7 +298,7 @@ export default function RecipeScreen() {
                 })}
               </View>
               {/* Réserve la place du bouton flottant : il reste sur fond blanc jusqu'en fin de défilement. */}
-              <View style={{ height: CTA_SLOT + (nextTimer ? TIMER_SPACE : 0) }} />
+              <View style={{ height: CTA_SLOT }} />
             </PaperCard>
           )}
         </View>
@@ -323,13 +309,6 @@ export default function RecipeScreen() {
           <View style={styles.ctaHalo}>
             <Button icon="play" label="Démarrer la recette" onPress={startStepByStep} />
           </View>
-        </View>
-      )}
-
-      {nextTimer && (
-        // Toujours en bas à gauche ; sur l'onglet Recette, au-dessus du bouton « Démarrer la recette ».
-        <View style={[styles.widget, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}>
-          <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
         </View>
       )}
 
@@ -347,14 +326,7 @@ export default function RecipeScreen() {
               }
             : undefined
         }
-        style={[
-          styles.toast,
-          {
-            bottom:
-              (tab === 'steps' ? CTA_SPACE + (nextTimer ? TIMER_SPACE : 0) : nextTimer ? CTA_SPACE : space[16]) +
-              insets.bottom,
-          },
-        ]}
+        style={[styles.toast, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}
       />
 
       <Modal
@@ -610,11 +582,6 @@ const styles = StyleSheet.create({
   ctaHalo: {
     borderRadius: radius.pill,
     ...shadow.fab,
-  },
-  // Pastille compacte, calée à gauche comme dans les onglets.
-  widget: {
-    position: 'absolute',
-    left: space[16],
   },
   toast: {
     position: 'absolute',
