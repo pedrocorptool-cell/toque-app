@@ -31,10 +31,12 @@ export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
 
   return (
     <BottomSheet visible={visible && timers.length > 0} onClose={close} title="Minuteur">
-      {/* Arrêter un minuteur terminé referme la sheet, les autres minuteurs continuent. */}
+      {/* « Arrêter » ne coupe que son minuteur ; la sheet se referme quand plus aucun ne sonne. */}
       <TimerList
         timers={shown.current}
-        onStop={close}
+        onStop={(stopped) => {
+          if (!timers.some((t) => isDone(t) && t.id !== stopped.id)) close();
+        }}
         onOpenRecipe={(timer) => {
           close();
           router.push(`/recette/${timer.recipeId}?etape=${timer.step}`);

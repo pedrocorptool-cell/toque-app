@@ -8,8 +8,8 @@ import { color, font, radius, space } from '@/theme/tokens';
 
 type TimerListProps = {
   timers: Timer[];
-  /** Après « Arrêter » sur un minuteur terminé. */
-  onStop?: () => void;
+  /** Après « Arrêter » sur un minuteur terminé (déjà retiré de la liste). */
+  onStop?: (timer: Timer) => void;
   /** Carte et chevron : ouvrent la fiche de la recette à l'étape du minuteur (sauf pour la recette à l'écran). */
   onOpenRecipe?: (timer: Timer) => void;
 };
@@ -80,7 +80,7 @@ function TimerRow({
             label="Arrêter"
             onPress={() => {
               remove(timer.id);
-              onStop?.();
+              onStop?.(timer);
             }}
           />
         </View>
