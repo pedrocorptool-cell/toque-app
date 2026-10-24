@@ -48,7 +48,7 @@ type ListRowProps = {
   value?: string;
   /** Chevron, radio, crayon… après la valeur. */
   trailing?: ReactNode;
-  /** Élément collé au libellé, à 8 px quelle que soit sa longueur (onde du son en cours de lecture). */
+  /** Élément calé à droite du libellé, à la même place sur chaque ligne (onde du son en cours de lecture). */
   inline?: ReactNode;
   onPress?: () => void;
   accessibilityRole?: AccessibilityRole;
@@ -140,6 +140,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   inline: {
-    flexShrink: 0,
+    flex: 1,
+    alignItems: 'flex-end',
   },
 });
