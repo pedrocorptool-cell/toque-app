@@ -25,12 +25,12 @@ export const TIMER_DOCK_SPACE = 48 + space[16];
 const styles = StyleSheet.create({
   dock: {
     position: 'absolute',
-    right: space[16],
+    left: space[16],
     bottom: space[16],
   },
   /** Sous un écran plutôt que par-dessus : rien n'est masqué en bas de page. */
   inline: {
-    alignSelf: 'flex-end',
+    alignSelf: 'flex-start',
     marginHorizontal: space[16],
     marginTop: space[8],
     marginBottom: space[16],

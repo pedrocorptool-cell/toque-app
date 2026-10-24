@@ -67,13 +67,11 @@ l'icône active de la navbar sur `action/secondary/icon`.
   même hors de la fiche. Quand l'un arrive à zéro, la sheet « Minuteur » s'ouvre où que l'on soit, à la place
   de « Dialogue/ Minuteur » (décision de Pierre, pour garder un seul composant d'alarme) ; « Arrêter » le
   retire, la croix arrête les minuteurs terminés et laisse tourner les autres.
-- **Minuteurs hors de la fiche** (maquette 639:17832, V3 retenue) : quand plusieurs recettes ont des minuteurs,
-  chaque carte de la sheet porte le nom de la recette au-dessus de l'étape ; un appui sur la carte ouvre la recette, chevron à l'appui (sauf sur la fiche elle-même). Dans les
-  onglets, la pastille des minuteurs reste affichée au-dessus de la barre (à gauche du + sur
-  l'accueil, en version compacte comme en pas à pas) et ouvre la sheet avec les minuteurs de toutes les recettes. Sur une fiche et en pas à pas, la
-  pastille et la sheet montrent aussi les minuteurs des autres recettes (ceux de la fiche en premier).
-  Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres
-  pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet et la pastille d'étape.
+- **Minuteurs entre recettes** (règles de Pierre, maquette 639:17832) : une seule pastille compacte, toujours
+  en bas à gauche (au-dessus de « Démarrer la recette » sur l'onglet Recette ; dans sa barre en pas à pas), qui
+  ouvre la sheet avec tous les minuteurs. Sur la fiche de l'unique recette en cours : étapes seules. Ailleurs, ou
+  dès que plusieurs recettes ont des minuteurs : nom de la recette + chevron ; un appui sur la carte rouvre la
+  fiche sur l'onglet Recette, à l'étape du minuteur (pas de chevron pour la recette à l'écran).
 - **Onglets Ingrédients / Recette** : l'icône de l'onglet actif est orange (`actionSecondaryIcon`) et la
   pastille blanche glisse d'un onglet à l'autre (250 ms).
 

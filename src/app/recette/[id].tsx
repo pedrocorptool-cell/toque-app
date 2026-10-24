@@ -49,10 +49,13 @@ const CTA_BOTTOM = space[32];
 const CTA_SLOT = 48 + space[16];
 /** Hauteur occupée par le bouton, pour poser toast et rappel au-dessus. */
 const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
+/** Pastille des minuteurs (48 px) et son écart, posée au-dessus du bouton sur l'onglet Recette. */
+const TIMER_SPACE = 48 + space[16];
 
 /** Figma : pages « Recette » onglets Ingrédients (191:4705) et Étapes (191:4824). */
 export default function RecipeScreen() {
-  const { id, importee } = useLocalSearchParams<{ id: string; importee?: string }>();
+  // « etape » : index de l'étape à montrer, quand on revient sur la fiche depuis la carte d'un minuteur.
+  const { id, importee, etape } = useLocalSearchParams<{ id: string; importee?: string; etape?: string }>();
   const { recipes, removeRecipe, categories, setRecipeCategories } = useRecipes();
   const { addFromRecipe } = useShopping();
   const insets = useSafeAreaInsets();
@@ -64,7 +67,7 @@ export default function RecipeScreen() {
   if (found) last.current = found;
   const recipe = last.current;
 
-  const [tab, setTab] = useState<Tab>('ingredients');
+  const [tab, setTab] = useState<Tab>(etape ? 'steps' : 'ingredients');
   // La fiche s'ouvre sur les parts par défaut du profil ; les quantités sont recalculées depuis la recette.
   const { defaultServings } = useProfile();
   const [servings, setServings] = useState(defaultServings);
@@ -105,6 +108,20 @@ export default function RecipeScreen() {
   const [shoppingOpen, setShoppingOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(importee ? 'Recette importée dans tes recettes' : null);
   const photoRef = useRef<Image>(null);
+  // Retour depuis un minuteur : la fiche s'ouvre sur l'onglet Recette, défilée jusqu'à l'étape du minuteur.
+  const scrollRef = useRef<ScrollView>(null);
+  const stepRefs = useRef<(View | null)[]>([]);
+  useEffect(() => {
+    if (!etape) return;
+    const t = setTimeout(() => {
+      stepRefs.current[Number(etape)]?.measureInWindow((_x, y) => {
+        scrollRef.current?.scrollTo({ y: Math.max(0, y - insets.top - space[32]), animated: true });
+      });
+    }, 400);
+    return () => clearTimeout(t);
+    // Une seule fois, à l'ouverture de la fiche.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
   const blurRef = useRef<View>(null);
 
   useEffect(() => {
@@ -161,7 +178,9 @@ export default function RecipeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={{ paddingBottom: tab === 'steps' ? space[16] + insets.bottom : space[24] }}>
+      <ScrollView
+        ref={scrollRef}
+        contentContainerStyle={{ paddingBottom: tab === 'steps' ? space[16] + insets.bottom : space[24] }}>
         <View ref={blurRef} style={[styles.blur, { height: BLUR_HEIGHT + insets.top }]}>
           <BlurGlow source={recipe.image} width={screenWidth} height={BLUR_HEIGHT + insets.top} blur={blur.hero} />
         </View>
@@ -269,7 +288,12 @@ export default function RecipeScreen() {
                 {recipe.steps.map((step, index) => {
                   const timer = timerFor(recipe.id, index);
                   return (
-                    <View key={index} style={styles.step}>
+                    <View
+                      key={index}
+                      ref={(el) => {
+                        stepRefs.current[index] = el;
+                      }}
+                      style={styles.step}>
                       <View style={styles.stepNumber}>
                         <AppText variant="step" color={color.actionSecondaryIcon}>
                           {index + 1}
@@ -288,7 +312,7 @@ export default function RecipeScreen() {
                 })}
               </View>
               {/* Réserve la place du bouton flottant : il reste sur fond blanc jusqu'en fin de défilement. */}
-              <View style={{ height: CTA_SLOT }} />
+              <View style={{ height: CTA_SLOT + (nextTimer ? TIMER_SPACE : 0) }} />
             </PaperCard>
           )}
         </View>
@@ -302,8 +326,9 @@ export default function RecipeScreen() {
         </View>
       )}
 
-      {tab === 'ingredients' && nextTimer && (
-        <View style={[styles.widget, { bottom: space[16] + insets.bottom }]}>
+      {nextTimer && (
+        // Toujours en bas à gauche ; sur l'onglet Recette, au-dessus du bouton « Démarrer la recette ».
+        <View style={[styles.widget, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}>
           <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
         </View>
       )}
@@ -322,7 +347,14 @@ export default function RecipeScreen() {
               }
             : undefined
         }
-        style={[styles.toast, { bottom: (tab === 'steps' || nextTimer ? CTA_SPACE : space[16]) + insets.bottom }]}
+        style={[
+          styles.toast,
+          {
+            bottom:
+              (tab === 'steps' ? CTA_SPACE + (nextTimer ? TIMER_SPACE : 0) : nextTimer ? CTA_SPACE : space[16]) +
+              insets.bottom,
+          },
+        ]}
       />
 
       <Modal
@@ -579,10 +611,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     ...shadow.fab,
   },
-  // Pastille compacte, calée à droite comme dans les onglets.
+  // Pastille compacte, calée à gauche comme dans les onglets.
   widget: {
     position: 'absolute',
-    right: space[16],
+    left: space[16],
   },
   toast: {
     position: 'absolute',

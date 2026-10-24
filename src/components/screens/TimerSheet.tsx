@@ -35,9 +35,9 @@ export function TimerSheet({ visible, onClose, timers }: TimerSheetProps) {
       <TimerList
         timers={shown.current}
         onStop={close}
-        onOpenRecipe={(id) => {
+        onOpenRecipe={(timer) => {
           close();
-          router.push(`/recette/${id}`);
+          router.push(`/recette/${timer.recipeId}?etape=${timer.step}`);
         }}
       />
     </BottomSheet>

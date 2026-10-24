@@ -10,15 +10,17 @@ type TimerListProps = {
   timers: Timer[];
   /** Après « Arrêter » sur un minuteur terminé. */
   onStop?: () => void;
-  /** Chevron de la carte : ouvre la fiche de la recette (absent pour la recette déjà à l'écran). */
-  onOpenRecipe?: (recipeId: string) => void;
+  /** Carte et chevron : ouvrent la fiche de la recette à l'étape du minuteur (sauf pour la recette à l'écran). */
+  onOpenRecipe?: (timer: Timer) => void;
 };
 
 /** Figma (639:17832) : cartes de « Bottom Sheet/ Minuteur », nom de la recette au-dessus de l'étape quand
  * plusieurs recettes ont des minuteurs. */
 export function TimerList({ timers, onStop, onOpenRecipe }: TimerListProps) {
-  // Le nom de la recette ne sert qu'à distinguer plusieurs recettes en cours.
-  const showTitle = new Set(timers.map((t) => t.recipeId)).size > 1;
+  // Le nom de la recette s'affiche dès qu'on n'est pas sur la fiche de l'unique recette en cours.
+  const { focusedRecipeId } = useTimers();
+  const recipeIds = new Set(timers.map((t) => t.recipeId));
+  const showTitle = recipeIds.size > 1 || !recipeIds.has(focusedRecipeId ?? '');
   return (
     <View style={styles.list}>
       {timers.map((t) => (
@@ -38,7 +40,7 @@ function TimerRow({
   const { recipes } = useRecipes();
   const title = recipes.find((r) => r.id === timer.recipeId)?.title;
   const canOpen = onOpenRecipe && timer.recipeId !== focusedRecipeId;
-  const open = canOpen ? () => onOpenRecipe(timer.recipeId) : undefined;
+  const open = canOpen ? () => onOpenRecipe(timer) : undefined;
   return (
     // Toute la carte ouvre la recette (hors de sa fiche) ; les boutons du bas gardent leur action. Pour les
     // lecteurs d'écran, c'est le chevron qui porte ce bouton.

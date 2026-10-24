@@ -285,9 +285,8 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  // À gauche du bouton +, centrée sur lui (pastille de 48, bouton de 56).
+  // En bas à gauche, centrée sur le bouton + (pastille de 48, bouton de 56).
   timerDock: {
-    right: space[16] + 56 + space[8],
     bottom: space[16] + 4,
   },
   fab: {
