@@ -38,8 +38,15 @@ function TimerRow({
   const { recipes } = useRecipes();
   const title = recipes.find((r) => r.id === timer.recipeId)?.title;
   const canOpen = onOpenRecipe && timer.recipeId !== focusedRecipeId;
+  const open = canOpen ? () => onOpenRecipe(timer.recipeId) : undefined;
   return (
-    <View style={styles.card}>
+    // Toute la carte ouvre la recette (hors de sa fiche) ; les boutons du bas gardent leur action. Pour les
+    // lecteurs d'écran, c'est le chevron qui porte ce bouton.
+    <Pressable
+      accessible={false}
+      disabled={!canOpen}
+      onPress={open}
+      style={({ pressed }) => [styles.card, pressed && styles.pressedCard]}>
       <View>
         {showTitle && title && <AppText style={styles.recipe}>{title}</AppText>}
         <View style={styles.header}>
@@ -57,7 +64,7 @@ function TimerRow({
                 accessibilityRole="button"
                 accessibilityLabel={`Voir la recette ${title ?? ''}`.trim()}
                 hitSlop={space[12]}
-                onPress={() => onOpenRecipe(timer.recipeId)}
+                onPress={open}
                 style={({ pressed }) => pressed && styles.pressedIcon}>
                 <Icon name="caretRight" />
               </Pressable>
@@ -86,7 +93,7 @@ function TimerRow({
           <Control icon="close" label="Supprimer le minuteur" onPress={() => remove(timer.id)} />
         </View>
       )}
-    </View>
+    </Pressable>
   );
 }
 
@@ -127,6 +134,9 @@ const styles = StyleSheet.create({
     fontFamily: font.medium,
     fontSize: 14,
     lineHeight: 24,
+  },
+  pressedCard: {
+    opacity: 0.8,
   },
   pressedIcon: {
     opacity: 0.6,
