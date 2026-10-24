@@ -48,7 +48,7 @@ type ListRowProps = {
   value?: string;
   /** Chevron, radio, crayon… après la valeur. */
   trailing?: ReactNode;
-  /** Élément calé à droite du libellé, à la même place sur chaque ligne (onde du son en cours de lecture). */
+  /** Élément à une place fixe sur chaque ligne, 72 px avant la fin (onde du son en cours de lecture). */
   inline?: ReactNode;
   onPress?: () => void;
   accessibilityRole?: AccessibilityRole;
@@ -72,7 +72,7 @@ export function ListRow({
     <>
       {leading}
       <View style={styles.labelBox}>
-        <AppText style={inline ? undefined : styles.label} numberOfLines={1}>
+        <AppText style={styles.label} numberOfLines={1}>
           {label}
         </AppText>
         {inline && <View style={styles.inline}>{inline}</View>}
@@ -139,8 +139,8 @@ const styles = StyleSheet.create({
   label: {
     flex: 1,
   },
+  // Position relevée sur la maquette de Pierre : l'onde ne bouge pas d'un son à l'autre.
   inline: {
-    flex: 1,
-    alignItems: 'flex-end',
+    marginRight: space[72],
   },
 });
