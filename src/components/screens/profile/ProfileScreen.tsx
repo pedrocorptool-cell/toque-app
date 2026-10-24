@@ -2,7 +2,9 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
+import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, ChefButton, IconButton, Logo, Toast, type ToastState } from '@/components/ui';
+import { useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { color, radius, space } from '@/theme/tokens';
 
@@ -17,6 +19,8 @@ type ProfileScreenProps = {
 /** Figma : écrans « Profil » et « Profil/ … » — en-tête brun, feuille claire qui défile. */
 export function ProfileScreen({ title, back, toast, children }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
+  // Pastille des minuteurs par-dessus la feuille : le contenu et le toast lui laissent la place.
+  const docked = useTimers().timers.length > 0;
   return (
     <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
@@ -34,11 +38,20 @@ export function ProfileScreen({ title, back, toast, children }: ProfileScreenPro
         </View>
       </View>
 
-      <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+      <ScrollView
+        style={styles.sheet}
+        contentContainerStyle={[styles.content, docked && { paddingBottom: space[16] + TIMER_DOCK_SPACE }]}
+        keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
 
-      <Toast message={toast.message} onClose={toast.hide} style={styles.toast} />
+      <TimerDock />
+
+      <Toast
+        message={toast.message}
+        onClose={toast.hide}
+        style={[styles.toast, docked && { bottom: space[16] + TIMER_DOCK_SPACE }]}
+      />
     </View>
   );
 }
