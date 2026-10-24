@@ -19,8 +19,8 @@ import {
   Dialog,
   IconButton,
   SegmentedTabs,
+  TimerChip,
   TimerPill,
-  TimerWidget,
   Toast,
 } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
@@ -304,7 +304,7 @@ export default function RecipeScreen() {
 
       {tab === 'ingredients' && nextTimer && (
         <View style={[styles.widget, { bottom: space[16] + insets.bottom }]}>
-          <TimerWidget count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
+          <TimerChip count={timers.length} remaining={nextTimer.remaining} onPress={() => setTimersOpen(true)} />
         </View>
       )}
 
@@ -579,9 +579,9 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     ...shadow.fab,
   },
+  // Pastille compacte, calée à droite comme dans les onglets.
   widget: {
     position: 'absolute',
-    left: space[16],
     right: space[16],
   },
   toast: {
