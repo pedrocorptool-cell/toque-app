@@ -27,7 +27,7 @@ import { useProfile } from '@/data/ProfileContext';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { useShopping } from '@/data/ShoppingContext';
-import { isDone, useTimers } from '@/data/TimersContext';
+import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
@@ -84,8 +84,9 @@ export default function RecipeScreen() {
     }, [id, setFocusedRecipeId]),
   );
 
-  // Un minuteur de cette recette arrive à zéro : sa sheet s'ouvre (le dialogue global est réservé aux autres écrans).
-  const doneCount = allTimers.filter((t) => t.recipeId === id && isDone(t)).length;
+  // Un minuteur arrive à zéro, de cette recette ou d'une autre : la sheet de la fiche s'ouvre (celle des onglets
+  // est réservée aux autres écrans).
+  const doneCount = allTimers.filter(isDone).length;
   const previousDone = useRef(doneCount);
   useEffect(() => {
     if (doneCount > previousDone.current && focused) setTimersOpen(true);
@@ -93,7 +94,7 @@ export default function RecipeScreen() {
   }, [doneCount, focused]);
 
   // Plus aucun minuteur : la sheet se referme (et ne se rouvrira pas toute seule au prochain lancement).
-  const timerCount = allTimers.filter((t) => t.recipeId === id).length;
+  const timerCount = allTimers.length;
   useEffect(() => {
     if (timerCount === 0) setTimersOpen(false);
   }, [timerCount]);
@@ -125,7 +126,8 @@ export default function RecipeScreen() {
   const saved = savedHashtagsOf(recipe, categories);
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
-  const timers = allTimers.filter((t) => t.recipeId === recipe.id).sort((x, y) => x.step - y.step);
+  // Les minuteurs suivent d'une recette à l'autre : ceux de cette fiche en premier, puis ceux des autres recettes.
+  const timers = orderTimers(allTimers, recipe.id);
   // Le minuteur qui sonnera le plus tôt, pour le rappel « Minuteurs (n) ».
   const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 

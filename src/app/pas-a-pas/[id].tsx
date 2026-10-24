@@ -21,7 +21,7 @@ import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
-import { isDone, useTimers } from '@/data/TimersContext';
+import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { blur, color, radius, space, text } from '@/theme/tokens';
 
@@ -77,11 +77,12 @@ export default function StepByStepScreen() {
     }, [id, setFocusedRecipeId]),
   );
 
-  // Minuteurs lancés : regroupés dans une pastille parmi les actions du bas (le plus proche de sonner affiché).
-  const timers = allTimers.filter((t) => t.recipeId === id).sort((x, y) => x.step - y.step);
+  // Minuteurs lancés, de cette recette et des autres : regroupés dans une pastille parmi les actions du bas (le
+  // plus proche de sonner affiché).
+  const timers = orderTimers(allTimers, id);
   const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 
-  // Un minuteur de la recette arrive à zéro : la sheet s'ouvre, comme sur la fiche.
+  // Un minuteur arrive à zéro : la sheet s'ouvre, comme sur la fiche.
   const doneCount = timers.filter(isDone).length;
   const previousDone = useRef(doneCount);
   useEffect(() => {

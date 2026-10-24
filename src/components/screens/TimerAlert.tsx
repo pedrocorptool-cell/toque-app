@@ -1,13 +1,13 @@
 import { useEffect, useRef } from 'react';
 
 import { useProfile } from '@/data/ProfileContext';
-import { isDone, useTimers } from '@/data/TimersContext';
+import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { useTimerSound } from '@/data/useTimerSound';
 
 import { TimerSheet } from './TimerSheet';
 
 /**
- * Sheet « Minuteur » montée à la racine de l'app : s'ouvre où que l'on soit dès qu'un minuteur arrive à
+ * Sheet « Minuteur » montée à la racine de l'app : hors fiche recette, s'ouvre dès qu'un minuteur arrive à
  * zéro, avec ceux qui tournent encore en dessous (la même sheet que sur la fiche, à la place du dialogue).
  * La sonnerie choisie dans le profil boucle tant qu'un minuteur terminé n'a pas été arrêté, y compris sur la
  * fiche de la recette.
@@ -16,8 +16,8 @@ export function TimerAlert() {
   const { timers, focusedRecipeId, sheetOpen: open, setSheetOpen: setOpen } = useTimers();
   const { timerSound } = useProfile();
   useTimerSound(timerSound, timers.some(isDone) ? 'loop' : 'off');
-  // Sur la fiche de la recette concernée, c'est sa sheet qui s'ouvre.
-  const doneCount = timers.filter((t) => isDone(t) && t.recipeId !== focusedRecipeId).length;
+  // Sur une fiche recette ou en pas à pas, c'est la sheet de l'écran qui s'ouvre, avec tous les minuteurs.
+  const doneCount = focusedRecipeId ? 0 : timers.filter(isDone).length;
   const previous = useRef(doneCount);
 
   useEffect(() => {

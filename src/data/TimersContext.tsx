@@ -86,3 +86,15 @@ export function useTimers() {
 
 /** Un minuteur arrivé à zéro attend qu'on l'arrête. */
 export const isDone = (t: Timer) => t.remaining === 0;
+
+/**
+ * Minuteurs de toutes les recettes pour une sheet : ceux de la recette à l'écran d'abord, puis les autres
+ * regroupés par recette, chaque groupe dans l'ordre des étapes.
+ */
+export const orderTimers = (timers: Timer[], firstRecipeId?: string | null) =>
+  [...timers].sort(
+    (a, b) =>
+      Number(b.recipeId === firstRecipeId) - Number(a.recipeId === firstRecipeId) ||
+      a.recipeId.localeCompare(b.recipeId) ||
+      a.step - b.step,
+  );
