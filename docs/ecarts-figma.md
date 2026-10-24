@@ -69,8 +69,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   retire, la croix arrête les minuteurs terminés et laisse tourner les autres.
 - **Minuteurs hors de la fiche** (maquette 639:17832, V3 retenue) : quand plusieurs recettes ont des minuteurs,
   chaque carte de la sheet porte le nom de la recette au-dessus de l'étape ; son chevron ouvre la recette (masqué sur la fiche elle-même). Dans les
-  onglets, la pastille « Minuteurs (n) » de la fiche reste affichée au-dessus de la barre (à gauche du + sur
-  l'accueil) et ouvre la sheet avec les minuteurs de toutes les recettes. Sur une fiche et en pas à pas, la
+  onglets, la pastille des minuteurs reste affichée au-dessus de la barre (à gauche du + sur
+  l'accueil, en version compacte comme en pas à pas) et ouvre la sheet avec les minuteurs de toutes les recettes. Sur une fiche et en pas à pas, la
   pastille et la sheet montrent aussi les minuteurs des autres recettes (ceux de la fiche en premier).
   Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres
   pulsent doucement (opacité 100 % ↔ 30 %, 1 s) dans la sheet et la pastille d'étape.
