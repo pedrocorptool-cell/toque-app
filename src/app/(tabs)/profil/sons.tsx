@@ -1,7 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, Easing } from 'react-native';
+import { AccessibilityInfo, Animated, Easing, StyleSheet, View } from 'react-native';
 
-import { Icon } from '@/components/icons/Icon';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
 import { ListCard, ListRow, Radio, useToast } from '@/components/ui';
 import { TIMER_SOUNDS, type TimerSoundId } from '@/data/profile';
@@ -46,31 +45,73 @@ export default function SonsScreen() {
   );
 }
 
-/** Onde orange qui pulse pendant l'aperçu, fixe avec « Réduire les animations ». */
+/**
+ * Barres de l'icône « waveform » (24 × 24) : centre x, hauteur au repos, et rythme de leur va-et-vient.
+ * Chaque barre grandit et rapetisse depuis son centre, à sa propre vitesse, comme un égaliseur.
+ */
+const BARS = [
+  { x: 4.5, height: 6, duration: 520 },
+  { x: 8.25, height: 18, duration: 380 },
+  { x: 12, height: 12, duration: 460 },
+  { x: 15.75, height: 6, duration: 340 },
+  { x: 19.5, height: 9, duration: 600 },
+];
+const BAR_WIDTH = 1.5;
+const WAVE_SIZE = 24;
+
+/** Onde orange de l'aperçu : ses barres s'animent pendant la lecture, fixes avec « Réduire les animations ». */
 function Wave() {
-  const pulse = useRef(new Animated.Value(1)).current;
+  const scales = useRef(BARS.map(() => new Animated.Value(1))).current;
 
   useEffect(() => {
-    let loop: Animated.CompositeAnimation | undefined;
+    let loops: Animated.CompositeAnimation[] = [];
     AccessibilityInfo.isReduceMotionEnabled().then(
       (reduce) => {
         if (reduce) return;
-        loop = Animated.loop(
-          Animated.sequence([
-            Animated.timing(pulse, { toValue: 0.35, duration: 400, easing: EASE, useNativeDriver: true }),
-            Animated.timing(pulse, { toValue: 1, duration: 400, easing: EASE, useNativeDriver: true }),
-          ]),
+        loops = scales.map((scale, i) =>
+          Animated.loop(
+            Animated.sequence([
+              Animated.timing(scale, { toValue: 0.3, duration: BARS[i].duration, easing: EASE, useNativeDriver: true }),
+              Animated.timing(scale, { toValue: 1, duration: BARS[i].duration, easing: EASE, useNativeDriver: true }),
+            ]),
+          ),
         );
-        loop.start();
+        loops.forEach((loop) => loop.start());
       },
       () => {},
     );
-    return () => loop?.stop();
-  }, [pulse]);
+    return () => loops.forEach((loop) => loop.stop());
+  }, [scales]);
 
   return (
-    <Animated.View style={{ opacity: pulse }}>
-      <Icon name="waveform" color={color.actionPrimaryBg} />
-    </Animated.View>
+    <View style={styles.wave}>
+      {BARS.map((bar, i) => (
+        <Animated.View
+          key={bar.x}
+          style={[
+            styles.bar,
+            {
+              left: bar.x - BAR_WIDTH / 2,
+              top: (WAVE_SIZE - bar.height) / 2,
+              height: bar.height,
+              transform: [{ scaleY: scales[i] }],
+            },
+          ]}
+        />
+      ))}
+    </View>
   );
 }
+
+const styles = StyleSheet.create({
+  wave: {
+    width: WAVE_SIZE,
+    height: WAVE_SIZE,
+  },
+  bar: {
+    position: 'absolute',
+    width: BAR_WIDTH,
+    borderRadius: BAR_WIDTH / 2,
+    backgroundColor: color.actionPrimaryBg,
+  },
+});
