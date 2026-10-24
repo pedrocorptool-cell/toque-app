@@ -67,8 +67,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   même hors de la fiche. Quand l'un arrive à zéro, la sheet « Minuteur » s'ouvre où que l'on soit, à la place
   de « Dialogue/ Minuteur » (décision de Pierre, pour garder un seul composant d'alarme) ; « Arrêter » le
   retire, la croix arrête les minuteurs terminés et laisse tourner les autres.
-- **Minuteurs hors de la fiche** (maquette 639:17832, V3 retenue) : chaque carte de la sheet porte le nom de
-  la recette au-dessus de l'étape ; son chevron ouvre la recette (masqué sur la fiche elle-même). Dans les
+- **Minuteurs hors de la fiche** (maquette 639:17832, V3 retenue) : quand plusieurs recettes ont des minuteurs,
+  chaque carte de la sheet porte le nom de la recette au-dessus de l'étape ; son chevron ouvre la recette (masqué sur la fiche elle-même). Dans les
   onglets, la pastille « Minuteurs (n) » de la fiche reste affichée au-dessus de la barre (à gauche du + sur
   l'accueil) et ouvre la sheet avec les minuteurs de toutes les recettes.
   Exception : sur la fiche de la recette concernée, c'est la sheet qui s'ouvre. À zéro, les chiffres

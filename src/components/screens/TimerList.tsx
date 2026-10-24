@@ -14,18 +14,26 @@ type TimerListProps = {
   onOpenRecipe?: (recipeId: string) => void;
 };
 
-/** Figma (639:17832) : cartes de « Bottom Sheet/ Minuteur », nom de la recette au-dessus de l'étape. */
+/** Figma (639:17832) : cartes de « Bottom Sheet/ Minuteur », nom de la recette au-dessus de l'étape quand
+ * plusieurs recettes ont des minuteurs. */
 export function TimerList({ timers, onStop, onOpenRecipe }: TimerListProps) {
+  // Le nom de la recette ne sert qu'à distinguer plusieurs recettes en cours.
+  const showTitle = new Set(timers.map((t) => t.recipeId)).size > 1;
   return (
     <View style={styles.list}>
       {timers.map((t) => (
-        <TimerRow key={t.id} timer={t} onStop={onStop} onOpenRecipe={onOpenRecipe} />
+        <TimerRow key={t.id} timer={t} showTitle={showTitle} onStop={onStop} onOpenRecipe={onOpenRecipe} />
       ))}
     </View>
   );
 }
 
-function TimerRow({ timer, onStop, onOpenRecipe }: { timer: Timer } & Omit<TimerListProps, 'timers'>) {
+function TimerRow({
+  timer,
+  showTitle,
+  onStop,
+  onOpenRecipe,
+}: { timer: Timer; showTitle: boolean } & Omit<TimerListProps, 'timers'>) {
   const { toggle, reset, remove, focusedRecipeId } = useTimers();
   const { recipes } = useRecipes();
   const title = recipes.find((r) => r.id === timer.recipeId)?.title;
@@ -33,7 +41,7 @@ function TimerRow({ timer, onStop, onOpenRecipe }: { timer: Timer } & Omit<Timer
   return (
     <View style={styles.card}>
       <View>
-        {title && <AppText style={styles.recipe}>{title}</AppText>}
+        {showTitle && title && <AppText style={styles.recipe}>{title}</AppText>}
         <View style={styles.header}>
           <AppText variant="label" color={color.textSecondary} style={styles.step}>
             {`Étape ${timer.step + 1}`}
