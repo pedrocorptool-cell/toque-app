@@ -209,3 +209,6 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Pas à pas** (Figma 461:3266) : numéro d'étape « 3/6 » en Medium 20 ; carte minuteur blanche (chiffres foncés,
   bouton lecture gris clair, sans libellé « Minuteur ») ; la pastille des minuteurs lancés est blanche avec
   l'icône réveil orange, comme les boutons ronds du bas (aussi dans les onglets).
+- **Retour au brun** (après l'essai vert) : `bgBrandPage` brown600, `bgBrandSurface` brown700, `borderOnBrand`
+  brown400, recherche et onglets de la fiche à nouveau en foncé 24 %, filtre actif foncé, écran de lancement
+  brun. Les changements d'interface faits pendant l'essai sont gardés.

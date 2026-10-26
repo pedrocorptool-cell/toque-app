@@ -47,15 +47,15 @@ export const color = {
 
   bgPage: palette.brown50,
   bgSurface: palette.neutral0,
-  // Fond de marque passé du brun (brown600 / brown700) au vert : Figma « Tests vert » (461:2852).
-  bgBrandPage: palette.green900,
-  bgBrandSurface: palette.green950,
+  // Fond de marque brun (l'essai vert de « Tests vert » 461:2852 a été abandonné).
+  bgBrandPage: palette.brown600,
+  bgBrandSurface: palette.brown700,
 
   borderDefault: palette.brown100,
   borderDivider: palette.neutral800A24,
-  borderOnBrand: palette.neutral0A24,
-  /** Champ posé sur le fond de marque (recherche de l'accueil) : blanc à 8 % (Figma 464:4982). */
-  bgBrandField: palette.neutral0A08,
+  borderOnBrand: palette.brown400,
+  /** Champ posé sur le fond de marque (recherche, onglets de la fiche) : teinte d'avant l'essai vert. */
+  bgBrandField: palette.neutral800A24,
 
   actionPrimaryBg: palette.orange600,
   actionPrimaryText: palette.orange100,
