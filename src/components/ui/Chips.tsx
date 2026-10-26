@@ -46,7 +46,7 @@ export function Tag({
 }) {
   return (
     <View style={[styles.tag, { backgroundColor: TAG_TONES[tone].bg }, shrink && styles.tagShrink]}>
-      <AppText variant="label" color={TAG_TONES[tone].text} numberOfLines={1}>
+      <AppText variant="label" color={TAG_TONES[tone].text} numberOfLines={1} style={shrink && styles.tagShrink}>
         {label}
       </AppText>
     </View>

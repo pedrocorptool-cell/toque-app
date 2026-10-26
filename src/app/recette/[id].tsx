@@ -504,6 +504,8 @@ const styles = StyleSheet.create({
     height: 60,
     flexDirection: 'row',
     alignItems: 'center',
+    // Figma 713:2325 : 16 px entre chaque moitié et la barre.
+    gap: space[16],
     paddingHorizontal: space[16],
     paddingVertical: space[12],
     borderTopWidth: 1,
@@ -515,6 +517,7 @@ const styles = StyleSheet.create({
   },
   half: {
     flex: 1,
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
