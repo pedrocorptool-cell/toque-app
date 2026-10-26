@@ -49,7 +49,8 @@ export type Category = {
   label: string;
   /** Affiché sur les cartes de la home et la fiche. */
   hashtag?: string;
-  dot: string;
+  /** Couleur des premières maquettes, plus affichée (Figma « V2 Sheet » 713:2413). */
+  dot?: string;
 };
 
 export const CATEGORIES: Category[] = [

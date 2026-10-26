@@ -11,7 +11,6 @@ import { TimerDock } from '@/components/screens/TimerDock';
 import {
   AppText,
   ChefButton,
-  ColorDot,
   Fab,
   FilterChip,
   FilterOptions,
@@ -210,7 +209,7 @@ export default function HomeScreen() {
 function optionsFor(key: FilterKey, creatorQuery: string, categories: Category[]): FilterOption<string>[] {
   switch (key) {
     case 'category':
-      return categories.map((c) => ({ id: c.id, label: c.label, leading: <ColorDot color={c.dot} /> }));
+      return categories.map((c) => ({ id: c.id, label: c.label }));
     case 'creator':
       return CREATORS.filter((c) => matchesText(c.label, creatorQuery)).map((c) => ({
         id: c.id,

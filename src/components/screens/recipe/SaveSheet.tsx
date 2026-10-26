@@ -1,8 +1,8 @@
 import { useEffect, useState } from 'react';
 import { StyleSheet } from 'react-native';
 
-import { CategoryFields, SWATCHES } from '@/components/screens/CategoryFields';
-import { AppText, BottomSheet, Button, ColorDot, FilterOptions } from '@/components/ui';
+import { CategoryFields } from '@/components/screens/CategoryFields';
+import { AppText, BottomSheet, Button, FilterOptions } from '@/components/ui';
 import { toHashtag, type CategoryId } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { color, space } from '@/theme/tokens';
@@ -22,7 +22,6 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
   const [selected, setSelected] = useState<string[]>(initial);
   const [creating, setCreating] = useState(false);
   const [name, setName] = useState('');
-  const [swatch, setSwatch] = useState<string>(SWATCHES[0]);
 
   useEffect(() => {
     if (!visible) return;
@@ -33,13 +32,12 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
 
   const startCreating = () => {
     setName('');
-    setSwatch(SWATCHES[0]);
     setCreating(true);
   };
 
   const createCategory = () => {
     const id = `custom-${Date.now()}`;
-    addCategory({ id, label: name.trim(), hashtag: toHashtag(name.trim()), dot: swatch });
+    addCategory({ id, label: name.trim(), hashtag: toHashtag(name.trim()) });
     setSelected([...selected, id]);
     setCreating(false);
   };
@@ -51,8 +49,8 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
         onClose={onClose}
         onBack={() => setCreating(false)}
         title="Créer une catégorie"
-        footer={<Button block label="Enregistrer" disabled={!name.trim()} onPress={createCategory} />}>
-        <CategoryFields name={name} onNameChange={setName} swatch={swatch} onSwatchChange={setSwatch} />
+        footer={<Button block icon="bookmark" label="Enregistrer" disabled={!name.trim()} onPress={createCategory} />}>
+        <CategoryFields name={name} onNameChange={setName} />
       </BottomSheet>
     );
   }
@@ -62,20 +60,13 @@ export function SaveSheet({ visible, onClose, initial, onSave }: SaveSheetProps)
       visible={visible}
       onClose={onClose}
       title="Enregistrer"
-      footer={
-        <Button
-          block
-          icon="bookmark"
-          label="Enregistrer"
-          onPress={() => onSave(selected)}
-        />
-      }>
+      footer={<Button block icon="bookmark" label="Enregistrer" onPress={() => onSave(selected)} />}>
       <AppText variant="overline" color={color.textSecondary} style={styles.overline}>
         Suggestions
       </AppText>
       <FilterOptions
         firstRow={{ label: 'Nouvelle catégorie', icon: 'plus', onPress: startCreating }}
-        options={categories.map((c) => ({ id: c.id, label: c.label, leading: <ColorDot color={c.dot} /> }))}
+        options={categories.map((c) => ({ id: c.id, label: c.hashtag ?? toHashtag(c.label) }))}
         selected={selected}
         onChange={setSelected}
       />

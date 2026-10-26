@@ -203,3 +203,6 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Étiquettes sans couleur de catégorie** (Figma « V2 Sheet » 713:2413) : durée en crème / texte orange
   (« 20 mn »), hashtags en gris clair / texte foncé, « #Plat » affiché comme les autres. Sur la fiche, les
   hashtags sont dans une étiquette blanche à 32 % sur une ligne avec « … », sans l'icône signet.
+- **Plus de couleur de catégorie** (Figma « V2 Sheet » 713:2413) : plus de pastille dans le filtre Catégorie,
+  la sheet « Enregistrer » (hashtags) et « Mes catégories » ; la création n'a plus que le nom, précédé de « # ».
+  La couleur reste dans les données (`dot` optionnel) mais n'est plus affichée ni demandée.

@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react';
 import { Image, StyleSheet, View } from 'react-native';
 
-import { CategoryFields, SWATCHES } from '@/components/screens/CategoryFields';
+import { CategoryFields } from '@/components/screens/CategoryFields';
 import { AppText, BottomSheet, Button, TextButton } from '@/components/ui';
 import { toHashtag, type Category } from '@/data/recipes';
 import { color, space, text } from '@/theme/tokens';
@@ -25,13 +25,11 @@ type CategorySheetProps = {
  */
 export function CategorySheet({ visible, onClose, category, onSave, onDelete }: CategorySheetProps) {
   const [name, setName] = useState('');
-  const [swatch, setSwatch] = useState<string>(SWATCHES[0]);
   const [confirming, setConfirming] = useState(false);
 
   useEffect(() => {
     if (!visible) return;
     setName(category?.label ?? '');
-    setSwatch(category?.dot ?? SWATCHES[0]);
     setConfirming(false);
   }, [visible, category]);
 
@@ -60,7 +58,7 @@ export function CategorySheet({ visible, onClose, category, onSave, onDelete }: 
       onClose={onClose}
       closable
       title={category ? 'Modifier la catégorie' : 'Créer une catégorie'}>
-      <CategoryFields name={name} onNameChange={setName} swatch={swatch} onSwatchChange={setSwatch} />
+      <CategoryFields name={name} onNameChange={setName} />
       <View style={styles.actions}>
         <Button
           block
@@ -71,7 +69,6 @@ export function CategorySheet({ visible, onClose, category, onSave, onDelete }: 
               id: category?.id ?? `custom-${Date.now()}`,
               label,
               hashtag: category?.label === label ? category.hashtag : toHashtag(label),
-              dot: swatch,
             })
           }
         />
