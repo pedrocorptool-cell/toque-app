@@ -27,6 +27,46 @@ export function FilterChip({ label, active, onPress }: FilterChipProps) {
   );
 }
 
+type CategoryTag = { label: string; dot: string };
+
+/**
+ * Hashtags des catégories, chacun précédé d'une pastille de sa couleur (8 px). Dans une étiquette bleue sur les
+ * cartes (`tone="tag"`), en blanc sur le fond de marque de la fiche (`tone="onBrand"`).
+ */
+export function CategoryTags({ tags, tone = 'tag' }: { tags: CategoryTag[]; tone?: 'tag' | 'onBrand' }) {
+  const onBrand = tone === 'onBrand';
+  return (
+    <View style={styles.categoryTags}>
+      {tags.map((tag, i) => (
+        <View key={tag.label} style={[styles.categoryTag, i === tags.length - 1 && styles.tagShrink]}>
+          <View
+            style={[
+              styles.categoryDot,
+              { backgroundColor: tag.dot, borderColor: onBrand ? color.borderOnBrand : color.borderDivider },
+            ]}
+          />
+          <AppText
+            variant={onBrand ? undefined : 'label'}
+            color={onBrand ? color.textOnBrandPrimary : color.tagText}
+            numberOfLines={1}
+            style={styles.tagShrink}>
+            {tag.label}
+          </AppText>
+        </View>
+      ))}
+    </View>
+  );
+}
+
+/** Étiquette des hashtags d'une carte recette, avec la pastille de couleur de chaque catégorie. */
+export function CategoryTag({ tags }: { tags: CategoryTag[] }) {
+  return (
+    <View style={[styles.tag, styles.tagShrink]}>
+      <CategoryTags tags={tags} />
+    </View>
+  );
+}
+
 /** Étiquette de durée ou de hashtags sur une carte recette. */
 export function Tag({ label, shrink }: { label: string; shrink?: boolean }) {
   return (
@@ -77,6 +117,24 @@ const styles = StyleSheet.create({
   },
   tagShrink: {
     flexShrink: 1,
+  },
+  categoryTags: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
+  categoryTag: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[4],
+  },
+  // Liseré discret : les teintes claires (crème) ou proches du fond (vert) restent visibles.
+  categoryDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    borderWidth: 1,
   },
   creator: {
     flexDirection: 'row',

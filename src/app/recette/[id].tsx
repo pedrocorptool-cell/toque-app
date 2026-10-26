@@ -15,6 +15,7 @@ import { TimerSheet } from '@/components/screens/TimerSheet';
 import {
   AppText,
   BottomSheet,
+  CategoryTags,
   Button,
   ChefTag,
   Dialog,
@@ -27,7 +28,7 @@ import {
 } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { useProfile } from '@/data/ProfileContext';
-import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
+import { CREATORS, formatIngredient, savedHashtagsOf, savedTagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { useShopping } from '@/data/ShoppingContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
@@ -142,6 +143,7 @@ export default function RecipeScreen() {
 
   const creator = CREATORS.find((c) => c.id === recipe.creator)!;
   const saved = savedHashtagsOf(recipe, categories);
+  const savedTags = savedTagsOf(recipe, categories);
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
   // Les minuteurs suivent d'une recette à l'autre : ceux de cette fiche en premier, puis ceux des autres recettes.
@@ -229,9 +231,9 @@ export default function RecipeScreen() {
               <Icon name="bookmark" color={color.textOnBrandPrimary} />
             </View>
             {saved ? (
-              <AppText color={color.textOnBrandPrimary} numberOfLines={1} style={styles.hashtags}>
-                {saved}
-              </AppText>
+              <View style={styles.hashtags}>
+                <CategoryTags tags={savedTags} tone="onBrand" />
+              </View>
             ) : (
               <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
             )}

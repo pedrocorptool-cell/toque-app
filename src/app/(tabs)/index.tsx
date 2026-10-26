@@ -31,7 +31,7 @@ import {
   SOURCES,
   creatorOf,
   filterRecipes,
-  hashtagsOf,
+  categoryTagsOf,
   matchesText,
   type FilterKey,
   type Filters,
@@ -129,7 +129,7 @@ export default function HomeScreen() {
               title={recipe.title}
               image={recipe.image}
               duration={`${recipe.duration}mn`}
-              hashtags={hashtagsOf(recipe, categories)}
+              tags={categoryTagsOf(recipe, categories)}
               creator={creatorOf(recipe)}
               onPress={() => router.push(`/recette/${recipe.id}`)}
             />
