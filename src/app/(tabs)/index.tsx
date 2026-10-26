@@ -31,6 +31,7 @@ import {
   creatorOf,
   filterRecipes,
   hashtagsOf,
+  toHashtag,
   matchesText,
   type FilterKey,
   type Filters,
@@ -209,7 +210,7 @@ export default function HomeScreen() {
 function optionsFor(key: FilterKey, creatorQuery: string, categories: Category[]): FilterOption<string>[] {
   switch (key) {
     case 'category':
-      return categories.map((c) => ({ id: c.id, label: c.label }));
+      return categories.map((c) => ({ id: c.id, label: c.hashtag ?? toHashtag(c.label) }));
     case 'creator':
       return CREATORS.filter((c) => matchesText(c.label, creatorQuery)).map((c) => ({
         id: c.id,

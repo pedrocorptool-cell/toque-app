@@ -4,7 +4,7 @@ import { Icon } from '@/components/icons/Icon';
 import { CategorySheet } from '@/components/screens/profile/CategorySheet';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
 import { ListCard, ListRow, useToast } from '@/components/ui';
-import type { Category } from '@/data/recipes';
+import { toHashtag, type Category } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { color } from '@/theme/tokens';
 
@@ -31,7 +31,7 @@ export default function CategoriesScreen() {
             return (
               <ListRow
                 key={category.id}
-                label={category.label}
+                label={category.hashtag ?? toHashtag(category.label)}
                 value={countLabel}
                 trailing={<Icon name="edit" color={color.actionSecondaryIcon} />}
                 accessibilityLabel={`Modifier ${category.label}, ${countLabel}`}
