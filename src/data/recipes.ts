@@ -47,13 +47,13 @@ const NAAN = require('@/assets/images/demo/naan.jpg');
 export type Category = {
   id: CategoryId;
   label: string;
-  /** Affiché sur les cartes de la home ; « Plat principal » n'en a pas dans Figma. */
+  /** Affiché sur les cartes de la home ; « Plat » n'en a pas dans Figma. */
   hashtag?: string;
   dot: string;
 };
 
 export const CATEGORIES: Category[] = [
-  { id: 'plat', label: 'Plat principal', dot: color.accentBlue },
+  { id: 'plat', label: 'Plat', dot: color.accentBlue },
   { id: 'dessert', label: 'Dessert', hashtag: '#Dessert', dot: color.accentOrange },
   { id: 'vege', label: 'Végé', hashtag: '#Végé', dot: color.accentGreen },
   { id: 'cheat', label: 'Cheat Meal', hashtag: '#CheatMeal', dot: color.accentCreme },
@@ -277,7 +277,7 @@ export function toHashtag(label: string) {
     .join('')}`;
 }
 
-/** Catégories de la recette sur la fiche : comme sur la home, « Plat principal » seulement s'il est seul. */
+/** Catégories de la recette sur la fiche : comme sur la home, « Plat » seulement s'il est seul. */
 export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
   const saved = categories.filter((c) => recipe.categories.includes(c.id));
   return hashtagsOf(recipe, categories) ?? saved.map((c) => c.hashtag ?? toHashtag(c.label)).join(' ');
