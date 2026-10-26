@@ -67,7 +67,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     padding: space[4],
     borderRadius: radius.pill,
-    backgroundColor: color.actionIconBg,
+    backgroundColor: color.bgBrandField,
   },
   tab: {
     flex: 1,
