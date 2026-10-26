@@ -36,7 +36,7 @@ type BottomSheetProps = {
   closable?: boolean;
 };
 
-const SHEET_DURATION = 250;
+export const SHEET_DURATION = 250;
 
 type SheetModalProps = {
   visible: boolean;

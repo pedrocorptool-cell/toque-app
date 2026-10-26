@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Modal, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
@@ -12,7 +12,20 @@ import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
 import { TipCard } from '@/components/screens/recipe/TipCard';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import { ActionMenu, AppText, Button, Dialog, IconButton, SegmentedTabs, TimerPill, Toast } from '@/components/ui';
+import {
+  AppText,
+  BottomSheet,
+  Button,
+  ChefTag,
+  Dialog,
+  IconButton,
+  ListCard,
+  ListRow,
+  SegmentedTabs,
+  TimerPill,
+  Toast,
+} from '@/components/ui';
+import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { useProfile } from '@/data/ProfileContext';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -157,9 +170,10 @@ export default function RecipeScreen() {
     });
   };
 
+  // La sheet des actions descend d'abord : la suivante (enregistrer, partager…) ne s'ouvre qu'après.
   const menuAction = (action: () => void) => () => {
     setMenuOpen(false);
-    action();
+    setTimeout(action, SHEET_DURATION);
   };
 
   return (
@@ -329,33 +343,34 @@ export default function RecipeScreen() {
         style={[styles.toast, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}
       />
 
-      <Modal
-        visible={menuOpen}
-        transparent
-        animationType="fade"
-        onRequestClose={() => setMenuOpen(false)}
-        statusBarTranslucent>
-        <Pressable
-          style={StyleSheet.absoluteFill}
-          onPress={() => setMenuOpen(false)}
-          accessibilityLabel="Fermer le menu"
-        />
-        <View style={[styles.menu, { top: insets.top + space[16] + 40 + space[8] }]}>
-          <ActionMenu
-            items={[
-              {
-                label: 'Modifier avec l’IA',
-                icon: 'edit',
-                premium: true,
-                onPress: menuAction(() => setToast('La modification par l’IA arrive à l’étape 3')),
-              },
-              { label: 'Enregistrer', icon: 'bookmark', onPress: menuAction(() => setSaveOpen(true)) },
-              { label: 'Partager', icon: 'link', onPress: menuAction(() => setShareOpen(true)) },
-              { label: 'Supprimer', icon: 'trash', danger: true, onPress: menuAction(() => setDeleteOpen(true)) },
-            ]}
+      {/* Figma 706:540 « Actions recette » : les actions du « … » dans une sheet, en bas de l'écran. */}
+      <BottomSheet visible={menuOpen} onClose={() => setMenuOpen(false)}>
+        <ListCard>
+          <ListRow
+            label="Modifier avec l’IA"
+            leading={<Icon name="edit" />}
+            trailing={<ChefTag />}
+            onPress={menuAction(() => setToast('La modification par l’IA arrive à l’étape 3'))}
           />
-        </View>
-      </Modal>
+          <ListRow
+            label="Enregistrer"
+            leading={<Icon name="bookmark" />}
+            onPress={menuAction(() => setSaveOpen(true))}
+          />
+          <ListRow
+            label="Ajouter à la liste de courses"
+            leading={<Icon name="basket" />}
+            onPress={menuAction(() => setShoppingOpen(true))}
+          />
+          <ListRow label="Partager" leading={<Icon name="qrCode" />} onPress={menuAction(() => setShareOpen(true))} />
+          <ListRow
+            label="Supprimer"
+            danger
+            leading={<Icon name="trash" color={color.feedbackDanger} />}
+            onPress={menuAction(() => setDeleteOpen(true))}
+          />
+        </ListCard>
+      </BottomSheet>
 
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
 
@@ -586,10 +601,6 @@ const styles = StyleSheet.create({
   toast: {
     position: 'absolute',
     left: space[16],
-    right: space[16],
-  },
-  menu: {
-    position: 'absolute',
     right: space[16],
   },
 });

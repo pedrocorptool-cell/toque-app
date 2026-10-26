@@ -54,6 +54,8 @@ type ListRowProps = {
   accessibilityRole?: AccessibilityRole;
   selected?: boolean;
   accessibilityLabel?: string;
+  /** Libellé rouge des actions destructrices (« Supprimer »). */
+  danger?: boolean;
 };
 
 /** Ligne de 56 px des listes du profil. */
@@ -67,12 +69,13 @@ export function ListRow({
   accessibilityRole = 'button',
   selected,
   accessibilityLabel,
+  danger,
 }: ListRowProps) {
   const content = (
     <>
       {leading}
       <View style={styles.labelBox}>
-        <AppText style={styles.label} numberOfLines={1}>
+        <AppText style={styles.label} color={danger ? color.feedbackDanger : undefined} numberOfLines={1}>
           {label}
         </AppText>
         {inline && <View style={styles.inline}>{inline}</View>}
