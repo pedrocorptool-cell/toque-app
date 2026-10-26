@@ -195,3 +195,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - Seules deux photos de plats existent dans Figma : les six recettes fictives les réutilisent.
 - Les filtres d'un même type s'additionnent (Végé OU Dessert), les différents filtres se combinent
   (Végé ET Jow). Le compteur « Voir les résultats (n) » se met à jour à chaque case cochée.
+
+- **Fond de marque vert** (Figma « Tests vert » 461:2852, à l'essai) : `bgBrandPage` passe de brown600 à
+  green900 (#243B16), `bgBrandSurface` à un vert plus sombre (#192A0F, absent de Figma), `borderOnBrand` au blanc
+  24 % des puces de filtre de la maquette (les filets bruns #A68D78 de la maquette juraient sur le vert). Écran
+  de lancement aussi en vert. Pour revenir au brun : ces trois tokens et `app.json`.

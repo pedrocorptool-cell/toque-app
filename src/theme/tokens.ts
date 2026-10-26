@@ -25,6 +25,9 @@ export const palette = {
   blue800: '#1B5071',
   green100: '#D1FAB8',
   green900: '#243B16',
+  /** Vert plus sombre que le fond de marque, pour les surfaces posées dessus (Tests vert 461:2852). */
+  green950: '#192A0F',
+  neutral0A24: 'rgba(255, 255, 255, 0.24)',
   // Couleurs de catégorie de « Créer une catégorie », sans variable dans Figma.
   grey300: '#C8C7C3',
   purple400: '#777ED0',
@@ -40,12 +43,13 @@ export const color = {
 
   bgPage: palette.brown50,
   bgSurface: palette.neutral0,
-  bgBrandPage: palette.brown600,
-  bgBrandSurface: palette.brown700,
+  // Fond de marque passé du brun (brown600 / brown700) au vert : Figma « Tests vert » (461:2852).
+  bgBrandPage: palette.green900,
+  bgBrandSurface: palette.green950,
 
   borderDefault: palette.brown100,
   borderDivider: palette.neutral800A24,
-  borderOnBrand: palette.brown400,
+  borderOnBrand: palette.neutral0A24,
 
   actionPrimaryBg: palette.orange600,
   actionPrimaryText: palette.orange100,
