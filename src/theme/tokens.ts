@@ -14,6 +14,8 @@ export const palette = {
   neutral800A64: 'rgba(40, 39, 37, 0.64)',
   neutral800A24: 'rgba(40, 39, 37, 0.24)',
   brown50: '#F5F4F1',
+  brown75: '#EEECE7',
+  brown75A32: 'rgba(238, 236, 231, 0.32)',
   brown100: '#DDDACF',
   brown400: '#A68D78',
   brown600: '#826A56',
@@ -72,6 +74,12 @@ export const color = {
 
   tagBg: palette.blue100,
   tagText: palette.blue800,
+  // Étiquettes des cartes et de la fiche sans couleur de catégorie (Figma « V2 Sheet » 713:2413).
+  tagTimeBg: palette.orange100,
+  tagTimeText: palette.orange600,
+  tagCategoryBg: palette.brown75,
+  tagCategoryText: palette.neutral800,
+  tagOnBrandBg: palette.brown75A32,
 
   controlSelectedBg: palette.neutral800,
   controlSelectedIcon: palette.neutral0,

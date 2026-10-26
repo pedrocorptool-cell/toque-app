@@ -22,6 +22,7 @@ import {
   ListCard,
   ListRow,
   SegmentedTabs,
+  Tag,
   TimerPill,
   Toast,
 } from '@/components/ui';
@@ -225,15 +226,15 @@ export default function RecipeScreen() {
             accessibilityLabel={saved ? `Modifier les catégories : ${saved}` : undefined}
             onPress={() => setSaveOpen(true)}
             style={({ pressed }) => [styles.half, pressed && styles.pressed]}>
-            <View style={styles.fixed}>
-              <Icon name="bookmark" color={color.textOnBrandPrimary} />
-            </View>
             {saved ? (
-              <AppText color={color.textOnBrandPrimary} numberOfLines={1} style={styles.hashtags}>
-                {saved}
-              </AppText>
+              <Tag label={saved} tone="onBrand" shrink />
             ) : (
-              <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
+              <>
+                <View style={styles.fixed}>
+                  <Icon name="bookmark" color={color.textOnBrandPrimary} />
+                </View>
+                <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
+              </>
             )}
           </Pressable>
         </View>
@@ -511,9 +512,6 @@ const styles = StyleSheet.create({
   },
   fixed: {
     flexShrink: 0,
-  },
-  hashtags: {
-    flexShrink: 1,
   },
   half: {
     flex: 1,

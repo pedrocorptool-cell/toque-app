@@ -128,7 +128,7 @@ export default function HomeScreen() {
               key={recipe.id}
               title={recipe.title}
               image={recipe.image}
-              duration={`${recipe.duration}mn`}
+              duration={`${recipe.duration} mn`}
               hashtags={hashtagsOf(recipe, categories)}
               creator={creatorOf(recipe)}
               onPress={() => router.push(`/recette/${recipe.id}`)}

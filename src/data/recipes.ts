@@ -47,13 +47,13 @@ const NAAN = require('@/assets/images/demo/naan.jpg');
 export type Category = {
   id: CategoryId;
   label: string;
-  /** Affiché sur les cartes de la home ; « Plat » n'en a pas dans Figma. */
+  /** Affiché sur les cartes de la home et la fiche. */
   hashtag?: string;
   dot: string;
 };
 
 export const CATEGORIES: Category[] = [
-  { id: 'plat', label: 'Plat', dot: color.accentBlue },
+  { id: 'plat', label: 'Plat', hashtag: '#Plat', dot: color.accentBlue },
   { id: 'dessert', label: 'Dessert', hashtag: '#Dessert', dot: color.accentOrange },
   { id: 'vege', label: 'Végé', hashtag: '#Végé', dot: color.accentGreen },
   { id: 'cheat', label: 'Cheat Meal', hashtag: '#CheatMeal', dot: color.accentCreme },
@@ -109,7 +109,9 @@ export const RECIPES: Recipe[] = [
       { text: 'Ajouter les tomates pelées et laisser mijoter à feu doux.', timer: 10 },
       { text: 'Cuire les rigatoni al dente en gardant une louche d’eau de cuisson.', timer: 660 },
       { text: 'Fouetter les jaunes d’œuf avec le pecorino et beaucoup de poivre.' },
-      { text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.' },
+      {
+        text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.',
+      },
     ],
     tip: 'Pour accompagner ce plat, un vin rouge du Beaujolais sera parfait !',
   },
@@ -277,10 +279,15 @@ export function toHashtag(label: string) {
     .join('')}`;
 }
 
-/** Catégories de la recette sur la fiche : comme sur la home, « Plat » seulement s'il est seul. */
+/** Catégories de la recette sur la fiche, comme sur la home. */
 export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
   const saved = categories.filter((c) => recipe.categories.includes(c.id));
-  return hashtagsOf(recipe, categories) ?? saved.map((c) => c.hashtag ?? toHashtag(c.label)).join(' ');
+  return saved.length
+    ? saved
+        .map((c) => c.hashtag ?? toHashtag(c.label))
+        .sort()
+        .join(' ')
+    : undefined;
 }
 
 export function creatorOf(recipe: Recipe) {

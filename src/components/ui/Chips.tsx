@@ -27,11 +27,26 @@ export function FilterChip({ label, active, onPress }: FilterChipProps) {
   );
 }
 
-/** Étiquette de durée ou de hashtags sur une carte recette. */
-export function Tag({ label, shrink }: { label: string; shrink?: boolean }) {
+const TAG_TONES = {
+  default: { bg: color.tagBg, text: color.tagText },
+  time: { bg: color.tagTimeBg, text: color.tagTimeText },
+  category: { bg: color.tagCategoryBg, text: color.tagCategoryText },
+  onBrand: { bg: color.tagOnBrandBg, text: color.textOnBrandPrimary },
+};
+
+/** Étiquette de durée ou de hashtags (carte recette, fiche). */
+export function Tag({
+  label,
+  shrink,
+  tone = 'default',
+}: {
+  label: string;
+  shrink?: boolean;
+  tone?: keyof typeof TAG_TONES;
+}) {
   return (
-    <View style={[styles.tag, shrink && styles.tagShrink]}>
-      <AppText variant="label" color={color.tagText} numberOfLines={1}>
+    <View style={[styles.tag, { backgroundColor: TAG_TONES[tone].bg }, shrink && styles.tagShrink]}>
+      <AppText variant="label" color={TAG_TONES[tone].text} numberOfLines={1}>
         {label}
       </AppText>
     </View>

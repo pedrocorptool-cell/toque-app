@@ -25,8 +25,8 @@ export function RecipeCard({ title, image, duration, hashtags, creator, onPress 
       <View style={styles.body}>
         <View style={styles.top}>
           <View style={styles.tags}>
-            <Tag label={duration} />
-            {hashtags && <Tag label={hashtags} shrink />}
+            <Tag label={duration} tone="time" />
+            {hashtags && <Tag label={hashtags} tone="category" shrink />}
           </View>
           <AppText variant="cardTitle" numberOfLines={1}>
             {title}
