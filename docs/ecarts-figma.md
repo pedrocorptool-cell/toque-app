@@ -134,8 +134,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
   avant « Tout supprimer », masqué quand il n'y a rien à supprimer.
 
 - **Import de recette** (Figma 260:563, 257:373 et 622:16839) : tout se passe dans la même sheet, la flèche revient
-  au premier écran. Chaque réseau a sa carte dans le premier écran et ouvre « Importer via » sur ce réseau. Réseaux
-  sociaux (Figma 622:16535) : les trois captures du tutoriel (« Insta 01 » à « TikTok 03 », exportées en
+  au premier écran. Chaque réseau a sa carte dans le premier écran et ouvre directement l'app du réseau (choix de Pierre :
+  le tutoriel « Importer via » ne s'ouvre que depuis « Guide d'import » du profil). Tutoriel (Figma 622:16535) : les trois captures du tutoriel (« Insta 01 » à « TikTok 03 », exportées en
   ×3 dans `assets/images/guide`) défilent seules, et le bouton orange à toucher clignote par-dessus (fixe si
   « Réduire les animations » est activé) ; ouvert depuis le profil, l'écran n'a que la croix ; « Ouvrir … » ouvre l'app du réseau (ou son site, dans un nouvel onglet sur le web). Le partage
   vers Toqué ne peut pas exister dans le prototype : au retour dans l'app, on fait comme si une publication venait

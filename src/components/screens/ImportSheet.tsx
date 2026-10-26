@@ -62,9 +62,9 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
     return () => sub.remove();
   }, []);
 
-  const openNetwork = async () => {
-    const { app, web } = SOCIAL_LINKS[network];
-    awaitingShare.current = network;
+  const openNetwork = async (id: SocialId = network) => {
+    const { app, web } = SOCIAL_LINKS[id];
+    awaitingShare.current = id;
     // Sur le web, le réseau s'ouvre dans un nouvel onglet : le prototype reste ouvert derrière.
     if (Platform.OS === 'web') return void Linking.openURL(web);
     await Linking.openURL(app).catch(() => Linking.openURL(web));
@@ -81,10 +81,8 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
             {SOCIAL_SOURCES.map((s) => (
               <ImportOption
                 key={s.id}
-                onPress={() => {
-                  setNetwork(s.id);
-                  setView('social');
-                }}
+                // Depuis l'accueil, le réseau s'ouvre directement : le guide reste dans le profil.
+                onPress={() => openNetwork(s.id)}
                 style={styles.social}>
                 <Image source={s.logo!} style={styles.logo} />
                 <AppText>{s.label}</AppText>
@@ -97,7 +95,9 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
           </View>
         </View>
       )}
-      {view === 'social' && <SocialImport network={network} onNetworkChange={setNetwork} onOpen={openNetwork} />}
+      {view === 'social' && (
+        <SocialImport network={network} onNetworkChange={setNetwork} onOpen={() => openNetwork()} />
+      )}
       {view === 'web' && <WebImport onImport={(url) => onStart({ method: 'web', url })} />}
       {view === 'photo' && <PhotoImport onImport={(uri) => onStart({ method: 'photo', uri })} />}
     </BottomSheet>
