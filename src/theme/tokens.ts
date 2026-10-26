@@ -28,6 +28,7 @@ export const palette = {
   /** Vert plus sombre que le fond de marque, pour les surfaces posées dessus (Tests vert 461:2852). */
   green950: '#192A0F',
   neutral0A24: 'rgba(255, 255, 255, 0.24)',
+  neutral0A08: 'rgba(255, 255, 255, 0.08)',
   // Couleurs de catégorie de « Créer une catégorie », sans variable dans Figma.
   grey300: '#C8C7C3',
   purple400: '#777ED0',
@@ -50,6 +51,8 @@ export const color = {
   borderDefault: palette.brown100,
   borderDivider: palette.neutral800A24,
   borderOnBrand: palette.neutral0A24,
+  /** Champ posé sur le fond de marque (recherche de l'accueil) : blanc à 8 % (Figma 464:4982). */
+  bgBrandField: palette.neutral0A08,
 
   actionPrimaryBg: palette.orange600,
   actionPrimaryText: palette.orange100,

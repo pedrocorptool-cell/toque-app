@@ -63,8 +63,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.borderOnBrand,
   },
+  // Filtre actif : orange de l'action principale (Figma 464:4982).
   chipActive: {
-    backgroundColor: color.controlSelectedBg,
+    backgroundColor: color.actionPrimaryBg,
   },
   pressed: {
     opacity: 0.7,

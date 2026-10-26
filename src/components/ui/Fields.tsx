@@ -81,7 +81,7 @@ const styles = StyleSheet.create({
     gap: space[8],
     paddingHorizontal: space[12],
     borderRadius: radius.pill,
-    backgroundColor: color.actionIconBg,
+    backgroundColor: color.bgBrandField,
   },
   searchSurface: {
     paddingHorizontal: space[16],
