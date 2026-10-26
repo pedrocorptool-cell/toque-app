@@ -211,3 +211,5 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Retour au brun** (après l'essai vert) : `bgBrandPage` brown600, `bgBrandSurface` brown700, `borderOnBrand`
   brown400, recherche et onglets de la fiche à nouveau en foncé 24 %, filtre actif foncé, écran de lancement
   brun. Les changements d'interface faits pendant l'essai sont gardés.
+- **Recette introuvable** (Figma 714:3046) : illustration exportée de Figma en PNG transparent avec ses ombres
+  (`illus/missing-recipe.png`), titre Medium 24/32 centré, bouton « Retour » blanc.

@@ -35,6 +35,8 @@ import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
+const MISSING = require('@/assets/images/illus/missing-recipe.png');
+
 type Tab = 'ingredients' | 'steps';
 
 const TABS = [
@@ -135,8 +137,11 @@ export default function RecipeScreen() {
   if (!recipe) {
     return (
       <View style={[styles.screen, styles.missing]}>
-        <AppText color={color.textOnBrandPrimary}>Cette recette n’existe plus.</AppText>
-        <Button label="Retour" onPress={() => goBack()} />
+        <Image source={MISSING} style={styles.missingIllus} accessibilityIgnoresInvertColors />
+        <AppText color={color.textOnBrandPrimary} style={styles.missingTitle} accessibilityRole="header">
+          Cette recette n’existe plus.
+        </AppText>
+        <Button variant="secondary" label="Retour" onPress={() => goBack()} />
       </View>
     );
   }
@@ -448,10 +453,24 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: color.bgBrandPage,
   },
+  // Figma « Recette/ Introuvable » 714:3046.
   missing: {
     alignItems: 'center',
     justifyContent: 'center',
     gap: space[16],
+    paddingHorizontal: space[16],
+  },
+  // Image exportée avec ses ombres (413 × 357) : marges négatives pour garder la boîte Figma de 361 × 322.
+  missingIllus: {
+    width: 413,
+    height: 357,
+    marginVertical: -18,
+  },
+  missingTitle: {
+    fontFamily: font.medium,
+    fontSize: 24,
+    lineHeight: 32,
+    textAlign: 'center',
   },
   blur: {
     position: 'absolute',
