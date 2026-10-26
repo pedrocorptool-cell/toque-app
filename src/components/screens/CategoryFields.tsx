@@ -16,7 +16,6 @@ export function CategoryFields({ name, onNameChange }: CategoryFieldsProps) {
   return (
     <View style={styles.field}>
       <AppText>#</AppText>
-      <View style={styles.separator} />
       <TextInput
         value={name}
         onChangeText={onNameChange}
@@ -39,12 +38,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[16],
     borderRadius: radius.pill,
     backgroundColor: color.bgSurface,
-  },
-  separator: {
-    alignSelf: 'stretch',
-    marginVertical: space[8],
-    width: 1,
-    backgroundColor: color.borderDivider,
   },
   input: {
     ...text.body,
