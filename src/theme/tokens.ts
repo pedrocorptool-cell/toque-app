@@ -22,6 +22,7 @@ export const palette = {
   brown700: '#645044',
   orange100: '#F5E9C9',
   orange600: '#CA401C',
+  blue50: '#E0F3FF',
   blue100: '#E5F0F9',
   blue200: '#B1D7EE',
   blue800: '#1B5071',
@@ -75,8 +76,8 @@ export const color = {
   tagBg: palette.blue100,
   tagText: palette.blue800,
   // Étiquettes des cartes et de la fiche sans couleur de catégorie (Figma « V2 Sheet » 713:2413).
-  tagTimeBg: palette.orange100,
-  tagTimeText: palette.orange600,
+  tagTimeBg: palette.blue50,
+  tagTimeText: palette.blue800,
   tagCategoryBg: palette.brown75,
   tagCategoryText: palette.neutral800,
   tagOnBrandBg: palette.brown75A32,
