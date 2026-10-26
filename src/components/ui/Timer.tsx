@@ -25,8 +25,18 @@ export function Blink({ active, children }: { active: boolean; children: ReactNo
     }
     const pulse = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.3, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
       ]),
     );
     pulse.start();
@@ -43,20 +53,15 @@ type TimerCardProps = {
   onCancel?: () => void;
 };
 
-/** Figma : « Minuteur » types Carte arrêtée / Carte en cours (pas à pas). */
+/** Figma : « Minuteur » du pas à pas (Tests vert 461:3277) — carte blanche, chiffres foncés. */
 export function TimerCard({ remaining, running, onToggle, onCancel }: TimerCardProps) {
   return (
-    <View style={[styles.surface, styles.card]}>
-      <View style={styles.cardText}>
-        <AppText variant="label" color={color.textOnBrandSecondary} style={styles.cardLabel}>
-          Minuteur
+    <View style={[styles.surface, styles.light, styles.card]}>
+      <Blink active={remaining === 0}>
+        <AppText variant="timer" style={styles.cardTime}>
+          {formatDuration(remaining)}
         </AppText>
-        <Blink active={remaining === 0}>
-          <AppText variant="timer" color={color.textOnBrandPrimary}>
-            {formatDuration(remaining)}
-          </AppText>
-        </Blink>
-      </View>
+      </Blink>
       <View style={styles.actions}>
         <Pressable
           accessibilityRole="button"
@@ -66,8 +71,12 @@ export function TimerCard({ remaining, running, onToggle, onCancel }: TimerCardP
           <Icon name={running ? 'pause' : 'play'} />
         </Pressable>
         {running && (
-          <Pressable accessibilityRole="button" accessibilityLabel="Annuler le minuteur" onPress={onCancel} style={styles.square}>
-            <Icon name="close" color={color.textOnBrandPrimary} />
+          <Pressable
+            accessibilityRole="button"
+            accessibilityLabel="Annuler le minuteur"
+            onPress={onCancel}
+            style={styles.square}>
+            <Icon name="close" />
           </Pressable>
         )}
       </View>
@@ -101,17 +110,17 @@ export function TimerChip({ count, remaining, onPress }: { count: number; remain
       accessibilityRole="button"
       accessibilityLabel={`Minuteurs (${count})`}
       onPress={onPress}
-      style={({ pressed }) => [styles.surface, styles.chip, pressed && styles.pressed]}>
-      <Icon name="alarm" color={color.aiBg} />
+      style={({ pressed }) => [styles.surface, styles.light, styles.chip, pressed && styles.pressed]}>
+      <Icon name="alarm" color={color.actionSecondaryIcon} />
       <Blink active={remaining === 0}>
-        <AppText variant="label" color={color.textOnBrandPrimary}>
-          <AppText variant="label" color={color.textOnBrandPrimary} style={styles.chipTime}>
+        <AppText variant="label">
+          <AppText variant="label" style={styles.chipTime}>
             {formatDuration(remaining)}
           </AppText>
           {count > 1 ? ` (${count})` : ''}
         </AppText>
       </Blink>
-      <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
+      <Icon name="chevronDown" size={16} />
     </Pressable>
   );
 }
@@ -130,7 +139,9 @@ export function TimerPill({ remaining, onPress, running }: TimerPillProps) {
   return (
     <Pressable
       accessibilityRole="button"
-      accessibilityLabel={running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'}
+      accessibilityLabel={
+        running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'
+      }
       onPress={onPress}
       style={({ pressed }) => [styles.surface, styles.pill, pressed && styles.pressed]}>
       <Blink active={done}>
@@ -149,17 +160,18 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     backgroundColor: color.controlSelectedBg,
   },
+  // Carte et pastille du pas à pas : blanches comme les boutons ronds du bas (Figma 461:3266).
+  light: {
+    backgroundColor: color.bgSurface,
+  },
   card: {
-    height: 88,
+    height: 76,
     justifyContent: 'space-between',
     padding: space[16],
     borderRadius: radius.lg,
   },
-  cardText: {
-    gap: space[8],
-  },
-  cardLabel: {
-    lineHeight: 20,
+  cardTime: {
+    fontSize: 23,
   },
   actions: {
     flexDirection: 'row',
@@ -173,7 +185,7 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
   },
   squarePrimary: {
-    backgroundColor: color.aiBg,
+    backgroundColor: color.tagCategoryBg,
   },
   widget: {
     height: 48,

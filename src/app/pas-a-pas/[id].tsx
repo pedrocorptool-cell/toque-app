@@ -310,7 +310,7 @@ export default function StepByStepScreen() {
               <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
                 <View style={styles.number}>
                   <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
-                    {index + 1}
+                    {`${index + 1}/${recipe.steps.length}`}
                   </AppText>
                 </View>
                 <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
@@ -482,17 +482,21 @@ const styles = StyleSheet.create({
     gap: space[32],
   },
   number: {
-    width: 64,
+    alignSelf: 'flex-start',
+    minWidth: 64,
     height: 40,
+    paddingHorizontal: space[12],
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
     borderColor: color.textOnBrandPrimary,
     borderRadius: 40,
   },
+  // Figma 461:3266 : « 3/6 » en Medium 20.
   numberText: {
     ...text.stat,
-    lineHeight: 28,
+    fontSize: 20,
+    lineHeight: 24,
   },
   instruction: {
     fontSize: 24,
@@ -525,7 +529,7 @@ const styles = StyleSheet.create({
   flyingCard: {
     position: 'absolute',
     overflow: 'hidden',
-    backgroundColor: color.controlSelectedBg,
+    backgroundColor: color.bgSurface,
   },
   floating: {
     position: 'absolute',
