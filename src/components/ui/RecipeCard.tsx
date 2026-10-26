@@ -3,21 +3,19 @@ import { Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 're
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
-import { CategoryTag, Creator, Tag } from './Chips';
+import { Creator, Tag } from './Chips';
 
 type RecipeCardProps = {
   title: string;
   image: ImageSourcePropType;
   duration: string;
   hashtags?: string;
-  /** Catégories avec leur couleur : remplace `hashtags` par des hashtags précédés d'une pastille. */
-  tags?: { label: string; dot: string }[];
   creator: { name: string; avatar?: ImageSourcePropType };
   onPress?: () => void;
 };
 
 /** Carte recette de la home (Figma : écran « Home »). */
-export function RecipeCard({ title, image, duration, hashtags, tags, creator, onPress }: RecipeCardProps) {
+export function RecipeCard({ title, image, duration, hashtags, creator, onPress }: RecipeCardProps) {
   return (
     <Pressable
       accessibilityRole="button"
@@ -28,7 +26,7 @@ export function RecipeCard({ title, image, duration, hashtags, tags, creator, on
         <View style={styles.top}>
           <View style={styles.tags}>
             <Tag label={duration} />
-            {tags?.length ? <CategoryTag tags={tags} /> : hashtags && <Tag label={hashtags} shrink />}
+            {hashtags && <Tag label={hashtags} shrink />}
           </View>
           <AppText variant="cardTitle" numberOfLines={1}>
             {title}

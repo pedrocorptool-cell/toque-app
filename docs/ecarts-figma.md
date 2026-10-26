@@ -200,7 +200,3 @@ l'icône active de la navbar sur `action/secondary/icon`.
   green900 (#243B16), `bgBrandSurface` à un vert plus sombre (#192A0F, absent de Figma), `borderOnBrand` au blanc
   24 % des puces de filtre de la maquette (les filets bruns #A68D78 de la maquette juraient sur le vert). Écran
   de lancement aussi en vert. Pour revenir au brun : ces trois tokens et `app.json`.
-- **Pastille de couleur des catégories** (à l'essai, absente de Figma) : un rond de 8 px de la couleur de la
-  catégorie devant chaque hashtag, sur les cartes (étiquette bleue inchangée) et sur la fiche. Liseré discret
-  pour que le crème et le vert restent visibles. Pour revenir aux hashtags seuls : `tags` de `RecipeCard` et
-  `CategoryTags` dans la fiche.

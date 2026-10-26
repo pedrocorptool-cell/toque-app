@@ -109,9 +109,7 @@ export const RECIPES: Recipe[] = [
       { text: 'Ajouter les tomates pelées et laisser mijoter à feu doux.', timer: 10 },
       { text: 'Cuire les rigatoni al dente en gardant une louche d’eau de cuisson.', timer: 660 },
       { text: 'Fouetter les jaunes d’œuf avec le pecorino et beaucoup de poivre.' },
-      {
-        text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.',
-      },
+      { text: 'Hors du feu, mélanger les pâtes à la sauce, puis ajouter le mélange œuf-pecorino et un peu d’eau de cuisson.' },
     ],
     tip: 'Pour accompagner ce plat, un vin rouge du Beaujolais sera parfait !',
   },
@@ -269,26 +267,6 @@ export function formatIngredient(ingredient: Ingredient, servings: number, base:
 export function hashtagsOf(recipe: Recipe, categories: Category[] = CATEGORIES) {
   const tags = categories.filter((c) => c.hashtag && recipe.categories.includes(c.id)).map((c) => c.hashtag);
   return tags.length ? tags.sort().join(' ') : undefined;
-}
-
-/** Hashtag d'une catégorie et sa couleur, pour la pastille devant le hashtag. */
-export type CategoryTag = { label: string; dot: string };
-
-/** Comme `hashtagsOf`, catégorie par catégorie avec sa couleur. */
-export function categoryTagsOf(recipe: Recipe, categories: Category[] = CATEGORIES): CategoryTag[] {
-  return categories
-    .filter((c) => c.hashtag && recipe.categories.includes(c.id))
-    .map((c) => ({ label: c.hashtag!, dot: c.dot }))
-    .sort((a, b) => (a.label < b.label ? -1 : 1));
-}
-
-/** Comme `savedHashtagsOf`, catégorie par catégorie avec sa couleur. */
-export function savedTagsOf(recipe: Recipe, categories: Category[]): CategoryTag[] {
-  const tags = categoryTagsOf(recipe, categories);
-  if (tags.length) return tags;
-  return categories
-    .filter((c) => recipe.categories.includes(c.id))
-    .map((c) => ({ label: c.hashtag ?? toHashtag(c.label), dot: c.dot }));
 }
 
 /** « Cheat Meal » → « #CheatMeal ». */

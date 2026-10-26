@@ -3,7 +3,7 @@ export { AppText } from './AppText';
 export { Button, TextButton } from './Button';
 export { ChefButton, ChefTag } from './Chef';
 export { Checkbox } from './Checkbox';
-export { CategoryTag, CategoryTags, Creator, FilterChip, Tag } from './Chips';
+export { Creator, FilterChip, Tag } from './Chips';
 export { AiChatField, SearchField } from './Fields';
 export { Fab, IconButton } from './IconButton';
 export { Logo } from './Logo';
