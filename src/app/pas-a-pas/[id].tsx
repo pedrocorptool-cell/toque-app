@@ -529,7 +529,7 @@ const styles = StyleSheet.create({
   flyingCard: {
     position: 'absolute',
     overflow: 'hidden',
-    backgroundColor: color.bgSurface,
+    backgroundColor: color.controlSelectedBg,
   },
   floating: {
     position: 'absolute',

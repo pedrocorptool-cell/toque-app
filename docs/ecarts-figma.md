@@ -206,9 +206,8 @@ l'icône active de la navbar sur `action/secondary/icon`.
 - **Plus de couleur de catégorie** (Figma « V2 Sheet » 713:2413) : plus de pastille dans le filtre Catégorie,
   la sheet « Enregistrer » (hashtags) et « Mes catégories » ; la création n'a plus que le nom, précédé de « # ».
   La couleur reste dans les données (`dot` optionnel) mais n'est plus affichée ni demandée.
-- **Pas à pas** (Figma 461:3266) : numéro d'étape « 3/6 » en Medium 20 ; carte minuteur blanche (chiffres foncés,
-  bouton lecture gris clair, sans libellé « Minuteur ») ; la pastille des minuteurs lancés est blanche avec
-  l'icône réveil orange, comme les boutons ronds du bas (aussi dans les onglets).
+- **Pas à pas** (Figma 461:3266) : numéro d'étape « 3/6 » en Medium 20 ; la carte minuteur et la pastille restent
+  foncées (Figma « Recette/ Stepp/ Minuteur off/on ») : la version blanche n'allait qu'avec le fond vert.
 - **Retour au brun** (après l'essai vert) : `bgBrandPage` brown600, `bgBrandSurface` brown700, `borderOnBrand`
   brown400, recherche et onglets de la fiche à nouveau en foncé 24 %, filtre actif foncé, écran de lancement
   brun. Les changements d'interface faits pendant l'essai sont gardés.
