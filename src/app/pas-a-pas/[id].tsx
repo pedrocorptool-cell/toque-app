@@ -306,13 +306,14 @@ export default function StepByStepScreen() {
               </Animated.View>
             </View>
 
-            <Animated.View style={{ opacity: contentOpacity }}>
+            <Animated.View style={[styles.step, { opacity: contentOpacity }]}>
+              {/* Le compteur reste en place ; seule l'étape glisse quand on change d'étape. */}
+              <View style={styles.number}>
+                <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
+                  {`${index + 1}/${recipe.steps.length}`}
+                </AppText>
+              </View>
               <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
-                <View style={styles.number}>
-                  <AppText style={styles.numberText} color={color.textOnBrandPrimary}>
-                    {`${index + 1}/${recipe.steps.length}`}
-                  </AppText>
-                </View>
                 <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
                   {step.text}
                 </AppText>
