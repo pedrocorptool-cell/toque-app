@@ -181,6 +181,8 @@ type DialogProps = {
   confirmLabel: string;
   onConfirm: () => void;
   cancelLabel?: string;
+  /** Titre long : il passe sous la ligne de la croix (Figma « Dialogue/ Notifications »). */
+  titleBelow?: boolean;
 };
 
 type DialogFrameProps = {
@@ -188,20 +190,32 @@ type DialogFrameProps = {
   onClose: () => void;
   title: string;
   children: ReactNode;
+  titleBelow?: boolean;
 };
 
 /** Cadre commun des dialogues : voile, carte centrée, titre et croix de fermeture. */
-export function DialogFrame({ visible, onClose, title, children }: DialogFrameProps) {
+export function DialogFrame({ visible, onClose, title, children, titleBelow }: DialogFrameProps) {
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose} statusBarTranslucent>
       <View style={styles.dialogRoot}>
         <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
         <View style={styles.dialog} accessibilityRole="alert">
-          <View style={styles.dialogHeader}>
-            <View style={styles.headerSpacer} />
-            <AppText variant="title">{title}</AppText>
-            <CloseButton onPress={onClose} />
-          </View>
+          {titleBelow ? (
+            <>
+              <View style={styles.dialogClose}>
+                <CloseButton onPress={onClose} />
+              </View>
+              <AppText variant="title" style={styles.center} accessibilityRole="header">
+                {title}
+              </AppText>
+            </>
+          ) : (
+            <View style={styles.dialogHeader}>
+              <View style={styles.headerSpacer} />
+              <AppText variant="title">{title}</AppText>
+              <CloseButton onPress={onClose} />
+            </View>
+          )}
           {children}
         </View>
       </View>
@@ -218,9 +232,10 @@ export function Dialog({
   confirmLabel,
   onConfirm,
   cancelLabel = 'Annuler',
+  titleBelow,
 }: DialogProps) {
   return (
-    <DialogFrame visible={visible} onClose={onClose} title={title}>
+    <DialogFrame visible={visible} onClose={onClose} title={title} titleBelow={titleBelow}>
       <AppText color={color.textSecondary} style={[styles.center, styles.message]}>
         {message}
       </AppText>
@@ -369,6 +384,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  dialogClose: {
+    alignItems: 'flex-end',
   },
   headerSpacer: {
     width: 24,

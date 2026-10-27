@@ -1,8 +1,16 @@
 import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
 
+import { Dialog } from '@/components/ui';
+
 import { useProfile } from './ProfileContext';
 import { useRecipes } from './RecipesContext';
-import { cancelTimerEnd, scheduleTimerEnd } from './timerNotifications';
+import {
+  askNotificationPermission,
+  cancelTimerEnd,
+  notificationPermission,
+  scheduleTimerEnd,
+  type NotificationPermission,
+} from './timerNotifications';
 
 /** Minuteur d'une étape. Il continue de tourner quand on quitte la fiche recette. */
 export type Timer = {
@@ -23,6 +31,11 @@ type TimersState = {
   timerFor: (recipeId: string, step: number) => Timer | undefined;
   /** Lance un minuteur absent, sinon le met en pause ou le relance. */
   toggle: (recipeId: string, step: number, duration: number) => void;
+  /**
+   * À attendre avant de lancer un minuteur : au premier, propose les notifications (« Être prévenu quand c'est
+   * prêt ») puis rend la main, quelle que soit la réponse.
+   */
+  beforeTimerStart: () => Promise<void>;
   /** Repart de la durée de départ, sans changer lecture / pause. */
   reset: (id: string) => void;
   remove: (id: string) => void;
@@ -62,7 +75,23 @@ export function TimersProvider({ children }: { children: ReactNode }) {
   const { recipes } = useRecipes();
   const { timerSound } = useProfile();
   const scheduled = useRef(new Map<string, number>());
+  const [permission, setPermission] = useState<NotificationPermission>('denied');
   useEffect(() => {
+    notificationPermission().then(setPermission);
+  }, []);
+  // Dialogue des notifications ouvert : le minuteur attend la réponse pour démarrer.
+  const pendingStart = useRef<(() => void) | null>(null);
+  const [askOpen, setAskOpen] = useState(false);
+  const answer = async (allow: boolean) => {
+    setAskOpen(false);
+    // « Plus tard » ou croix : plus de question jusqu'au prochain lancement de l'app.
+    setPermission(allow ? await askNotificationPermission() : 'denied');
+    pendingStart.current?.();
+    pendingStart.current = null;
+  };
+
+  useEffect(() => {
+    if (permission !== 'granted') return;
     const running = new Map(timers.filter((t) => t.endsAt).map((t) => [t.id, t]));
     for (const id of scheduled.current.keys()) {
       if (!running.has(id)) {
@@ -77,7 +106,7 @@ export function TimersProvider({ children }: { children: ReactNode }) {
       const body = `${recipe?.title ?? 'Recette'} · étape ${t.step + 1}`;
       scheduleTimerEnd(t.id, Math.round((t.endsAt! - Date.now()) / 1000), body, timerSound);
     }
-  }, [timers, recipes, timerSound]);
+  }, [timers, recipes, timerSound, permission]);
 
   const value = useMemo<TimersState>(
     () => ({
@@ -100,6 +129,13 @@ export function TimersProvider({ children }: { children: ReactNode }) {
             return { ...t, remaining, running, endsAt: running ? now + remaining * 1000 : undefined };
           });
         }),
+      beforeTimerStart: () =>
+        permission !== 'undetermined'
+          ? Promise.resolve()
+          : new Promise<void>((resolve) => {
+              pendingStart.current = resolve;
+              setAskOpen(true);
+            }),
       reset: (id) =>
         setTimers((list) =>
           list.map((t) =>
@@ -114,10 +150,25 @@ export function TimersProvider({ children }: { children: ReactNode }) {
       sheetOpen,
       setSheetOpen,
     }),
-    [timers, focusedRecipeId, sheetOpen],
+    [timers, focusedRecipeId, sheetOpen, permission],
   );
 
-  return <TimersContext.Provider value={value}>{children}</TimersContext.Provider>;
+  return (
+    <TimersContext.Provider value={value}>
+      {children}
+      {/* Figma « Dialogue/ Notifications » : avant la demande d'iOS, pour qu'elle arrive au bon moment. */}
+      <Dialog
+        visible={askOpen}
+        onClose={() => answer(false)}
+        title="Être prévenu quand c’est prêt"
+        titleBelow
+        message="Toqué t’envoie une notification quand un minuteur se termine, même si ton téléphone est verrouillé."
+        confirmLabel="Autoriser"
+        onConfirm={() => answer(true)}
+        cancelLabel="Plus tard"
+      />
+    </TimersContext.Provider>
+  );
 }
 
 export function useTimers() {

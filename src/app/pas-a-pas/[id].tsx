@@ -63,7 +63,7 @@ export default function StepByStepScreen() {
   useKeepAwake();
   const { width: screenWidth } = useWindowDimensions();
   const { recipes, setRecipeImage } = useRecipes();
-  const { timers: allTimers, timerFor, toggle, setFocusedRecipeId } = useTimers();
+  const { timers: allTimers, timerFor, toggle, beforeTimerStart, setFocusedRecipeId } = useTimers();
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
 
@@ -202,7 +202,8 @@ export default function StepByStepScreen() {
   // Pendant le trajet, la pastille n'apparaît qu'à l'arrivée de la carte.
   const chipOpacity = flight.interpolate({ inputRange: [0, 0.8, 1], outputRange: [0, 0, 1] });
 
-  const startTimer = (seconds: number) => {
+  const startTimer = async (seconds: number) => {
+    if (!timer) await beforeTimerStart();
     // La pastille est déjà là : son compteur suffit, pas de trajet.
     if (timers.length) return toggle(recipe.id, index, seconds);
     cardRef.current?.measureInWindow((x, y, width, height) => {

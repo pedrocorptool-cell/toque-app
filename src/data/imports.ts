@@ -20,6 +20,12 @@ export type ImportRequest =
   | { method: 'web'; url: string }
   | { method: 'photo'; uri: string };
 
+/**
+ * Prototype sans serveur : un import ne peut pas vraiment échouer. Un lien contenant « erreur » simule l'échec,
+ * pour voir l'écran « Import impossible ».
+ */
+export const simulatedFailure = (request: ImportRequest) => request.method === 'web' && request.url.includes('erreur');
+
 /** Accepte « marmiton.org/… » comme « https://… » ; renvoie null si ce n'est pas une adresse web. */
 export function normalizeUrl(input: string): string | null {
   const value = input.trim();

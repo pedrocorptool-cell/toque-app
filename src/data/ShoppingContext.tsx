@@ -14,6 +14,8 @@ type ShoppingState = {
   toggle: (id: string) => void;
   remove: (id: string) => void;
   clear: () => void;
+  /** Remet une liste entière, pour annuler « Tout supprimer ». */
+  restore: (items: ShoppingItem[]) => void;
   /** Déplace un article à acheter à la position `to` parmi les articles à acheter. */
   move: (id: string, to: number) => void;
 };
@@ -69,6 +71,7 @@ export function ShoppingProvider({ children }: { children: ReactNode }) {
         }),
       remove: (id) => setItems((list) => list.filter((i) => i.id !== id)),
       clear: () => setItems([]),
+      restore: (saved) => setItems(saved),
       move: (id, to) =>
         setItems((list) => {
           const toBuy = list.filter((i) => !i.checked);

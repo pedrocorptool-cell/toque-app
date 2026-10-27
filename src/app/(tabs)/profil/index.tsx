@@ -3,6 +3,7 @@ import { useState } from 'react';
 import { Pressable, StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
+import { ImportError } from '@/components/screens/import/ImportError';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
@@ -19,7 +20,7 @@ export default function ProfilScreen() {
   const { categories } = useRecipes();
   const toast = useToast();
   const [guideOpen, setGuideOpen] = useState(false);
-  const [importing, setImporting] = useSimulatedImport();
+  const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   return (
@@ -83,6 +84,14 @@ export default function ProfilScreen() {
         }}
       />
       <ImportLoading visible={!!importing} onCancel={() => setImporting(null)} />
+      <ImportError
+        visible={!!importFailed}
+        onRetry={() => {
+          setImportFailed(null);
+          setImporting(importFailed);
+        }}
+        onClose={() => setImportFailed(null)}
+      />
 
       <Dialog
         visible={logoutOpen}

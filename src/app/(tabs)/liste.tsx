@@ -17,20 +17,22 @@ import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion } from '@/components/ui';
-import { useShopping } from '@/data/ShoppingContext';
+import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
 import { useTimers } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
 
 type Drag = { id: string; from: number; to: number };
 
 /** Passage d'un article entre « À acheter » et « Articles cochés » : fondu et resserrement en 200 ms. */
+/** Temps laissé pour annuler « Tout supprimer ». */
+const UNDO_DELAY = 4000;
 const SECTION_CHANGE = LayoutAnimation.create(200, 'easeInEaseOut', 'opacity');
 
 /** Figma : « Liste » (244:3444) — liste de courses, articles à acheter puis articles cochés. */
 export default function ListeScreen() {
   const insets = useSafeAreaInsets();
   const docked = useTimers().timers.length > 0;
-  const { items, addItem, rename, toggle, remove, clear, move } = useShopping();
+  const { items, addItem, rename, toggle, remove, clear, restore, move } = useShopping();
   const toBuy = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
   const reduceMotion = useReduceMotion();
@@ -50,6 +52,16 @@ export default function ListeScreen() {
   const requestFocus = (id: string) => setFocusRequest((r) => ({ id, n: (r?.n ?? 0) + 1 }));
   const [clearOpen, setClearOpen] = useState(false);
   const [toast, setToast] = useState<string | null>(null);
+  // Liste vidée : le toast propose de la remettre pendant UNDO_DELAY, puis l'ancienne liste est oubliée.
+  const [cleared, setCleared] = useState<ShoppingItem[] | null>(null);
+  useEffect(() => {
+    if (!cleared) return;
+    const t = setTimeout(() => {
+      setCleared(null);
+      setToast(null);
+    }, UNDO_DELAY);
+    return () => clearTimeout(t);
+  }, [cleared]);
 
   // Glisser-déposer par la poignée : la ligne suit le doigt, les autres s'écartent d'une ligne.
   const [drag, setDrag] = useState<Drag | null>(null);
@@ -130,7 +142,12 @@ export default function ListeScreen() {
       <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
         <View style={styles.topRow}>
           <Logo />
-          <ChefButton onPress={() => setToast('L’offre Toqué Chef arrive bientôt')} />
+          <ChefButton
+            onPress={() => {
+              setCleared(null);
+              setToast('L’offre Toqué Chef arrive bientôt');
+            }}
+          />
         </View>
         <AppText variant="title" color={color.textOnBrandPrimary}>
           Liste de courses
@@ -211,7 +228,22 @@ export default function ListeScreen() {
 
       <Toast
         message={toast}
-        onClose={() => setToast(null)}
+        onClose={() => {
+          setToast(null);
+          setCleared(null);
+        }}
+        action={
+          cleared
+            ? {
+                label: 'Annuler',
+                onPress: () => {
+                  restore(cleared);
+                  setCleared(null);
+                  setToast(null);
+                },
+              }
+            : undefined
+        }
         style={[styles.toast, docked && { bottom: space[16] + TIMER_DOCK_SPACE }]}
       />
 
@@ -223,6 +255,8 @@ export default function ListeScreen() {
         confirmLabel="Oui, tout supprimer"
         onConfirm={() => {
           setClearOpen(false);
+          setCleared(items);
+          setToast('Liste supprimée');
           clear();
           // Après la fermeture du dialogue, qui rend sinon le focus au bouton « Tout supprimer ».
           setTimeout(() => {

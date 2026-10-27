@@ -4,6 +4,7 @@ import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
+import { ImportError } from '@/components/screens/import/ImportError';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
@@ -60,7 +61,7 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
-  const [importing, setImporting] = useSimulatedImport();
+  const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
   const [toast, setToast] = useState<string | null>(null);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
@@ -203,6 +204,14 @@ export default function HomeScreen() {
         }}
       />
       <ImportLoading visible={!!importing} onCancel={() => setImporting(null)} />
+      <ImportError
+        visible={!!importFailed}
+        onRetry={() => {
+          setImportFailed(null);
+          setImporting(importFailed);
+        }}
+        onClose={() => setImportFailed(null)}
+      />
     </View>
   );
 }

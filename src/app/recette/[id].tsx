@@ -75,7 +75,7 @@ export default function RecipeScreen() {
   // La fiche s'ouvre sur les parts par défaut du profil ; les quantités sont recalculées depuis la recette.
   const { defaultServings } = useProfile();
   const [servings, setServings] = useState(defaultServings);
-  const { timers: allTimers, timerFor, toggle, remove, setFocusedRecipeId } = useTimers();
+  const { timers: allTimers, timerFor, toggle, beforeTimerStart, remove, setFocusedRecipeId } = useTimers();
   const [timersOpen, setTimersOpen] = useState(false);
 
   // Écran au premier plan : la sheet ne doit pas s'ouvrir par-dessus le mode étape par étape.
@@ -154,9 +154,10 @@ export default function RecipeScreen() {
   const timers = orderTimers(allTimers, recipe.id);
 
   /** Premier appui : lance le minuteur. Ensuite : ouvre la sheet pour le piloter. */
-  const pressTimer = (index: number, seconds: number) => {
-    if (timerFor(recipe.id, index)) setTimersOpen(true);
-    else toggle(recipe.id, index, seconds);
+  const pressTimer = async (index: number, seconds: number) => {
+    if (timerFor(recipe.id, index)) return setTimersOpen(true);
+    await beforeTimerStart();
+    toggle(recipe.id, index, seconds);
   };
 
   /** Mesure la photo et le flou à l'écran : le mode étape par étape part de là pour sa transition. */

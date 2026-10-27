@@ -18,15 +18,21 @@ if (supported) {
   });
 }
 
-let permission: Promise<boolean> | null = null;
+/** `undetermined` : iOS n'a encore rien demandé, le dialogue « Être prévenu quand c'est prêt » peut s'afficher. */
+export type NotificationPermission = 'undetermined' | 'granted' | 'denied';
 
-/** iOS ne pose la question qu'une fois : on la pose au premier minuteur lancé, pas à l'ouverture de l'app. */
-function allowed() {
-  permission ??= Notifications.getPermissionsAsync()
-    .then((current) => (current.granted ? current : Notifications.requestPermissionsAsync()))
-    .then((result) => result.granted)
-    .catch(() => false);
-  return permission;
+export async function notificationPermission(): Promise<NotificationPermission> {
+  if (!supported) return 'denied';
+  const current = await Notifications.getPermissionsAsync().catch(() => null);
+  if (!current) return 'denied';
+  return current.granted ? 'granted' : current.canAskAgain ? 'undetermined' : 'denied';
+}
+
+/** Demande d'iOS, lancée par « Autoriser » : elle ne s'affiche qu'une fois par installation. */
+export async function askNotificationPermission(): Promise<NotificationPermission> {
+  if (!supported) return 'denied';
+  const result = await Notifications.requestPermissionsAsync().catch(() => null);
+  return result?.granted ? 'granted' : 'denied';
 }
 
 /**
@@ -35,7 +41,7 @@ function allowed() {
  * Expo Go, qui n'embarque pas ces fichiers, joue le son par défaut.
  */
 export async function scheduleTimerEnd(id: string, seconds: number, body: string, sound: TimerSoundId) {
-  if (!supported || seconds <= 0 || !(await allowed())) return;
+  if (!supported || seconds <= 0) return;
   await Notifications.scheduleNotificationAsync({
     identifier: id,
     content: { title: 'Minuteur terminé', body, sound: `${sound}.wav` },

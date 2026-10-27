@@ -1,9 +1,14 @@
-import { Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { useRef } from 'react';
+import { Animated, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Creator, Tag } from './Chips';
+import { useReduceMotion } from './useReduceMotion';
+
+/** Apparition de la photo une fois chargée, sur le fond beige qui tient sa place. */
+const PHOTO_FADE = 250;
 
 type RecipeCardProps = {
   title: string;
@@ -16,12 +21,25 @@ type RecipeCardProps = {
 
 /** Carte recette de la home (Figma : écran « Home »). */
 export function RecipeCard({ title, image, duration, hashtags, creator, onPress }: RecipeCardProps) {
+  const reduceMotion = useReduceMotion();
+  const photo = useRef(new Animated.Value(0)).current;
+  const showPhoto = () =>
+    Animated.timing(photo, { toValue: 1, duration: reduceMotion ? 0 : PHOTO_FADE, useNativeDriver: true }).start();
+
   return (
     <Pressable
       accessibilityRole="button"
       onPress={onPress}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
-      <Image source={image} style={styles.image} resizeMode="cover" />
+      <View style={styles.image}>
+        <Animated.Image
+          source={image}
+          style={[styles.photo, { opacity: photo }]}
+          resizeMode="cover"
+          onLoad={showPhoto}
+          onError={showPhoto}
+        />
+      </View>
       <View style={styles.body}>
         <View style={styles.top}>
           <View style={styles.tags}>
@@ -54,6 +72,12 @@ const styles = StyleSheet.create({
     width: 120,
     height: 120,
     borderRadius: radius.md,
+    overflow: 'hidden',
+    backgroundColor: color.bgSkeleton,
+  },
+  photo: {
+    width: '100%',
+    height: '100%',
   },
   body: {
     flex: 1,

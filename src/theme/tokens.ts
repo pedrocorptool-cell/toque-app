@@ -47,6 +47,8 @@ export const color = {
 
   bgPage: palette.brown50,
   bgSurface: palette.neutral0,
+  /** Place d'une photo en cours de chargement (Figma « Home/ Chargement »). */
+  bgSkeleton: palette.brown75,
   // Fond de marque brun (l'essai vert de « Tests vert » 461:2852 a été abandonné).
   bgBrandPage: palette.brown600,
   bgBrandSurface: palette.brown700,
