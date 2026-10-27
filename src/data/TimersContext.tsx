@@ -1,4 +1,8 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+
+import { useProfile } from './ProfileContext';
+import { useRecipes } from './RecipesContext';
+import { cancelTimerEnd, scheduleTimerEnd } from './timerNotifications';
 
 /** Minuteur d'une étape. Il continue de tourner quand on quitte la fiche recette. */
 export type Timer = {
@@ -10,6 +14,8 @@ export type Timer = {
   duration: number;
   remaining: number;
   running: boolean;
+  /** Heure de fin quand il tourne : le temps restant en est déduit, même après un passage en arrière-plan. */
+  endsAt?: number;
 };
 
 type TimersState = {
@@ -44,13 +50,34 @@ export function TimersProvider({ children }: { children: ReactNode }) {
       setTimers((list) =>
         list.map((t) => {
           if (!t.running) return t;
-          const remaining = Math.max(0, t.remaining - 1);
-          return { ...t, remaining, running: remaining > 0 };
+          const remaining = Math.max(0, Math.round((t.endsAt! - Date.now()) / 1000));
+          return { ...t, remaining, running: remaining > 0, endsAt: remaining > 0 ? t.endsAt : undefined };
         }),
       );
     }, 1000);
     return () => clearInterval(tick);
   }, [anyRunning]);
+
+  // Une notification par minuteur qui tourne, reprogrammée à chaque départ, annulée à la pause ou à la suppression.
+  const { recipes } = useRecipes();
+  const { timerSound } = useProfile();
+  const scheduled = useRef(new Map<string, number>());
+  useEffect(() => {
+    const running = new Map(timers.filter((t) => t.endsAt).map((t) => [t.id, t]));
+    for (const id of scheduled.current.keys()) {
+      if (!running.has(id)) {
+        cancelTimerEnd(id);
+        scheduled.current.delete(id);
+      }
+    }
+    for (const t of running.values()) {
+      if (scheduled.current.get(t.id) === t.endsAt) continue;
+      scheduled.current.set(t.id, t.endsAt!);
+      const recipe = recipes.find((r) => r.id === t.recipeId);
+      const body = `${recipe?.title ?? 'Recette'} · étape ${t.step + 1}`;
+      scheduleTimerEnd(t.id, Math.round((t.endsAt! - Date.now()) / 1000), body, timerSound);
+    }
+  }, [timers, recipes, timerSound]);
 
   const value = useMemo<TimersState>(
     () => ({
@@ -60,12 +87,27 @@ export function TimersProvider({ children }: { children: ReactNode }) {
         setTimers((list) => {
           const id = timerId(recipeId, step);
           const current = list.find((t) => t.id === id);
-          if (!current) return [...list, { id, recipeId, step, duration, remaining: duration, running: true }];
-          return list.map((t) =>
-            t.id === id ? { ...t, remaining: t.remaining || t.duration, running: !t.running || t.remaining === 0 } : t,
-          );
+          const now = Date.now();
+          if (!current)
+            return [
+              ...list,
+              { id, recipeId, step, duration, remaining: duration, running: true, endsAt: now + duration * 1000 },
+            ];
+          return list.map((t) => {
+            if (t.id !== id) return t;
+            const remaining = t.remaining || t.duration;
+            const running = !t.running || t.remaining === 0;
+            return { ...t, remaining, running, endsAt: running ? now + remaining * 1000 : undefined };
+          });
         }),
-      reset: (id) => setTimers((list) => list.map((t) => (t.id === id ? { ...t, remaining: t.duration } : t))),
+      reset: (id) =>
+        setTimers((list) =>
+          list.map((t) =>
+            t.id === id
+              ? { ...t, remaining: t.duration, endsAt: t.running ? Date.now() + t.duration * 1000 : undefined }
+              : t,
+          ),
+        ),
       remove: (id) => setTimers((list) => list.filter((t) => t.id !== id)),
       focusedRecipeId,
       setFocusedRecipeId,

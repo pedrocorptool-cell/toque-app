@@ -43,6 +43,17 @@
           "cameraPermission": "Toqué utilise l’appareil photo pour photographier tes plats.",
           "photosPermission": "Toqué accède à tes photos pour illustrer tes recettes."
         }
+      ],
+      [
+        "expo-notifications",
+        {
+          "sounds": [
+            "./assets/sounds/notification/timer.wav",
+            "./assets/sounds/notification/den-den.wav",
+            "./assets/sounds/notification/ultra-instinct.wav",
+            "./assets/sounds/notification/outro.wav"
+          ]
+        }
       ]
     ],
     "experiments": {

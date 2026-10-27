@@ -4,6 +4,7 @@ import {
   Easing,
   KeyboardAvoidingView,
   Modal,
+  PanResponder,
   Platform,
   Pressable,
   ScrollView,
@@ -37,6 +38,9 @@ type BottomSheetProps = {
 };
 
 export const SHEET_DURATION = 250;
+/** Glissement vers le bas au-delà duquel la sheet se ferme au lâcher (ou lâcher rapide, en pt/ms). */
+const DISMISS_DISTANCE = 120;
+const DISMISS_VELOCITY = 0.8;
 
 type SheetModalProps = {
   visible: boolean;
@@ -53,9 +57,30 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
   const [mounted, setMounted] = useState(visible);
   const progress = useRef(new Animated.Value(0)).current;
   const [height, setHeight] = useState(800);
+  // Décalage du doigt quand on tire la sheet vers le bas ; jamais vers le haut.
+  const drag = useRef(new Animated.Value(0)).current;
+  const latestClose = useRef(onClose);
+  latestClose.current = onClose;
+
+  const pan = useRef(
+    PanResponder.create({
+      // Laisse le toucher aux boutons et aux listes qui défilent : la sheet ne prend que les glissements vers le bas.
+      onMoveShouldSetPanResponder: (_, g) => g.dy > 8 && g.dy > Math.abs(g.dx) * 1.5,
+      onPanResponderMove: (_, g) => drag.setValue(Math.max(0, g.dy)),
+      onPanResponderRelease: (_, g) => {
+        if (g.dy > DISMISS_DISTANCE || g.vy > DISMISS_VELOCITY) latestClose.current();
+        else Animated.spring(drag, { toValue: 0, bounciness: 0, useNativeDriver: true }).start();
+      },
+      onPanResponderTerminate: () =>
+        Animated.spring(drag, { toValue: 0, bounciness: 0, useNativeDriver: true }).start(),
+    }),
+  ).current;
 
   useEffect(() => {
-    if (visible) setMounted(true);
+    if (visible) {
+      setMounted(true);
+      drag.setValue(0);
+    }
     Animated.timing(progress, {
       toValue: visible ? 1 : 0,
       duration: SHEET_DURATION,
@@ -64,9 +89,9 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
     }).start(({ finished }) => {
       if (finished && !visible) setMounted(false);
     });
-  }, [visible, progress]);
+  }, [visible, progress, drag]);
 
-  const translateY = progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] });
+  const translateY = Animated.add(progress.interpolate({ inputRange: [0, 1], outputRange: [height, 0] }), drag);
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
@@ -75,6 +100,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
         </Animated.View>
         <Animated.View
+          {...pan.panHandlers}
           onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
           style={[styles.sheet, sheetStyle, { transform: [{ translateY }] }]}>
           {children}

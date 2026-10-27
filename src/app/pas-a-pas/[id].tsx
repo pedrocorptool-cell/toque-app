@@ -14,6 +14,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import * as ImagePicker from 'expo-image-picker';
+import { useKeepAwake } from 'expo-keep-awake';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
@@ -58,6 +59,8 @@ export default function StepByStepScreen() {
     bh?: string;
   }>();
   const { id } = params;
+  // En cuisine, les mains sont prises : l'écran reste allumé tant que le mode étape par étape est ouvert.
+  useKeepAwake();
   const { width: screenWidth } = useWindowDimensions();
   const { recipes, setRecipeImage } = useRecipes();
   const { timers: allTimers, timerFor, toggle, setFocusedRecipeId } = useTimers();
