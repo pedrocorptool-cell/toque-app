@@ -85,6 +85,7 @@ const styles = StyleSheet.create({
   fab: {
     width: 56,
     height: 56,
+    backgroundColor: color.actionPrimaryBg,
     ...shadow.fab,
   },
 });
