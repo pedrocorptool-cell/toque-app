@@ -75,7 +75,7 @@ export default function OnboardingScreen() {
   const goTo = (i: number) => {
     setIndex(i);
     pager.current?.scrollToOffset({ offset: i * width, animated: !reduceMotion });
-    AccessibilityInfo.announceForAccessibility(`Étape ${i + 1} sur ${STEPS.length}`);
+    AccessibilityInfo.announceForAccessibility(i < LAST ? `Étape ${i + 1} sur ${LAST}` : 'Choix de l’avatar');
   };
 
   /** Avant l'avatar, l'espace Toqué : sans lui, « Continuer », « Ignorer » ou un glissé ouvrent la sheet. */
@@ -195,16 +195,29 @@ export default function OnboardingScreen() {
   );
 }
 
-/** Progression : une pastille par étape, celle en cours s'allonge et passe au bleu en suivant le glissé. */
+/** Les trois présentations : l'avatar, qui crée le compte, n'a pas de pastille (Figma 748:6241). */
+const SLIDES = STEPS.filter((step) => 'art' in step);
+
+/**
+ * Progression : une pastille par présentation, celle en cours s'allonge et passe au bleu en suivant le glissé.
+ * Elles s'effacent en arrivant sur l'avatar, en gardant leur place pour que le bouton ne bouge pas.
+ */
 function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: number; index: number }) {
+  const opacity = scrollX.interpolate({
+    inputRange: [(SLIDES.length - 1) * width, SLIDES.length * width],
+    outputRange: [1, 0],
+    extrapolate: 'clamp',
+  });
   return (
-    <View
-      style={styles.dots}
-      accessible
+    <Animated.View
+      style={[styles.dots, { opacity }]}
+      accessible={index < SLIDES.length}
+      accessibilityElementsHidden={index >= SLIDES.length}
+      importantForAccessibility={index < SLIDES.length ? 'yes' : 'no-hide-descendants'}
       accessibilityRole="progressbar"
-      accessibilityLabel={`Étape ${index + 1} sur ${STEPS.length}`}
-      accessibilityValue={{ min: 1, max: STEPS.length, now: index + 1 }}>
-      {STEPS.map((step, i) => {
+      accessibilityLabel={`Étape ${index + 1} sur ${SLIDES.length}`}
+      accessibilityValue={{ min: 1, max: SLIDES.length, now: index + 1 }}>
+      {SLIDES.map((step, i) => {
         const range = [(i - 1) * width, i * width, (i + 1) * width];
         return (
           <Animated.View
@@ -227,7 +240,7 @@ function Dots({ scrollX, width, index }: { scrollX: Animated.Value; width: numbe
           />
         );
       })}
-    </View>
+    </Animated.View>
   );
 }
 

@@ -73,8 +73,12 @@ export default function CompteScreen() {
             ID Toqué
           </AppText>
           {/* L'ID rattache le téléphone à l'espace : il se lit et se copie, il ne se modifie pas. */}
-          <View style={styles.field} accessibilityLabelledBy="toque-id" accessible>
-            <AppText selectable numberOfLines={1}>
+          <View
+            style={[styles.field, styles.fieldDisabled]}
+            accessibilityLabelledBy="toque-id"
+            accessibilityState={{ disabled: true }}
+            accessible>
+            <AppText selectable numberOfLines={1} color={color.textSecondary}>
               {account.toqueId}
             </AppText>
           </View>
@@ -114,6 +118,10 @@ export default function CompteScreen() {
 }
 
 const styles = StyleSheet.create({
+  // Figma 536:7434 : champ désactivé, fond de page et texte secondaire.
+  fieldDisabled: {
+    backgroundColor: color.bgPage,
+  },
   card: {
     gap: space[16],
     padding: space[16],
