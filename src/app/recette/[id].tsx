@@ -31,6 +31,7 @@ import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { useProfile } from '@/data/ProfileContext';
 import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
+import { haptics } from '@/data/haptics';
 import { useShopping } from '@/data/ShoppingContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -413,6 +414,7 @@ export default function RecipeScreen() {
         onSave={(ids) => {
           setSaveOpen(false);
           setRecipeCategories(recipe.id, ids);
+          if (ids.length) haptics.success();
           const labels = categories.filter((c) => ids.includes(c.id)).map((c) => c.label);
           setToast(
             labels.length ? `Recette enregistrée dans ${labels.join(', ')}` : 'Recette retirée de tes catégories',

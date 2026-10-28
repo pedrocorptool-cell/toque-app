@@ -21,6 +21,7 @@ import { Icon, type IconName } from '@/components/icons/Icon';
 import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Toast, Tappable } from '@/components/ui';
+import { haptics } from '@/data/haptics';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -232,6 +233,7 @@ export default function StepByStepScreen() {
 
   const goTo = (next: number) => {
     direction.current = next > index ? 1 : -1;
+    haptics.selection();
     setIndex(next);
   };
 

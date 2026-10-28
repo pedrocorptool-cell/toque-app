@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 
 import { Dialog } from '@/components/ui';
 
+import { haptics } from './haptics';
 import { useProfile } from './ProfileContext';
 import { useRecipes } from './RecipesContext';
 import {
@@ -71,6 +72,14 @@ export function TimersProvider({ children }: { children: ReactNode }) {
     return () => clearInterval(tick);
   }, [anyRunning]);
 
+  // Un minuteur qui arrive à zéro vibre une fois, en plus de sonner.
+  const done = useRef(new Set<string>());
+  useEffect(() => {
+    const now = new Set(timers.filter(isDone).map((t) => t.id));
+    if ([...now].some((id) => !done.current.has(id))) haptics.success();
+    done.current = now;
+  }, [timers]);
+
   // Une notification par minuteur qui tourne, reprogrammée à chaque départ, annulée à la pause ou à la suppression.
   const { recipes } = useRecipes();
   const { timerSound } = useProfile();
@@ -112,7 +121,8 @@ export function TimersProvider({ children }: { children: ReactNode }) {
     () => ({
       timers,
       timerFor: (recipeId, step) => timers.find((t) => t.id === timerId(recipeId, step)),
-      toggle: (recipeId, step, duration) =>
+      toggle: (recipeId, step, duration) => {
+        haptics.selection();
         setTimers((list) => {
           const id = timerId(recipeId, step);
           const current = list.find((t) => t.id === id);
@@ -128,7 +138,8 @@ export function TimersProvider({ children }: { children: ReactNode }) {
             const running = !t.running || t.remaining === 0;
             return { ...t, remaining, running, endsAt: running ? now + remaining * 1000 : undefined };
           });
-        }),
+        });
+      },
       beforeTimerStart: () =>
         permission !== 'undetermined'
           ? Promise.resolve()

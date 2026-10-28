@@ -1,6 +1,7 @@
 import { router } from 'expo-router';
 import { useEffect, useState } from 'react';
 
+import { haptics } from '@/data/haptics';
 import { importedRecipe, simulatedFailure, type ImportRequest } from '@/data/imports';
 import { useRecipes } from '@/data/RecipesContext';
 
@@ -25,6 +26,7 @@ export function useSimulatedImport() {
       }
       const recipe = importedRecipe(importing);
       addRecipe(recipe);
+      haptics.success();
       setImporting(null);
       router.push({ pathname: '/recette/[id]', params: { id: recipe.id, importee: '1' } });
     }, IMPORT_DURATION);

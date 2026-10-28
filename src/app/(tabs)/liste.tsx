@@ -17,6 +17,7 @@ import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
+import { haptics } from '@/data/haptics';
 import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
 import { useTimers } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
@@ -41,6 +42,7 @@ export default function ListeScreen() {
   // Dernier article coché : son trait se trace en arrivant dans « Articles cochés ».
   const [justChecked, setJustChecked] = useState<string | null>(null);
   const toggleSmoothly = (id: string) => {
+    haptics.selection();
     if (!reduceMotion) LayoutAnimation.configureNext(SECTION_CHANGE);
     setJustChecked(!reduceMotion && items.some((i) => i.id === id && !i.checked) ? id : null);
     toggle(id);
@@ -70,6 +72,7 @@ export default function ListeScreen() {
   const startDrag = (id: string, from: number) => {
     Keyboard.dismiss();
     dragY.setValue(0);
+    haptics.lift();
     setDrag({ id, from, to: from });
   };
   const moveDrag = (dy: number) => {
@@ -80,6 +83,13 @@ export default function ListeScreen() {
       return to === d.to ? d : { ...d, to };
     });
   };
+  // Un petit cran à chaque emplacement franchi.
+  const lastSlot = useRef<number | null>(null);
+  useEffect(() => {
+    const slot = drag?.to ?? null;
+    if (slot !== null && lastSlot.current !== null && slot !== lastSlot.current) haptics.selection();
+    lastSlot.current = slot;
+  }, [drag?.to]);
   const endDrag = () => {
     if (drag && drag.to !== drag.from) move(drag.id, drag.to);
     dragY.setValue(0);

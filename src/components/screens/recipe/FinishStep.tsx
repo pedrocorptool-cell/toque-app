@@ -14,6 +14,7 @@ import Svg, { Circle, Defs, Mask, Path, Rect } from 'react-native-svg';
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon } from '@/components/icons/Icon';
 import { AppText, Button, TextButton, useReduceMotion, Tappable } from '@/components/ui';
+import { haptics } from '@/data/haptics';
 import { motion } from '@/theme/motion';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
@@ -54,6 +55,12 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
   const reduceMotion = useReduceMotion();
   const landing = useRef(new Animated.Value(0)).current;
   const underline = useRef(new Animated.Value(0)).current;
+
+  // Le timbre qui se pose vibre une fois, au moment où il touche l'écran.
+  useEffect(() => {
+    const t = setTimeout(haptics.success, reduceMotion ? 0 : STAMP_DELAY);
+    return () => clearTimeout(t);
+  }, [reduceMotion]);
 
   useEffect(() => {
     if (reduceMotion) {
