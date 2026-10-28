@@ -9,15 +9,11 @@ import { AppText, Avatar, BottomSheet, ListCard, ListRow, useToast, Tappable } f
 import { useProfile } from '@/data/ProfileContext';
 import { color, radius, space, text } from '@/theme/tokens';
 
-const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-
-/** Figma : « Profil/ Compte » — avatar, nom d'utilisateur et adresse mail. */
+/** Figma : « Profil/ Compte » — avatar, nom d'utilisateur et ID Toqué. */
 export default function CompteScreen() {
   const { account, setAccount, avatar, setAvatar } = useProfile();
   const toast = useToast();
   const [name, setName] = useState(account.name);
-  const [email, setEmail] = useState(account.email);
-  const [emailError, setEmailError] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -25,13 +21,6 @@ export default function CompteScreen() {
   const saveName = () => {
     if (name.trim()) setAccount({ ...account, name: name.trim() });
     else setName(account.name);
-  };
-  const saveEmail = () => {
-    const value = email.trim();
-    if (!value) return setEmail(account.email);
-    const valid = EMAIL.test(value);
-    setEmailError(!valid);
-    if (valid) setAccount({ ...account, email: value });
   };
 
   const fromLibrary = async () => {
@@ -80,32 +69,15 @@ export default function CompteScreen() {
             style={styles.field}
           />
 
-          <AppText variant="overline" color={color.textSecondary} nativeID="email">
-            Adresse mail
+          <AppText variant="overline" color={color.textSecondary} nativeID="toque-id">
+            ID Toqué
           </AppText>
-          <TextInput
-            value={email}
-            onChangeText={(value) => {
-              setEmail(value);
-              if (emailError) setEmailError(false);
-            }}
-            onBlur={saveEmail}
-            onSubmitEditing={saveEmail}
-            accessibilityLabelledBy="email"
-            accessibilityLabel="Adresse mail"
-            keyboardType="email-address"
-            autoCapitalize="none"
-            autoCorrect={false}
-            autoComplete="email"
-            textContentType="emailAddress"
-            returnKeyType="done"
-            style={[styles.field, emailError && styles.fieldError]}
-          />
-          {emailError && (
-            <AppText variant="label" color={color.feedbackDanger} accessibilityLiveRegion="polite">
-              Cette adresse ne ressemble pas à une adresse mail.
+          {/* L'ID rattache le téléphone à l'espace : il se lit et se copie, il ne se modifie pas. */}
+          <View style={styles.field} accessibilityLabelledBy="toque-id" accessible>
+            <AppText selectable numberOfLines={1}>
+              {account.toqueId}
             </AppText>
-          )}
+          </View>
         </View>
       </ProfileScreen>
 
@@ -171,12 +143,10 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     borderWidth: 1,
     borderColor: color.borderDefault,
+    justifyContent: 'center',
     backgroundColor: color.bgSurface,
     color: color.textPrimary,
     // Sur le web, le contour de focus du navigateur s'ajouterait au liseré du champ.
     ...(Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)),
-  },
-  fieldError: {
-    borderColor: color.feedbackDanger,
   },
 });

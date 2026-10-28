@@ -4,6 +4,7 @@ import { AccessibilityInfo, Animated, BackHandler, StyleSheet, View, useWindowDi
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ART, OnboardingArt, type ArtName } from '@/components/screens/onboarding/OnboardingArt';
+import { SpaceSheet } from '@/components/screens/onboarding/SpaceSheet';
 import { AvatarChooser } from '@/components/screens/profile/AvatarChooser';
 import { AppText, Button, IconButton, Logo, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
@@ -29,8 +30,8 @@ const STEPS: Step[] = [
     art: 'list',
     text: 'Fini les vidéos sur pause et les allers-retours entre apps. Suis chaque étape, minuteur en main.',
   },
-  // Dernière étape : le choix de l'avatar, enregistré au « Valider ».
-  { key: 'avatar', text: 'Pour commencer, choisis ton avatar Toqué' },
+  // Dernière étape : le choix de l'avatar, enregistré au « Valider ». Avant elle, la sheet de l'espace Toqué.
+  { key: 'avatar', text: 'Choisis ton avatar Toqué pour créer ton compte' },
 ];
 
 const LAST = STEPS.length - 1;
@@ -45,11 +46,16 @@ const ART_GAP = space[40];
  * Figma « Onbarding » (578:7999) : quatre écrans sur le fond brun, au premier lancement et depuis le profil.
  * Retour, logo et « Ignorer » en haut ; progression et CTA en bas ; on avance au bouton ou en faisant glisser.
  * Chaque illustration s'anime quand son étape est affichée ; la dernière étape fait choisir l'avatar Toqué.
+ * Sans espace Toqué, on ne passe à l'avatar qu'après la sheet du pseudo et de l'ID (Figma 748:6064).
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { avatar, setAvatar, setOnboarded } = useProfile();
+  const { account, setAccount, avatar, setAvatar, setOnboarded } = useProfile();
+  // Revue depuis le profil : l'espace existe déjà, l'avatar se valide sans créer de compte.
+  const [hadAccount] = useState(Boolean(account.toqueId));
+  const hasAccount = Boolean(account.toqueId);
+  const [spaceOpen, setSpaceOpen] = useState(false);
   const [avatarId, setAvatarId] = useState<AvatarId>(avatar.kind === 'toque' ? avatar.id : 'onion');
   const [background, setBackground] = useState(avatar.kind === 'toque' ? avatar.background : color.accentCreme);
   const [index, setIndex] = useState(0);
@@ -70,6 +76,17 @@ export default function OnboardingScreen() {
     setIndex(i);
     pager.current?.scrollToOffset({ offset: i * width, animated: !reduceMotion });
     AccessibilityInfo.announceForAccessibility(`Étape ${i + 1} sur ${STEPS.length}`);
+  };
+
+  /** Avant l'avatar, l'espace Toqué : sans lui, « Continuer », « Ignorer » ou un glissé ouvrent la sheet. */
+  const askSpace = () => {
+    goTo(LAST - 1);
+    setSpaceOpen(true);
+  };
+  const next = () => {
+    if (index === LAST) return finish(true);
+    if (index === LAST - 1 && !hasAccount) return askSpace();
+    goTo(index + 1);
   };
 
   /** « Ignorer » garde l'avatar actuel ; « Valider » enregistre celui choisi. */
@@ -100,7 +117,7 @@ export default function OnboardingScreen() {
         </View>
         <Logo />
         <View style={[styles.side, styles.sideEnd]}>
-          <TextButton tone="onBrand" label="Ignorer" onPress={() => finish(false)} />
+          <TextButton tone="onBrand" label="Ignorer" onPress={() => (hasAccount ? finish(false) : askSpace())} />
         </View>
       </View>
 
@@ -118,9 +135,13 @@ export default function OnboardingScreen() {
             useNativeDriver: false,
             listener: (e: { nativeEvent: { contentOffset: { x: number } } }) => {
               const i = Math.round(e.nativeEvent.contentOffset.x / width);
-              if (i !== index && i >= 0 && i <= LAST) setIndex(i);
+              if (i !== index && i >= 0 && i <= (hasAccount ? LAST : LAST - 1)) setIndex(i);
             },
           })}
+          onMomentumScrollEnd={(e) => {
+            // Glissé jusqu'à l'avatar sans espace : retour à la 3e étape, la sheet s'ouvre.
+            if (!hasAccount && Math.round(e.nativeEvent.contentOffset.x / width) === LAST) askSpace();
+          }}
           scrollEventThrottle={16}
           renderItem={({ item, index: i }) =>
             'art' in item ? (
@@ -142,7 +163,7 @@ export default function OnboardingScreen() {
                     color={color.textOnBrandPrimary}
                     style={[styles.text, styles.avatarText]}
                     accessibilityRole="header">
-                    {item.text}
+                    {hadAccount ? 'Choisis ton avatar Toqué' : item.text}
                   </AppText>
                 </AvatarChooser>
               </View>
@@ -156,10 +177,20 @@ export default function OnboardingScreen() {
         <Button
           block
           variant="secondary"
-          label={index === LAST ? 'Valider' : 'Continuer'}
-          onPress={() => (index === LAST ? finish(true) : goTo(index + 1))}
+          label={index === LAST ? (hadAccount ? 'Valider' : 'Valider et créer mon compte') : 'Continuer'}
+          onPress={next}
         />
       </View>
+
+      <SpaceSheet
+        visible={spaceOpen}
+        onClose={() => setSpaceOpen(false)}
+        onCreate={(created) => {
+          setAccount(created);
+          setSpaceOpen(false);
+          goTo(LAST);
+        }}
+      />
     </View>
   );
 }

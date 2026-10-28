@@ -2,6 +2,9 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { color } from '@/theme/tokens';
 
+/** ID d'invitation d'un espace Toqué : un pseudo d'un seul mot, « # » et 4 chiffres (FolleCourgette#0001). */
+export const isToqueId = (id: string) => /^[\p{L}\d]+#\d{4}$/u.test(id);
+
 export type AvatarId = 'onion' | 'tomato' | 'olive' | 'biscuit';
 
 /** Figma « 🚀 Design » (avatars à côté de l'onboarding), dans l'ordre du carrousel, qui boucle. */

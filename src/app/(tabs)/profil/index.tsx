@@ -38,7 +38,7 @@ export default function ProfilScreen() {
               {account.name}
             </AppText>
             <AppText variant="label" color={color.textSecondary} numberOfLines={1}>
-              {account.email}
+              {`ID : ${account.toqueId}`}
             </AppText>
           </View>
           <Icon name="edit" color={color.actionSecondaryIcon} />

@@ -4,7 +4,8 @@ import { color } from '@/theme/tokens';
 
 import type { Avatar, TimerSoundId } from './profile';
 
-type Account = { name: string; email: string };
+/** Pseudo et ID de l'espace Toqué, saisis à l'onboarding ; vides tant que le téléphone n'a pas d'espace. */
+export type Account = { name: string; toqueId: string };
 
 type ProfileState = {
   account: Account;
@@ -23,11 +24,11 @@ type ProfileState = {
 
 const ProfileContext = createContext<ProfileState | null>(null);
 
-// Prototype : pas de compte, une identité de démo, en mémoire comme le reste.
-const DEMO_ACCOUNT: Account = { name: 'Florent Outan', email: 'florent.outan@exemple.fr' };
+// En mémoire comme le reste, jusqu'au branchement de la base.
+const NO_ACCOUNT: Account = { name: '', toqueId: '' };
 
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [account, setAccount] = useState(DEMO_ACCOUNT);
+  const [account, setAccount] = useState(NO_ACCOUNT);
   const [avatar, setAvatar] = useState<Avatar>({ kind: 'toque', id: 'onion', background: color.accentCreme });
   const [defaultServings, setDefaultServings] = useState(2);
   const [timerSound, setTimerSound] = useState<TimerSoundId>('timer');
