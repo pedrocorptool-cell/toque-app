@@ -20,7 +20,7 @@ import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import { AppText, IconButton, TimerCard, TimerChip, Toast, Tappable } from '@/components/ui';
+import { AppText, IconButton, TimerCard, TimerChip, Tappable } from '@/components/ui';
 import { haptics } from '@/data/haptics';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
@@ -34,8 +34,6 @@ const THUMB = 80;
 const TRANSITION = 500;
 /** Durée du passage de la carte minuteur à la pastille du bas. */
 const FLIGHT = 450;
-/** Hauteur de la rangée de boutons du bas (48 px + 24 px de marge) et 16 px d'écart : le toast se pose au-dessus. */
-const BOTTOM_ROW = space[24] + 48 + space[16];
 
 type Origin = { px: number; py: number; ps: number; by: number; bh: number };
 type Rect = { x: number; y: number; width: number; height: number };
@@ -69,7 +67,6 @@ export default function StepByStepScreen() {
   const recipe = recipes.find((r) => r.id === id);
 
   const [index, setIndex] = useState(0);
-  const [toast, setToast] = useState<string | null>(null);
   const [timersOpen, setTimersOpen] = useState(false);
   const [photoTaken, setPhotoTaken] = useState(false);
 
@@ -185,12 +182,6 @@ export default function StepByStepScreen() {
       useNativeDriver: true,
     }).start();
   }, [index, enter]);
-
-  useEffect(() => {
-    if (!toast) return;
-    const t = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(t);
-  }, [toast]);
 
   if (!recipe) return null;
 
@@ -336,11 +327,6 @@ export default function StepByStepScreen() {
           <Animated.View
             style={[styles.bottomRow, { paddingBottom: insets.bottom + space[24], opacity: contentOpacity }]}>
             <View style={styles.nav}>
-              <RoundButton
-                icon="magic"
-                label="Modifier avec l’IA"
-                onPress={() => setToast('La modification avec l’IA arrivera dans une prochaine version')}
-              />
               {nextTimer && (
                 <View ref={chipRef}>
                   <Animated.View style={flying && { opacity: chipOpacity }}>
@@ -385,12 +371,6 @@ export default function StepByStepScreen() {
       {flying && (
         <FlyingCard flight={flight} from={flying.from} to={flying.to ?? flying.from} remaining={flying.remaining} />
       )}
-
-      <Toast
-        message={toast}
-        onClose={() => setToast(null)}
-        style={[styles.floating, { bottom: BOTTOM_ROW + insets.bottom }]}
-      />
 
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
     </Animated.View>
@@ -535,10 +515,5 @@ const styles = StyleSheet.create({
     position: 'absolute',
     overflow: 'hidden',
     backgroundColor: color.controlSelectedBg,
-  },
-  floating: {
-    position: 'absolute',
-    left: space[16],
-    right: space[16],
   },
 });

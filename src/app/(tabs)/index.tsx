@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -11,7 +11,6 @@ import { ImportSheet } from '@/components/screens/ImportSheet';
 import { TimerDock } from '@/components/screens/TimerDock';
 import {
   AppText,
-  ChefButton,
   Fab,
   FilterChip,
   FilterOptions,
@@ -20,7 +19,6 @@ import {
   RecipeCard,
   SearchField,
   TextButton,
-  Toast,
   type FilterOption,
 } from '@/components/ui';
 import {
@@ -62,19 +60,12 @@ export default function HomeScreen() {
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
-  const [toast, setToast] = useState<string | null>(null);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
   const draftCount = useMemo(
     () => filterRecipes(recipes, query, { ...filters, [shownFilter]: draft[shownFilter] }).length,
     [recipes, shownFilter, draft, filters, query],
   );
-
-  useEffect(() => {
-    if (!toast) return;
-    const id = setTimeout(() => setToast(null), 3000);
-    return () => clearTimeout(id);
-  }, [toast]);
 
   const openSheet = (key: FilterKey) => {
     setDraft(filters);
@@ -98,7 +89,6 @@ export default function HomeScreen() {
         <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
           <View style={styles.topRow}>
             <Logo />
-            <ChefButton onPress={() => setToast('L’offre Toqué Chef arrive bientôt')} />
           </View>
           <AppText variant="title" color={color.textOnBrandPrimary}>
             Vos recettes
@@ -164,8 +154,6 @@ export default function HomeScreen() {
       <View style={styles.fab}>
         <Fab onPress={() => setImportOpen(true)} />
       </View>
-
-      <Toast message={toast} onClose={() => setToast(null)} style={styles.toast} />
 
       <FilterSheet
         visible={openFilter !== null}
@@ -302,12 +290,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     right: space[16],
     bottom: space[16],
-  },
-  toast: {
-    position: 'absolute',
-    left: space[16],
-    right: space[16],
-    bottom: space[16] + 56 + space[16],
   },
   creatorAvatar: {
     width: 32,

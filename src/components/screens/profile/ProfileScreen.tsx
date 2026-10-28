@@ -3,7 +3,7 @@ import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
-import { AppText, ChefButton, IconButton, Logo, Toast, type ToastState } from '@/components/ui';
+import { AppText, IconButton, Logo, Toast, type ToastState } from '@/components/ui';
 import { useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { color, radius, space } from '@/theme/tokens';
@@ -26,7 +26,6 @@ export function ProfileScreen({ title, back, toast, children }: ProfileScreenPro
       <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
         <View style={styles.topRow}>
           <Logo />
-          <ChefButton onPress={() => toast.show('L’offre Toqué Chef arrive bientôt')} />
         </View>
         <View style={styles.titleRow}>
           {back && (

@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
-import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
+import { AppText, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
 import { haptics } from '@/data/haptics';
 import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
 import { useTimers } from '@/data/TimersContext';
@@ -152,12 +152,6 @@ export default function ListeScreen() {
       <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
         <View style={styles.topRow}>
           <Logo />
-          <ChefButton
-            onPress={() => {
-              setCleared(null);
-              setToast('L’offre Toqué Chef arrive bientôt');
-            }}
-          />
         </View>
         <AppText variant="title" color={color.textOnBrandPrimary}>
           Liste de courses

@@ -131,7 +131,6 @@ export default function CompteScreen() {
         visible={pickerOpen}
         initial={avatar}
         onClose={() => setPickerOpen(false)}
-        onChef={() => toast.show('L’offre Toqué Chef arrive bientôt')}
         onSave={(next) => {
           setAvatar(next);
           setPickerOpen(false);

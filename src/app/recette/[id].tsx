@@ -16,7 +16,6 @@ import {
   AppText,
   BottomSheet,
   Button,
-  ChefTag,
   Dialog,
   IconButton,
   ListCard,
@@ -352,12 +351,6 @@ export default function RecipeScreen() {
       {/* Figma 706:540 « Actions recette » : les actions du « … » dans une sheet, en bas de l'écran. */}
       <BottomSheet visible={menuOpen} onClose={() => setMenuOpen(false)}>
         <ListCard>
-          <ListRow
-            label="Modifier avec l’IA"
-            leading={<Icon name="edit" />}
-            trailing={<ChefTag />}
-            onPress={menuAction(() => setToast('La modification par l’IA arrive à l’étape 3'))}
-          />
           <ListRow
             label="Enregistrer"
             leading={<Icon name="bookmark" />}

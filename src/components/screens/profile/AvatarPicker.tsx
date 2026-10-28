@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { AppText, Button, ChefButton, Logo, TextButton } from '@/components/ui';
+import { AppText, Button, Logo, TextButton } from '@/components/ui';
 import { type Avatar, type AvatarId } from '@/data/profile';
 import { color, space } from '@/theme/tokens';
 
@@ -13,18 +13,16 @@ type AvatarPickerProps = {
   initial: Avatar;
   onClose: () => void;
   onSave: (avatar: Avatar) => void;
-  onChef: () => void;
 };
 
 /** Figma : « Profil/ Compte » (choix d'avatar) — carrousel d'avatars Toqué et couleur de fond, plein écran. */
-export function AvatarPicker({ visible, initial, onClose, onSave, onChef }: AvatarPickerProps) {
+export function AvatarPicker({ visible, initial, onClose, onSave }: AvatarPickerProps) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} animationType="slide" onRequestClose={onClose} statusBarTranslucent>
       <View style={[styles.screen, { paddingTop: insets.top + space[24], paddingBottom: insets.bottom + space[16] }]}>
         <View style={styles.topRow}>
           <Logo />
-          <ChefButton onPress={onChef} />
         </View>
         {/* Monté à chaque ouverture : le choix repart de l'avatar actuel. */}
         {visible && <PickerBody initial={initial} onClose={onClose} onSave={onSave} />}
