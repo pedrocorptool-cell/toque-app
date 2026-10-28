@@ -1,9 +1,10 @@
 import { Children, Fragment, type ReactNode } from 'react';
-import { Pressable, StyleSheet, View, type AccessibilityRole } from 'react-native';
+import { StyleSheet, View, type AccessibilityRole } from 'react-native';
 
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 type ListCardProps = {
   children: ReactNode;
@@ -90,14 +91,15 @@ export function ListRow({
   );
   if (!onPress) return <View style={styles.row}>{content}</View>;
   return (
-    <Pressable
+    <Tappable
+      feedback="surface"
       accessibilityRole={accessibilityRole}
       accessibilityState={selected === undefined ? undefined : { selected, checked: selected }}
       accessibilityLabel={accessibilityLabel ?? (value ? `${label} : ${value}` : label)}
       onPress={onPress}
-      style={({ pressed }) => [styles.row, pressed && styles.pressed]}>
+      style={styles.row}>
       {content}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -128,9 +130,6 @@ const styles = StyleSheet.create({
     gap: space[8],
     paddingHorizontal: space[16],
     backgroundColor: color.bgSurface,
-  },
-  pressed: {
-    backgroundColor: color.bgPage,
   },
   labelBox: {
     flex: 1,

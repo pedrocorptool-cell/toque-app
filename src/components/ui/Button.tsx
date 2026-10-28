@@ -1,9 +1,10 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 type ButtonProps = {
   label: string;
@@ -21,16 +22,15 @@ export function Button({ label, onPress, icon, block, disabled, variant = 'prima
   const secondary = variant === 'secondary';
   const tint = secondary ? color.actionSecondaryIcon : color.actionPrimaryText;
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       onPress={onPress}
       disabled={disabled}
-      style={({ pressed }) => [
+      feedback="surface"
+      style={[
         styles.base,
         block && styles.block,
-        secondary
-          ? { backgroundColor: pressed ? color.bgPage : color.bgSurface }
-          : { backgroundColor: pressed ? color.actionPrimaryBgPressed : color.actionPrimaryBg },
+        { backgroundColor: secondary ? color.bgSurface : color.actionPrimaryBg },
         disabled && styles.disabled,
       ]}>
       {icon && (
@@ -41,7 +41,7 @@ export function Button({ label, onPress, icon, block, disabled, variant = 'prima
       <AppText variant="button" color={tint}>
         {label}
       </AppText>
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -57,16 +57,12 @@ type TextButtonProps = {
 export function TextButton({ label, onPress, icon, tone = 'default' }: TextButtonProps) {
   const tint = { default: color.textPrimary, danger: color.feedbackDanger, onBrand: color.textOnBrandPrimary }[tone];
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      hitSlop={space[8]}
-      style={({ pressed }) => [styles.text, pressed && styles.textPressed]}>
+    <Tappable accessibilityRole="button" onPress={onPress} hitSlop={space[8]} style={styles.text}>
       {icon && <Icon name={icon} color={tint} />}
       <AppText variant="button" color={tint}>
         {label}
       </AppText>
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -92,8 +88,5 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[8],
-  },
-  textPressed: {
-    opacity: 0.6,
   },
 });

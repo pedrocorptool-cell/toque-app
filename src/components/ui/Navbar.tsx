@@ -1,4 +1,4 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import type { BottomTabBarProps } from 'expo-router/js-tabs';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -6,6 +6,7 @@ import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Recettes', icon: 'book' },
@@ -23,7 +24,7 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
         if (!tab) return null;
         const focused = state.index === index;
         return (
-          <Pressable
+          <Tappable
             key={route.key}
             accessibilityRole="tab"
             accessibilityState={{ selected: focused }}
@@ -36,7 +37,7 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
             <AppText variant="label" color={focused ? color.textPrimary : color.textSecondary}>
               {tab.label}
             </AppText>
-          </Pressable>
+          </Tappable>
         );
       })}
     </View>

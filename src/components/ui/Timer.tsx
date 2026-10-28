@@ -1,10 +1,11 @@
 import { useEffect, useRef, type ReactNode } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { color, font, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 export function formatDuration(totalSeconds: number) {
   const s = Math.max(0, Math.round(totalSeconds));
@@ -25,8 +26,18 @@ export function Blink({ active, children }: { active: boolean; children: ReactNo
     }
     const pulse = Animated.loop(
       Animated.sequence([
-        Animated.timing(opacity, { toValue: 0.3, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
-        Animated.timing(opacity, { toValue: 1, duration: 500, easing: Easing.inOut(Easing.ease), useNativeDriver: true }),
+        Animated.timing(opacity, {
+          toValue: 0.3,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
+        Animated.timing(opacity, {
+          toValue: 1,
+          duration: 500,
+          easing: Easing.inOut(Easing.ease),
+          useNativeDriver: true,
+        }),
       ]),
     );
     pulse.start();
@@ -58,17 +69,24 @@ export function TimerCard({ remaining, running, onToggle, onCancel }: TimerCardP
         </Blink>
       </View>
       <View style={styles.actions}>
-        <Pressable
+        <Tappable
+          feedback="surface"
           accessibilityRole="button"
           accessibilityLabel={running ? 'Mettre en pause' : 'Démarrer'}
           onPress={onToggle}
           style={[styles.square, styles.squarePrimary]}>
           <Icon name={running ? 'pause' : 'play'} />
-        </Pressable>
+        </Tappable>
         {running && (
-          <Pressable accessibilityRole="button" accessibilityLabel="Annuler le minuteur" onPress={onCancel} style={styles.square}>
+          <Tappable
+            feedback="surface"
+            tint="light"
+            accessibilityRole="button"
+            accessibilityLabel="Annuler le minuteur"
+            onPress={onCancel}
+            style={styles.square}>
             <Icon name="close" color={color.textOnBrandPrimary} />
-          </Pressable>
+          </Tappable>
         )}
       </View>
     </View>
@@ -78,7 +96,12 @@ export function TimerCard({ remaining, running, onToggle, onCancel }: TimerCardP
 /** Figma : « Minuteur » type Widget — rappel des minuteurs actifs. */
 export function TimerWidget({ count, remaining, onPress }: { count: number; remaining: number; onPress?: () => void }) {
   return (
-    <Pressable accessibilityRole="button" onPress={onPress} style={[styles.surface, styles.widget]}>
+    <Tappable
+      feedback="surface"
+      tint="light"
+      accessibilityRole="button"
+      onPress={onPress}
+      style={[styles.surface, styles.widget]}>
       <AppText variant="caption" color={color.textOnBrandSecondary} style={styles.widgetLabel}>
         {`Minuteurs (${count})`}
       </AppText>
@@ -90,18 +113,20 @@ export function TimerWidget({ count, remaining, onPress }: { count: number; rema
         </Blink>
         <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
       </View>
-    </Pressable>
+    </Tappable>
   );
 }
 
 /** Figma (Exploration 442:865) : minuteurs lancés, rangés parmi les actions du bas du mode étape par étape. */
 export function TimerChip({ count, remaining, onPress }: { count: number; remaining: number; onPress?: () => void }) {
   return (
-    <Pressable
+    <Tappable
+      feedback="surface"
+      tint="light"
       accessibilityRole="button"
       accessibilityLabel={`Minuteurs (${count})`}
       onPress={onPress}
-      style={({ pressed }) => [styles.surface, styles.chip, pressed && styles.pressed]}>
+      style={[styles.surface, styles.chip]}>
       <Icon name="alarm" color={color.aiBg} />
       <Blink active={remaining === 0}>
         <AppText variant="label" color={color.textOnBrandPrimary}>
@@ -112,7 +137,7 @@ export function TimerChip({ count, remaining, onPress }: { count: number; remain
         </AppText>
       </Blink>
       <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -128,18 +153,22 @@ export function TimerPill({ remaining, onPress, running }: TimerPillProps) {
   const done = running !== undefined && remaining === 0;
   const icon = running === undefined ? 'chevronDown' : running ? 'pause' : 'play';
   return (
-    <Pressable
+    <Tappable
+      feedback="surface"
+      tint="light"
       accessibilityRole="button"
-      accessibilityLabel={running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'}
+      accessibilityLabel={
+        running === undefined ? undefined : running ? 'Mettre en pause le minuteur' : 'Lancer le minuteur'
+      }
       onPress={onPress}
-      style={({ pressed }) => [styles.surface, styles.pill, pressed && styles.pressed]}>
+      style={[styles.surface, styles.pill]}>
       <Blink active={done}>
         <AppText variant="label" color={color.textOnBrandPrimary}>
           {formatDuration(remaining)}
         </AppText>
       </Blink>
       <Icon name={icon} size={16} color={color.textOnBrandPrimary} />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -188,9 +217,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[8],
-  },
-  pressed: {
-    opacity: 0.8,
   },
   chip: {
     height: 48,

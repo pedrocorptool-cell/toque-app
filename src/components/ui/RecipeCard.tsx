@@ -1,11 +1,12 @@
 import { useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Animated, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { Creator, Tag } from './Chips';
 import { useReduceMotion } from './useReduceMotion';
+import { Tappable } from './Tappable';
 
 /** Apparition de la photo une fois chargée, sur le fond beige qui tient sa place. */
 const PHOTO_FADE = 250;
@@ -27,10 +28,7 @@ export function RecipeCard({ title, image, duration, hashtags, creator, onPress 
     Animated.timing(photo, { toValue: 1, duration: reduceMotion ? 0 : PHOTO_FADE, useNativeDriver: true }).start();
 
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.card, pressed && styles.pressed]}>
+    <Tappable feedback="card" accessibilityRole="button" onPress={onPress} style={styles.card}>
       <View style={styles.image}>
         <Animated.Image
           source={image}
@@ -52,7 +50,7 @@ export function RecipeCard({ title, image, duration, hashtags, creator, onPress 
         </View>
         <Creator {...creator} />
       </View>
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -64,9 +62,6 @@ const styles = StyleSheet.create({
     padding: space[16],
     borderRadius: radius.xl,
     backgroundColor: color.bgSurface,
-  },
-  pressed: {
-    opacity: 0.85,
   },
   image: {
     width: 120,

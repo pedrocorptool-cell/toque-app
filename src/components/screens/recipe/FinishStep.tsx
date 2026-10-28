@@ -13,7 +13,7 @@ import Svg, { Circle, Defs, Mask, Path, Rect } from 'react-native-svg';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon } from '@/components/icons/Icon';
-import { AppText, Button, TextButton, useReduceMotion } from '@/components/ui';
+import { AppText, Button, TextButton, useReduceMotion, Tappable } from '@/components/ui';
 import { motion } from '@/theme/motion';
 import { blur, color, font, radius, shadow, space } from '@/theme/tokens';
 
@@ -102,12 +102,13 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
           </View>
           <Animated.View style={[styles.stamp, stampMotion]}>
             <StampPaper />
-            <Pressable
+            <Tappable
+              feedback="card"
               accessibilityRole="button"
               accessibilityLabel={photoTaken ? 'Reprendre la photo' : 'Prendre une photo'}
               onPress={onTakePhoto}>
               <CrossfadePhoto source={image} instant={reduceMotion} />
-            </Pressable>
+            </Tappable>
             <View style={styles.stampFooter}>
               <View style={styles.homemade}>
                 <AppText style={styles.homemadeText} color={color.tagText}>
@@ -130,13 +131,14 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
                   </Svg>
                 </Animated.View>
               </View>
-              <Pressable
+              <Tappable
+                feedback="surface"
                 accessibilityRole="button"
                 accessibilityLabel={photoTaken ? 'Reprendre la photo' : 'Prendre une photo'}
                 onPress={onTakePhoto}
-                style={({ pressed }) => [styles.camera, pressed && styles.pressed]}>
+                style={styles.camera}>
                 <Icon name="camera" color={color.actionPrimaryText} />
-              </Pressable>
+              </Tappable>
             </View>
           </Animated.View>
         </View>
@@ -271,9 +273,6 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: color.actionPrimaryBg,
     ...shadow.fab,
-  },
-  pressed: {
-    backgroundColor: color.actionPrimaryBgPressed,
   },
   message: {
     maxWidth: 269,

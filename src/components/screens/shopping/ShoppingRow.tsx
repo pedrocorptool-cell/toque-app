@@ -1,8 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, PanResponder, Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Animated, PanResponder, Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
-import { AppText, Checkbox } from '@/components/ui';
+import { AppText, Checkbox, Tappable } from '@/components/ui';
 import type { ShoppingItem } from '@/data/ShoppingContext';
 import { motion } from '@/theme/motion';
 import { color, space, text } from '@/theme/tokens';
@@ -77,7 +77,7 @@ export function ToBuyRow(props: ToBuyRowProps) {
         style={styles.input}
       />
       {focused && props.removable && (
-        <Pressable
+        <Tappable
           accessibilityRole="button"
           accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}
           onPress={props.onRemove}
@@ -85,7 +85,7 @@ export function ToBuyRow(props: ToBuyRowProps) {
           {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
           hitSlop={space[8]}>
           <Icon name="close" color={color.textPrimary} />
-        </Pressable>
+        </Tappable>
       )}
     </Animated.View>
   );

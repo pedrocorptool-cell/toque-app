@@ -16,7 +16,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
-import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion } from '@/components/ui';
+import { AppText, ChefButton, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
 import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
 import { useTimers } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
@@ -165,14 +165,14 @@ export default function ListeScreen() {
                 {`${count} article${count > 1 ? 's' : ''}`}
               </AppText>
               {(count > 0 || checked.length > 0) && (
-                <Pressable
+                <Tappable
                   accessibilityRole="button"
                   onPress={() => setClearOpen(true)}
                   hitSlop={space[8]}
-                  style={({ pressed }) => [styles.clear, pressed && styles.pressed]}>
+                  style={styles.clear}>
                   <Icon name="trash" color={color.actionSecondaryIcon} />
                   <AppText>Tout supprimer</AppText>
-                </Pressable>
+                </Tappable>
               )}
             </View>
 
@@ -197,13 +197,10 @@ export default function ListeScreen() {
               />
             ))}
 
-            <Pressable
-              accessibilityRole="button"
-              onPress={startNewItem}
-              style={({ pressed }) => [styles.add, pressed && styles.pressed]}>
+            <Tappable accessibilityRole="button" onPress={startNewItem} style={styles.add}>
               <Icon name="plus" color={color.textPrimary} />
               <AppText>Ajouter</AppText>
-            </Pressable>
+            </Tappable>
           </View>
 
           {checked.length > 0 && (
@@ -318,9 +315,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[8],
     paddingLeft: 24 + space[8],
-  },
-  pressed: {
-    opacity: 0.6,
   },
   toast: {
     position: 'absolute',

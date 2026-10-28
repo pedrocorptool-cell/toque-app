@@ -1,9 +1,9 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { DEMO_QR_PATH } from '@/components/art/paths';
 import { Icon } from '@/components/icons/Icon';
-import { AppText, DialogFrame } from '@/components/ui';
+import { AppText, DialogFrame, Tappable } from '@/components/ui';
 import { color, radius, space } from '@/theme/tokens';
 
 type ShareDialogProps = {
@@ -25,14 +25,10 @@ export function ShareDialog({ visible, onClose, onCopyLink }: ShareDialogProps) 
         </Svg>
         <View style={styles.qrCenter} />
       </View>
-      <Pressable
-        accessibilityRole="button"
-        onPress={onCopyLink}
-        hitSlop={space[8]}
-        style={({ pressed }) => [styles.copy, pressed && styles.pressed]}>
+      <Tappable accessibilityRole="button" onPress={onCopyLink} hitSlop={space[8]} style={styles.copy}>
         <Icon name="link" color={color.actionSecondaryIcon} />
         <AppText variant="button">Copier le lien</AppText>
-      </Pressable>
+      </Tappable>
     </DialogFrame>
   );
 }
@@ -64,8 +60,5 @@ const styles = StyleSheet.create({
     alignSelf: 'center',
     alignItems: 'center',
     gap: space[8],
-  },
-  pressed: {
-    opacity: 0.6,
   },
 });

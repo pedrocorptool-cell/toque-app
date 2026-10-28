@@ -1,5 +1,5 @@
 import { useEffect, useRef } from 'react';
-import { Animated, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, StyleSheet, View } from 'react-native';
 import Svg, { Path } from 'react-native-svg';
 
 import { motion } from '@/theme/motion';
@@ -7,6 +7,7 @@ import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
 import { useReduceMotion } from './useReduceMotion';
+import { Tappable } from './Tappable';
 
 /** La coche grandit de 60 % à sa taille en 140 ms, sans rebond : un geste fréquent reste discret. */
 const TICK_DURATION = 140;
@@ -45,7 +46,7 @@ export function Checkbox({ checked, onChange, label }: CheckboxProps) {
   }, [checked]);
 
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="checkbox"
       accessibilityState={{ checked }}
       accessibilityLabel={label}
@@ -75,7 +76,7 @@ export function Checkbox({ checked, onChange, label }: CheckboxProps) {
           )}
         </View>
       </View>
-    </Pressable>
+    </Tappable>
   );
 }
 

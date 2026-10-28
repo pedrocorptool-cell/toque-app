@@ -1,8 +1,8 @@
 import { type ReactNode } from 'react';
-import { Pressable, StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
+import { StyleSheet, type StyleProp, type ViewStyle } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
-import { AppText } from '@/components/ui';
+import { AppText, Tappable } from '@/components/ui';
 import { color, radius, space } from '@/theme/tokens';
 
 /** Figma « Bottom Sheet/ Import » : carte blanche d'un mode d'import. */
@@ -16,12 +16,9 @@ export function ImportOption({
   children: ReactNode;
 }) {
   return (
-    <Pressable
-      accessibilityRole="button"
-      onPress={onPress}
-      style={({ pressed }) => [styles.option, style, pressed && styles.pressed]}>
+    <Tappable feedback="card" accessibilityRole="button" onPress={onPress} style={[styles.option, style]}>
       {children}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -41,9 +38,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radius.lg,
     backgroundColor: color.bgSurface,
-  },
-  pressed: {
-    opacity: 0.7,
   },
   half: {
     flex: 1,

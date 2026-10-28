@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from 'react';
-import { Animated, Easing, Pressable, StyleSheet, View } from 'react-native';
+import { Animated, Easing, StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, radius, shadow, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 type Option<T extends string> = { value: T; label: string; icon: IconName };
 
@@ -46,7 +47,7 @@ export function SegmentedTabs<T extends string>({ options, value, onChange }: Se
         const active = option.value === value;
         const tint = active ? color.textPrimary : color.textOnBrandPrimary;
         return (
-          <Pressable
+          <Tappable
             key={option.value}
             accessibilityRole="tab"
             accessibilityState={{ selected: active }}
@@ -54,7 +55,7 @@ export function SegmentedTabs<T extends string>({ options, value, onChange }: Se
             style={styles.tab}>
             <Icon name={option.icon} color={active ? color.actionSecondaryIcon : tint} />
             <AppText color={tint}>{option.label}</AppText>
-          </Pressable>
+          </Tappable>
         );
       })}
     </View>

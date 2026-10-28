@@ -65,6 +65,9 @@ export const color = {
   actionIconBg: palette.neutral800A24,
 
   overlayScrim: palette.neutral800A24,
+  /** Voile posé sur une surface pendant l'appui (`Tappable`) : il fonce, ou éclaircit une surface foncée. */
+  pressShade: palette.neutral800,
+  pressShadeOnDark: palette.neutral0,
   feedbackDanger: palette.orange600,
   chipBg: palette.orange100,
 
@@ -102,8 +105,6 @@ export const color = {
 
   // Absents de Figma : valeurs codées en dur dans la maquette,
   // proposées ici comme tokens (voir docs/ecarts-figma.md).
-  actionPrimaryBgPressed: '#B33919',
-  actionIconBgPressed: 'rgba(40, 39, 37, 0.32)',
   /** Filets des cartes « papier » de la fiche recette (#927760 dans Figma). */
   borderPaper: '#927760',
   /** Coin plié de la carte « Astuce » (#2C5F7D dans Figma). */

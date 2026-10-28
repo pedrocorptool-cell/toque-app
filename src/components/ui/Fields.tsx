@@ -1,7 +1,9 @@
-import { Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { StyleSheet, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { color, radius, shadow, space, text } from '@/theme/tokens';
+
+import { Tappable } from './Tappable';
 
 type SearchFieldProps = {
   value: string;
@@ -12,7 +14,12 @@ type SearchFieldProps = {
 };
 
 /** Figma : « Search » — champ de recherche. */
-export function SearchField({ value, onChangeText, placeholder = 'Rechercher une recette', tone = 'onBrand' }: SearchFieldProps) {
+export function SearchField({
+  value,
+  onChangeText,
+  placeholder = 'Rechercher une recette',
+  tone = 'onBrand',
+}: SearchFieldProps) {
   const onBrand = tone === 'onBrand';
   const ink = onBrand ? color.textOnBrandPrimary : color.textPrimary;
   return (
@@ -29,9 +36,13 @@ export function SearchField({ value, onChangeText, placeholder = 'Rechercher une
         style={[styles.input, { color: ink }]}
       />
       {value.length > 0 && (
-        <Pressable accessibilityRole="button" accessibilityLabel="Effacer la recherche" onPress={() => onChangeText('')} hitSlop={space[8]}>
+        <Tappable
+          accessibilityRole="button"
+          accessibilityLabel="Effacer la recherche"
+          onPress={() => onChangeText('')}
+          hitSlop={space[8]}>
           <Icon name="close" size={16} color={ink} />
-        </Pressable>
+        </Tappable>
       )}
     </View>
   );
@@ -61,13 +72,17 @@ export function AiChatField({ value, onChangeText, onSubmit, generating, onStop 
         style={[styles.input, { color: color.textPrimary }, generating && styles.generating]}
       />
       {generating ? (
-        <Pressable accessibilityRole="button" accessibilityLabel="Arrêter la génération" onPress={onStop} hitSlop={space[8]}>
+        <Tappable
+          accessibilityRole="button"
+          accessibilityLabel="Arrêter la génération"
+          onPress={onStop}
+          hitSlop={space[8]}>
           <Icon name="stop" />
-        </Pressable>
+        </Tappable>
       ) : (
-        <Pressable accessibilityRole="button" accessibilityLabel="Dicter" hitSlop={space[8]}>
+        <Tappable accessibilityRole="button" accessibilityLabel="Dicter" hitSlop={space[8]}>
           <Icon name="mic" />
-        </Pressable>
+        </Tappable>
       )}
     </View>
   );

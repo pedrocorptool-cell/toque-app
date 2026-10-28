@@ -1,11 +1,11 @@
 import * as ImagePicker from 'expo-image-picker';
 import { useState } from 'react';
-import { Platform, Pressable, StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { AvatarPicker } from '@/components/screens/profile/AvatarPicker';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
-import { AppText, Avatar, BottomSheet, ListCard, ListRow, useToast } from '@/components/ui';
+import { AppText, Avatar, BottomSheet, ListCard, ListRow, useToast, Tappable } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
 import { color, radius, space, text } from '@/theme/tokens';
 
@@ -52,16 +52,17 @@ export default function CompteScreen() {
           <AppText variant="overline" color={color.textSecondary}>
             Avatar
           </AppText>
-          <Pressable
+          <Tappable
+            feedback="card"
             accessibilityRole="button"
             accessibilityLabel="Modifier la photo"
             onPress={() => setPhotoOpen(true)}
-            style={({ pressed }) => [styles.avatar, pressed && styles.pressed]}>
+            style={styles.avatar}>
             <Avatar avatar={avatar} size={80} />
             <View style={styles.badge}>
               <Icon name="edit" size={16} color={color.actionSecondaryIcon} />
             </View>
-          </Pressable>
+          </Tappable>
 
           <AppText variant="overline" color={color.textSecondary} nativeID="nom">
             Nom d’utilisateur
@@ -150,9 +151,6 @@ const styles = StyleSheet.create({
   },
   avatar: {
     alignSelf: 'flex-start',
-  },
-  pressed: {
-    opacity: 0.7,
   },
   badge: {
     position: 'absolute',

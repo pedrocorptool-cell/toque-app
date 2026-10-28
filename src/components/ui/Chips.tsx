@@ -1,9 +1,10 @@
-import { Image, Pressable, StyleSheet, View, type ImageSourcePropType } from 'react-native';
+import { Image, StyleSheet, View, type ImageSourcePropType } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { color, radius, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Tappable } from './Tappable';
 
 type FilterChipProps = {
   label: string;
@@ -14,16 +15,16 @@ type FilterChipProps = {
 /** Figma : « Chip/ Filtre » — Défaut : contour + chevron ; Actif : fond foncé. */
 export function FilterChip({ label, active, onPress }: FilterChipProps) {
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityState={{ selected: active }}
       onPress={onPress}
-      style={({ pressed }) => [styles.chip, active ? styles.chipActive : styles.chipIdle, pressed && styles.pressed]}>
+      style={[styles.chip, active ? styles.chipActive : styles.chipIdle]}>
       <AppText variant="label" color={color.textOnBrandPrimary}>
         {label}
       </AppText>
       {!active && <Icon name="chevronDown" size={16} color={color.textOnBrandPrimary} />}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -80,9 +81,6 @@ const styles = StyleSheet.create({
   },
   chipActive: {
     backgroundColor: color.controlSelectedBg,
-  },
-  pressed: {
-    opacity: 0.7,
   },
   tag: {
     padding: space[4],

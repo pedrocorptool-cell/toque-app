@@ -20,7 +20,7 @@ import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
-import { AppText, IconButton, TimerCard, TimerChip, Toast } from '@/components/ui';
+import { AppText, IconButton, TimerCard, TimerChip, Toast, Tappable } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -434,15 +434,16 @@ function RoundButton({
   disabled?: boolean;
 }) {
   return (
-    <Pressable
+    <Tappable
+      feedback="surface"
       accessibilityRole="button"
       accessibilityLabel={label}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      style={({ pressed }) => [styles.round, pressed && styles.roundPressed, disabled && styles.disabled]}>
+      style={[styles.round, disabled && styles.disabled]}>
       <Icon name={icon} color={color.actionSecondaryIcon} />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -524,9 +525,6 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     borderRadius: radius.pill,
     backgroundColor: color.bgSurface,
-  },
-  roundPressed: {
-    backgroundColor: color.bgPage,
   },
   disabled: {
     opacity: 0.4,

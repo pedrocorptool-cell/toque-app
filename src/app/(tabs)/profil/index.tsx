@@ -1,6 +1,6 @@
 import { router } from 'expo-router';
 import { useState } from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { ImportError } from '@/components/screens/import/ImportError';
@@ -8,7 +8,7 @@ import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
-import { AppText, Avatar, Dialog, ListCard, ListRow, TextButton, useToast } from '@/components/ui';
+import { AppText, Avatar, Dialog, ListCard, ListRow, TextButton, useToast, Tappable } from '@/components/ui';
 import { partsLabel, TIMER_SOUNDS } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { useRecipes } from '@/data/RecipesContext';
@@ -26,11 +26,12 @@ export default function ProfilScreen() {
   return (
     <>
       <ProfileScreen title="Profil" toast={toast}>
-        <Pressable
+        <Tappable
+          feedback="surface"
           accessibilityRole="button"
           accessibilityLabel={`${account.name}, modifier le compte`}
           onPress={() => router.push('/profil/compte')}
-          style={({ pressed }) => [styles.identity, pressed && styles.pressed]}>
+          style={styles.identity}>
           <Avatar avatar={avatar} size={80} />
           <View style={styles.identityText}>
             <AppText variant="cardTitle" numberOfLines={1}>
@@ -41,7 +42,7 @@ export default function ProfilScreen() {
             </AppText>
           </View>
           <Icon name="edit" color={color.actionSecondaryIcon} />
-        </Pressable>
+        </Tappable>
 
         <ListCard title="Paramètres" divider="line">
           <SettingRow
@@ -131,9 +132,6 @@ const styles = StyleSheet.create({
     padding: space[16],
     borderRadius: radius.lg,
     backgroundColor: color.bgSurface,
-  },
-  pressed: {
-    opacity: 0.7,
   },
   identityText: {
     flex: 1,

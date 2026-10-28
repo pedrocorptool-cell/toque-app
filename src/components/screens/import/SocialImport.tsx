@@ -10,7 +10,7 @@ import {
   View,
 } from 'react-native';
 
-import { AppText, Button, useReduceMotion } from '@/components/ui';
+import { AppText, Button, useReduceMotion, Tappable } from '@/components/ui';
 import { SOCIALS, type SocialId } from '@/data/imports';
 import { SOURCES } from '@/data/recipes';
 import { color, radius, space } from '@/theme/tokens';
@@ -83,7 +83,7 @@ export function SocialImport({ network, onNetworkChange, onOpen }: SocialImportP
         {SOCIALS.map((id) => {
           const active = id === network;
           return (
-            <Pressable
+            <Tappable
               key={id}
               accessibilityRole="tab"
               accessibilityState={{ selected: active }}
@@ -91,7 +91,7 @@ export function SocialImport({ network, onNetworkChange, onOpen }: SocialImportP
               style={[styles.tab, active ? styles.tabActive : styles.tabIdle]}>
               <Image source={sourceOf(id).logo!} style={styles.tabLogo} />
               <AppText>{sourceOf(id).label}</AppText>
-            </Pressable>
+            </Tappable>
           );
         })}
       </View>

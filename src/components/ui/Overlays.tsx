@@ -22,6 +22,7 @@ import { color, radius, shadow, space } from '@/theme/tokens';
 import { AppText } from './AppText';
 import { useReduceMotion } from './useReduceMotion';
 import { Button, TextButton } from './Button';
+import { Tappable } from './Tappable';
 
 type BottomSheetProps = {
   visible: boolean;
@@ -119,9 +120,9 @@ export function BottomSheet({ visible, onClose, title, children, footer, onBack,
       {onBack || closable ? (
         <View style={styles.dialogHeader}>
           {onBack ? (
-            <Pressable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
+            <Tappable accessibilityRole="button" accessibilityLabel="Retour" onPress={onBack} hitSlop={space[12]}>
               <Icon name="arrowLeft" />
-            </Pressable>
+            </Tappable>
           ) : (
             <View style={styles.headerSpacer} />
           )}
@@ -249,9 +250,9 @@ export function Dialog({
 
 function CloseButton({ onPress }: { onPress: () => void }) {
   return (
-    <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onPress} hitSlop={space[12]}>
+    <Tappable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onPress} hitSlop={space[12]}>
       <Icon name="close" />
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -305,9 +306,9 @@ export function Toast({ message, onClose, action, style }: ToastProps) {
         </AppText>
         {shownAction && <TextButton label={shownAction.label} onPress={shownAction.onPress} />}
         {onClose && (
-          <Pressable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
+          <Tappable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
             <Icon name="close" />
-          </Pressable>
+          </Tappable>
         )}
       </View>
     </Animated.View>

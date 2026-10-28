@@ -1,7 +1,9 @@
-import { Pressable, StyleSheet } from 'react-native';
+import { StyleSheet } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, radius, shadow, space } from '@/theme/tokens';
+
+import { Tappable } from './Tappable';
 
 type Variant = 'primary' | 'surface' | 'onBrand' | 'plain';
 type Size = 'sm' | 'md' | 'lg';
@@ -23,11 +25,11 @@ type IconButtonProps = {
 
 const SIZE = { sm: 32, md: 40, lg: 48 } as const;
 
-const BG: Record<Variant, { idle: string; pressed: string }> = {
-  primary: { idle: color.actionPrimaryBg, pressed: color.actionPrimaryBgPressed },
-  surface: { idle: color.bgSurface, pressed: color.bgPage },
-  onBrand: { idle: color.actionIconBg, pressed: color.actionIconBgPressed },
-  plain: { idle: 'transparent', pressed: color.actionIconBg },
+const BG: Record<Variant, string> = {
+  primary: color.actionPrimaryBg,
+  surface: color.bgSurface,
+  onBrand: color.actionIconBg,
+  plain: 'transparent',
 };
 
 const ICON: Record<Variant, string> = {
@@ -41,34 +43,36 @@ const ICON: Record<Variant, string> = {
 export function IconButton({ icon, accessibilityLabel, onPress, variant = 'onBrand', size = 'md' }: IconButtonProps) {
   const dim = SIZE[size];
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
       hitSlop={size === 'sm' ? space[4] : 0}
-      style={({ pressed }) => [
-        styles.base,
-        { width: dim, height: dim, backgroundColor: pressed ? BG[variant].pressed : BG[variant].idle },
-      ]}>
+      // Sans fond, l'icône seule s'estompe ; avec un fond, il fonce d'un cran.
+      feedback={variant === 'plain' ? 'opacity' : 'surface'}
+      style={[styles.base, { width: dim, height: dim, backgroundColor: BG[variant] }]}>
       <Icon name={icon} size={size === 'sm' ? 16 : 24} color={ICON[variant]} />
-    </Pressable>
+    </Tappable>
   );
 }
 
 /** Figma : « Bouton/ FAB » — 56 px, halo orange. */
-export function Fab({ onPress, accessibilityLabel = 'Ajouter une recette' }: { onPress?: () => void; accessibilityLabel?: string }) {
+export function Fab({
+  onPress,
+  accessibilityLabel = 'Ajouter une recette',
+}: {
+  onPress?: () => void;
+  accessibilityLabel?: string;
+}) {
   return (
-    <Pressable
+    <Tappable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       onPress={onPress}
-      style={({ pressed }) => [
-        styles.base,
-        styles.fab,
-        { backgroundColor: pressed ? color.actionPrimaryBgPressed : color.actionPrimaryBg },
-      ]}>
+      feedback="surface"
+      style={[styles.base, styles.fab]}>
       <Icon name="plus" color={color.actionPrimaryText} />
-    </Pressable>
+    </Tappable>
   );
 }
 

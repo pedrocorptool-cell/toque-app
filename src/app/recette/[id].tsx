@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, Pressable, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
@@ -25,6 +25,7 @@ import {
   Tag,
   TimerPill,
   Toast,
+  Tappable,
 } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { useProfile } from '@/data/ProfileContext';
@@ -227,11 +228,11 @@ export default function RecipeScreen() {
           </View>
           <View style={styles.divider} />
           {/* Recette déjà classée : ses catégories remplacent « Enregistrer » et ouvrent la même sheet. */}
-          <Pressable
+          <Tappable
             accessibilityRole="button"
             accessibilityLabel={saved ? `Modifier les catégories : ${saved}` : undefined}
             onPress={() => setSaveOpen(true)}
-            style={({ pressed }) => [styles.half, pressed && styles.pressed]}>
+            style={styles.half}>
             {saved ? (
               <Tag label={saved} tone="onBrand" shrink />
             ) : (
@@ -242,7 +243,7 @@ export default function RecipeScreen() {
                 <AppText color={color.textOnBrandPrimary}>Enregistrer</AppText>
               </>
             )}
-          </Pressable>
+          </Tappable>
         </View>
 
         <View style={styles.section}>
@@ -271,13 +272,10 @@ export default function RecipeScreen() {
                 </View>
               }
               footer={
-                <Pressable
-                  accessibilityRole="button"
-                  onPress={() => setShoppingOpen(true)}
-                  style={({ pressed }) => [styles.footerAction, pressed && styles.pressed]}>
+                <Tappable accessibilityRole="button" onPress={() => setShoppingOpen(true)} style={styles.footerAction}>
                   <Icon name="basket" color={color.actionSecondaryIcon} />
                   <AppText>Ajouter à la liste de courses</AppText>
-                </Pressable>
+                </Tappable>
               }>
               {ingredients.map((line) => (
                 <View key={line} style={styles.ingredient}>
@@ -555,9 +553,6 @@ const styles = StyleSheet.create({
     width: 1,
     height: 26,
     backgroundColor: color.borderOnBrand,
-  },
-  pressed: {
-    opacity: 0.6,
   },
   section: {
     gap: space[24],

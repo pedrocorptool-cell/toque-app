@@ -12,6 +12,7 @@ import {
   type NativeSyntheticEvent,
 } from 'react-native';
 
+import { Tappable } from '@/components/ui';
 import { AVATAR_ART_RATIO, AVATAR_FILL } from '@/components/ui/Avatar';
 import { AVATAR_BACKGROUNDS, AVATARS, type AvatarId } from '@/data/profile';
 import { color, radius, space } from '@/theme/tokens';
@@ -115,7 +116,8 @@ export function AvatarChooser({
             extrapolate: 'clamp',
           });
           return (
-            <Pressable
+            <Tappable
+              feedback="card"
               key={k}
               accessibilityRole="radio"
               accessibilityLabel={item.label}
@@ -128,7 +130,7 @@ export function AvatarChooser({
                   <Image source={item.image} style={styles.art} />
                 </Animated.View>
               </Animated.View>
-            </Pressable>
+            </Tappable>
           );
         })}
       </Animated.ScrollView>
@@ -139,7 +141,8 @@ export function AvatarChooser({
         {AVATAR_BACKGROUNDS.map((value) => {
           const active = value === background;
           return (
-            <Pressable
+            <Tappable
+              feedback="card"
               key={value}
               accessibilityRole="radio"
               accessibilityLabel="Couleur de fond"
@@ -147,7 +150,7 @@ export function AvatarChooser({
               onPress={() => onBackgroundChange(value)}
               style={[styles.cell, active && styles.cellActive]}>
               <View style={[styles.dot, { backgroundColor: value }]} />
-            </Pressable>
+            </Tappable>
           );
         })}
       </View>

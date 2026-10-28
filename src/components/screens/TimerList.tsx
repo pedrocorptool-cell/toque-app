@@ -1,7 +1,7 @@
-import { Pressable, StyleSheet, View } from 'react-native';
+import { StyleSheet, View } from 'react-native';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
-import { AppText, Blink, formatDuration } from '@/components/ui';
+import { AppText, Blink, formatDuration, Tappable } from '@/components/ui';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, useTimers, type Timer } from '@/data/TimersContext';
 import { color, font, radius, space } from '@/theme/tokens';
@@ -44,11 +44,7 @@ function TimerRow({
   return (
     // Toute la carte ouvre la recette (hors de sa fiche) ; les boutons du bas gardent leur action. Pour les
     // lecteurs d'écran, c'est le chevron qui porte ce bouton.
-    <Pressable
-      accessible={false}
-      disabled={!canOpen}
-      onPress={open}
-      style={({ pressed }) => [styles.card, pressed && styles.pressedCard]}>
+    <Tappable feedback="surface" accessible={false} disabled={!canOpen} onPress={open} style={styles.card}>
       <View>
         {showTitle && title && <AppText style={styles.recipe}>{title}</AppText>}
         <View style={styles.header}>
@@ -62,14 +58,13 @@ function TimerRow({
               </AppText>
             </Blink>
             {canOpen && (
-              <Pressable
+              <Tappable
                 accessibilityRole="button"
                 accessibilityLabel={`Voir la recette ${title ?? ''}`.trim()}
                 hitSlop={space[12]}
-                onPress={open}
-                style={({ pressed }) => pressed && styles.pressedIcon}>
+                onPress={open}>
                 <Icon name="caretRight" />
-              </Pressable>
+              </Tappable>
             )}
           </View>
         </View>
@@ -95,20 +90,21 @@ function TimerRow({
           <Control icon="close" label="Supprimer le minuteur" onPress={() => remove(timer.id)} />
         </View>
       )}
-    </Pressable>
+    </Tappable>
   );
 }
 
 /** Une case de la barre de contrôle ; sans icône, le libellé est affiché. */
 function Control({ icon, label, onPress }: { icon?: IconName; label: string; onPress: () => void }) {
   return (
-    <Pressable
+    <Tappable
+      feedback="surface"
       accessibilityRole="button"
       accessibilityLabel={label}
       onPress={onPress}
-      style={({ pressed }) => [styles.control, pressed && styles.pressed]}>
+      style={styles.control}>
       {icon ? <Icon name={icon} /> : <AppText>{label}</AppText>}
-    </Pressable>
+    </Tappable>
   );
 }
 
@@ -137,12 +133,6 @@ const styles = StyleSheet.create({
     fontSize: 14,
     lineHeight: 24,
   },
-  pressedCard: {
-    opacity: 0.8,
-  },
-  pressedIcon: {
-    opacity: 0.6,
-  },
   step: {
     lineHeight: 24,
     textTransform: 'uppercase',
@@ -162,8 +152,5 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: color.aiBg,
-  },
-  pressed: {
-    backgroundColor: color.aiSubtle,
   },
 });
