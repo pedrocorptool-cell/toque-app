@@ -52,7 +52,7 @@ export function importedRecipe(request: ImportRequest): Recipe {
 const GRATIN: Omit<Recipe, 'id' | 'image'> = {
   title: 'Gratin dauphinois de mamie',
   duration: 75,
-  categories: ['plat', 'vege'],
+  categories: ['plat'],
   creator: 'jow',
   source: 'photo',
   kcal: 520,
@@ -79,7 +79,7 @@ const RIGATONI: Omit<Recipe, 'id'> = {
   title: 'Rigatoni crème de poivrons',
   image: require('@/assets/images/demo/pasta.jpg') as ImageSourcePropType,
   duration: 25,
-  categories: ['plat', 'vege'],
+  categories: ['plat'],
   creator: 'marmiton',
   source: 'web',
   kcal: 610,

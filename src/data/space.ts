@@ -1,7 +1,7 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 import type { Avatar, TimerSoundId } from './profile';
-import { BUNDLED_IMAGES, CATEGORIES, type Category, type Recipe } from './recipes';
+import { BUNDLED_IMAGES, CATEGORIES, LEGACY_CATEGORIES, type Category, type Recipe } from './recipes';
 import type { ShoppingItem } from './shopping';
 import { supabase } from './supabase';
 
@@ -107,6 +107,17 @@ async function loadSpace(spaceId: string): Promise<SpaceData> {
     data.profile = { ...profile, seeded: true };
     data.categories = CATEGORIES;
     await saveProfile(spaceId, data.profile);
+  } else if (categories.some((c) => LEGACY_CATEGORIES.includes(c.id))) {
+    // Espace créé avec Végé et Cheat Meal : passage à Entrée, Plat, Dessert, Cocktail, en gardant les catégories
+    // créées par l'utilisateur.
+    const custom = categories.filter(
+      (c) => !LEGACY_CATEGORIES.includes(c.id) && !CATEGORIES.some((d) => d.id === c.id),
+    );
+    data.categories = [...CATEGORIES, ...custom];
+    await pushRows('categories', spaceId, data.categories.map(toRow), categories.map(toRow));
+    const kept = recipes.map((r) => ({ ...r, categories: r.categories.filter((c) => !LEGACY_CATEGORIES.includes(c)) }));
+    await pushRows('recipes', spaceId, kept.map(toRow), recipes.map(toRow));
+    data.recipes = kept.map(decodeRecipe);
   }
   remember(data);
   return data;

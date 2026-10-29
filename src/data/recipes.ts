@@ -64,11 +64,14 @@ export type Category = {
 };
 
 export const CATEGORIES: Category[] = [
+  { id: 'entree', label: 'Entrée', hashtag: '#Entrée', dot: color.accentGreen },
   { id: 'plat', label: 'Plat', hashtag: '#Plat', dot: color.accentBlue },
   { id: 'dessert', label: 'Dessert', hashtag: '#Dessert', dot: color.accentOrange },
-  { id: 'vege', label: 'Végé', hashtag: '#Végé', dot: color.accentGreen },
-  { id: 'cheat', label: 'Cheat Meal', hashtag: '#CheatMeal', dot: color.accentCreme },
+  { id: 'cocktail', label: 'Cocktail', hashtag: '#Cocktail', dot: color.accentCreme },
 ];
+
+/** Catégories de départ des premières versions, remplacées par Entrée et Cocktail. */
+export const LEGACY_CATEGORIES = ['vege', 'cheat'];
 
 export const CREATORS: { id: CreatorId; label: string; avatar: ImageSourcePropType }[] = [
   { id: 'marmiton', label: 'Marmiton', avatar: require('@/assets/images/demo/av_marmiton.png') },
@@ -99,7 +102,7 @@ export const RECIPES: Recipe[] = [
     title: 'Pasta alla zozzona',
     image: PASTA,
     duration: 20,
-    categories: ['plat', 'cheat', 'vege'],
+    categories: ['plat'],
     creator: 'whoogys',
     source: 'instagram',
     kcal: 80,
@@ -158,7 +161,7 @@ export const RECIPES: Recipe[] = [
     title: 'Rigatoni alla vodka',
     image: PASTA,
     duration: 25,
-    categories: ['plat', 'vege'],
+    categories: ['plat'],
     creator: 'jow',
     source: 'tiktok',
     kcal: 640,
@@ -185,7 +188,7 @@ export const RECIPES: Recipe[] = [
     title: 'Pizza à la poêle express',
     image: NAAN,
     duration: 10,
-    categories: ['cheat'],
+    categories: ['plat'],
     creator: 'whoogys',
     source: 'tiktok',
     kcal: 710,
@@ -208,7 +211,7 @@ export const RECIPES: Recipe[] = [
     title: 'Gratin de pâtes du chef',
     image: PASTA,
     duration: 75,
-    categories: ['plat', 'cheat'],
+    categories: ['plat'],
     creator: 'etchebest',
     source: 'facebook',
     kcal: 820,
@@ -236,7 +239,7 @@ export const RECIPES: Recipe[] = [
     title: 'Flatbread légumes rôtis',
     image: NAAN,
     duration: 35,
-    categories: ['vege'],
+    categories: ['entree'],
     creator: 'jow',
     source: 'photo',
     kcal: 450,

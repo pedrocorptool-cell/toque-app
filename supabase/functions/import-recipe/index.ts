@@ -89,7 +89,7 @@ Deno.serve(async (req) => {
       duration: recipe.duration,
       servings: Math.max(1, recipe.servings),
       kcal: recipe.kcal,
-      categories: recipe.categories,
+      categories: recipe.category ? [recipe.category] : [],
       ingredients: recipe.ingredients.map((i: { qty: number | null; name: string }) =>
         i.qty == null ? { name: i.name } : { qty: i.qty, name: i.name },
       ),
@@ -136,8 +136,8 @@ function instructions(categories: { id: string; label: string }[]) {
       'd’attendre (cuisson, repos), sinon null.',
     'tip : une astuce donnée par la source, ou null.',
     categories.length
-      ? `categories : les identifiants qui conviennent parmi ${categories.map((c) => `${c.id} (${c.label})`).join(', ')}.`
-      : 'categories : liste vide.',
+      ? `category : la catégorie qui convient le mieux, une seule, parmi ${categories.map((c) => `${c.id} (${c.label})`).join(', ')} ; null si aucune ne convient.`
+      : 'category : null.',
   ].join('\n');
 }
 
@@ -153,7 +153,7 @@ function schema(categoryIds: string[]) {
       'duration',
       'servings',
       'kcal',
-      'categories',
+      'category',
       'ingredients',
       'steps',
       'tip',
@@ -167,10 +167,10 @@ function schema(categoryIds: string[]) {
       duration: { type: 'integer' },
       servings: { type: 'integer' },
       kcal: { type: 'integer' },
-      categories: {
-        type: 'array',
-        items: categoryIds.length ? { type: 'string', enum: categoryIds } : { type: 'string' },
-      },
+      // Une seule catégorie par recette importée.
+      category: categoryIds.length
+        ? { anyOf: [{ type: 'string', enum: categoryIds }, { type: 'null' }] }
+        : { type: 'null' },
       ingredients: {
         type: 'array',
         items: {
