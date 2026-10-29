@@ -116,6 +116,10 @@ function instructions(categories: { id: string; label: string }[]) {
     'Extrais la recette de ce contenu (page web, publication de réseau social ou photo) pour l’app de cuisine Toqué.',
     'Réponds en français, même si la source est dans une autre langue, et reste fidèle à la recette d’origine.',
     'Si le contenu ne contient pas de recette, mets is_recipe à false et laisse les listes vides.',
+    'N’invente jamais d’ingrédient ni de quantité : recopie exactement ceux du contenu (« 160 g d’œufs (= 3 gros ' +
+      'œufs) » reste tel quel). Si la liste des ingrédients n’est pas dans le contenu (légende coupée, recette ' +
+      'seulement dans la vidéo), mets is_recipe à false plutôt que de deviner une recette.',
+    'Si les ingrédients sont écrits mais pas les étapes, déduis des étapes courtes et simples à partir d’eux.',
     'title : le nom du plat, court, sans emoji.',
     'creator : l’auteur, le compte ou le site (« Marmiton », « Jow », un pseudo Instagram…), vide si inconnu.',
     'creator_handle : pour une publication de réseau social, le pseudo du compte qui l’a publiée, sans @ ; sinon vide.',
@@ -213,12 +217,12 @@ async function readPage(input: string) {
     .filter((block) => /recipe/i.test(block))
     .join('\n')
     .slice(0, 30_000);
-  const visible = decode(
-    html
-      .replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, ' ')
-      .replace(/<[^>]+>/g, ' ')
-      .replace(/\s+/g, ' '),
-  ).slice(0, jsonLd ? 8_000 : 30_000);
+  const visible = textOf(html.replace(/<(script|style|noscript|svg|nav|footer|header)[\s\S]*?<\/\1>/gi, ' ')).slice(
+    0,
+    jsonLd ? 8_000 : 30_000,
+  );
+  // La page d'une publication ne montre qu'un extrait de la légende : la légende complète vient à part.
+  const caption = await captionOf(res.url).catch(() => null);
 
   const ogImage = meta('og:image') ?? meta('twitter:image');
   // Logo du site : l'icône d'écran d'accueil, sinon la plus grande icône PNG (les .ico et .svg ne s'affichent pas
@@ -237,6 +241,7 @@ async function readPage(input: string) {
     `Titre : ${decode(meta('og:title') ?? html.match(/<title[^>]*>([^<]*)/i)?.[1] ?? '')}`,
     `Site : ${decode(meta('og:site_name') ?? url.hostname)}`,
     `Description : ${decode(meta('og:description') ?? meta('description') ?? '')}`,
+    caption && `Légende complète de la publication :\n${caption}`,
     jsonLd && `Données de recette (JSON-LD) :\n${jsonLd}`,
     `Texte de la page :\n${visible}`,
   ];
@@ -293,6 +298,46 @@ async function storeImage(db: any, space: string, url: string): Promise<string |
     console.error('store image failed', error);
     return url.startsWith('data:') ? null : url;
   }
+}
+
+/** Texte visible d'un morceau de HTML, en gardant les retours à la ligne des listes et paragraphes. */
+function textOf(html: string) {
+  return decode(
+    html
+      .replace(/<br\s*\/?>/gi, '\n')
+      .replace(/<\/(p|li|div|h\d)>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\s*\n\s*/g, '\n'),
+  );
+}
+
+/** Légende entière d'une publication Instagram (page d'intégration) ou TikTok (oEmbed). */
+async function captionOf(url: string): Promise<string | null> {
+  const insta = url.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reels?|tv)\/([\w-]+)/i);
+  if (insta) {
+    const res = await fetch(`https://www.instagram.com/p/${insta[1]}/embed/captioned/`, {
+      headers: { 'User-Agent': BROWSER_UA, 'Accept-Language': 'fr-FR,fr;q=0.9' },
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const html = await res.text();
+    const block =
+      html.match(/<div class="Caption"[^>]*>([\s\S]*?)<div class="CaptionComments"/i)?.[1] ??
+      html.match(/<div class="Caption"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1];
+    return block ? textOf(block).slice(0, 15_000) : null;
+  }
+  if (/tiktok\.com/i.test(url)) {
+    const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
+      signal: AbortSignal.timeout(15000),
+    });
+    if (!res.ok) return null;
+    const data = await res.json();
+    return (
+      [data.author_unique_id && `Compte : ${data.author_unique_id}`, data.title].filter(Boolean).join('\n') || null
+    );
+  }
+  return null;
 }
 
 function decode(value: string) {
