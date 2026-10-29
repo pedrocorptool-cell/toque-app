@@ -18,7 +18,7 @@ type PaperCardProps = {
 export function PaperCard({ title, headerRight, children, footer }: PaperCardProps) {
   return (
     <View>
-      <Svg width="100%" height={12} viewBox="0 0 361 12" preserveAspectRatio="none">
+      <Svg width="100%" height={12} viewBox="0 0 361 12" preserveAspectRatio="none" style={styles.edge}>
         <Path d={PAPER_EDGE_PATH} fill={color.bgSurface} />
       </Svg>
       <View style={styles.paper}>
@@ -34,6 +34,10 @@ export function PaperCard({ title, headerRight, children, footer }: PaperCardPro
 }
 
 const styles = StyleSheet.create({
+  // Le bord chevauche la feuille d'1 px : sans ça, une fine ligne du fond apparaît entre les deux sur téléphone.
+  edge: {
+    marginBottom: -1,
+  },
   paper: {
     backgroundColor: color.bgSurface,
   },
