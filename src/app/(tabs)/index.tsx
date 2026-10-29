@@ -216,17 +216,13 @@ function optionsFor(
     case 'category':
       return categories.map((c) => ({ id: c.id, label: c.hashtag ?? toHashtag(c.label) }));
     case 'creator':
-      // Les créateurs des recettes enregistrées ; ceux lus à l'import n'ont pas d'avatar.
+      // Les créateurs des recettes enregistrées ; le nom seul quand l'import n'a pas trouvé d'avatar.
       return creatorsOf(recipes)
         .filter((c) => matchesText(c.name, creatorQuery))
         .map((c) => ({
           id: c.id,
           label: c.name,
-          leading: c.avatar ? (
-            <Image source={c.avatar} style={styles.creatorAvatar} />
-          ) : (
-            <View style={[styles.creatorAvatar, styles.creatorAvatarEmpty]} />
-          ),
+          leading: c.avatar && <Image source={c.avatar} style={styles.creatorAvatar} />,
         }));
     case 'duration':
       return DURATIONS.map((d) => ({ id: d.id, label: d.label }));
@@ -309,9 +305,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-  },
-  creatorAvatarEmpty: {
-    backgroundColor: color.borderDefault,
   },
   sourceLogo: {
     width: 24,

@@ -148,6 +148,7 @@ type ReadRecipe = Pick<Recipe, 'title' | 'duration' | 'servings' | 'kcal' | 'ing
   creator: string | null;
   tip: string | null;
   image: string | null;
+  avatar: string | null;
   url: string | null;
 };
 
@@ -173,8 +174,9 @@ export async function importRecipe(request: ImportRequest, categories: Category[
   return {
     id: `import-${Date.now()}`,
     title: data.title,
-    // Une photo garde le cliché pris ; un lien prend l'image de la page, sinon une vignette par défaut.
-    image: request.method === 'photo' ? { uri: request.uri } : data.image ? { uri: data.image } : PLACEHOLDER,
+    // Image copiée dans le stockage de l'espace (photo prise ou image de la page) ; à défaut, la photo locale ou une
+    // vignette par défaut.
+    image: data.image ? { uri: data.image } : request.method === 'photo' ? { uri: request.uri } : PLACEHOLDER,
     duration: data.duration,
     categories: data.categories,
     creator: data.creator ?? (source === 'photo' ? 'Photo' : 'Web'),
@@ -184,6 +186,7 @@ export async function importRecipe(request: ImportRequest, categories: Category[
     ingredients: data.ingredients,
     steps: data.steps,
     ...(data.tip ? { tip: data.tip } : {}),
+    ...(data.avatar ? { creatorAvatar: data.avatar } : {}),
     ...(data.url ? { url: data.url } : url ? { url } : {}),
   };
 }

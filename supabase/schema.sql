@@ -115,5 +115,13 @@ drop policy if exists "ma liste" on public.shopping_items;
 create policy "ma liste" on public.shopping_items for all to authenticated
   using (space_id = public.my_space()) with check (space_id = public.my_space());
 
+-- Images des recettes importées (vignettes, avatars des créateurs, photos) : lisibles par tous, chaque téléphone
+-- n'écrit que dans le dossier de son espace.
+insert into storage.buckets (id, name, public) values ('recipe-images', 'recipe-images', true)
+  on conflict (id) do nothing;
+drop policy if exists "images de mon espace" on storage.objects;
+create policy "images de mon espace" on storage.objects for insert to authenticated
+  with check (bucket_id = 'recipe-images' and (storage.foldername(name))[1] = public.my_space()::text);
+
 -- Ton espace. Pour un ami, relance seulement cette ligne avec son ID.
 insert into public.spaces (code) values ('FolleCourgette#0001') on conflict (code) do nothing;

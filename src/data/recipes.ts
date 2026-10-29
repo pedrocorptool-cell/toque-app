@@ -23,6 +23,8 @@ export type Recipe = {
   source: SourceId;
   /** Page d'origine d'une recette importée par lien. */
   url?: string;
+  /** Avatar du compte (réseau social) ou logo du site, lus à l'import. */
+  creatorAvatar?: string;
   kcal: number;
   /** Nombre de parts pour lequel les quantités sont écrites. */
   servings: number;
@@ -302,7 +304,11 @@ export function creatorOf(recipe: Recipe): { id: string; name: string; avatar?: 
   const creator = CREATORS.find((c) => c.id === recipe.creator);
   return creator
     ? { id: creator.id, name: creator.label, avatar: creator.avatar }
-    : { id: recipe.creator, name: recipe.creator || 'Inconnu' };
+    : {
+        id: recipe.creator,
+        name: recipe.creator || 'Inconnu',
+        ...(recipe.creatorAvatar ? { avatar: { uri: recipe.creatorAvatar } } : {}),
+      };
 }
 
 /** Créateurs des recettes enregistrées, pour le filtre « Créateur ». */

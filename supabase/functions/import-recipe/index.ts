@@ -42,13 +42,10 @@ Deno.serve(async (req) => {
   }
 
   let content: Anthropic.Beta.BetaContentBlockParam[];
-  let image: string | null = null;
-  let sourceUrl: string | null = null;
+  let page: Awaited<ReturnType<typeof readPage>> | null = null;
   if (body.kind === 'url' && typeof body.url === 'string') {
-    const page = await readPage(body.url).catch(() => null);
+    page = await readPage(body.url).catch(() => null);
     if (!page) return fail('page_unreachable', 422);
-    image = page.image;
-    sourceUrl = page.url;
     content = [{ type: 'text', text: `Page : ${page.url}\n\n${page.text}` }];
   } else if (body.kind === 'image' && typeof body.data === 'string') {
     const mediaType = ['image/jpeg', 'image/png', 'image/webp', 'image/gif'].includes(body.mediaType)
@@ -76,6 +73,16 @@ Deno.serve(async (req) => {
     const recipe = JSON.parse(text);
     if (!recipe.is_recipe || !recipe.steps?.length) return fail('not_a_recipe', 422);
     console.log('import ok', { space, kind: body.kind, usage: response.usage });
+
+    // Images copiées dans le stockage de l'espace : les liens des réseaux sociaux expirent au bout de quelques
+    // jours, et une photo prise sur le téléphone devient visible partout.
+    const store = (url: string | null) => (url ? storeImage(db, space, url) : Promise.resolve(null));
+    const [image, avatar] = await Promise.all([
+      body.kind === 'image'
+        ? storeImage(db, space, `data:${body.mediaType || 'image/jpeg'};base64,${body.data}`)
+        : store(page!.image),
+      body.kind === 'url' ? findAvatar(page!, recipe.creator_handle).then(store) : Promise.resolve(null),
+    ]);
     return json({
       title: recipe.title,
       creator: recipe.creator || null,
@@ -91,7 +98,8 @@ Deno.serve(async (req) => {
       ),
       tip: recipe.tip || null,
       image,
-      url: sourceUrl,
+      avatar,
+      url: page?.url ?? null,
     });
   } catch (error) {
     console.error('import failed', error);
@@ -110,6 +118,7 @@ function instructions(categories: { id: string; label: string }[]) {
     'Si le contenu ne contient pas de recette, mets is_recipe à false et laisse les listes vides.',
     'title : le nom du plat, court, sans emoji.',
     'creator : l’auteur, le compte ou le site (« Marmiton », « Jow », un pseudo Instagram…), vide si inconnu.',
+    'creator_handle : pour une publication de réseau social, le pseudo du compte qui l’a publiée, sans @ ; sinon vide.',
     'duration : le temps total en minutes (préparation et cuisson), estimé si absent.',
     'servings : le nombre de parts pour lequel les quantités sont écrites.',
     'kcal : une estimation des calories par part.',
@@ -146,6 +155,7 @@ function schema(categoryIds: string[]) {
       is_recipe: { type: 'boolean' },
       title: { type: 'string' },
       creator: { type: 'string' },
+      creator_handle: { type: 'string' },
       duration: { type: 'integer' },
       servings: { type: 'integer' },
       kcal: { type: 'integer' },
@@ -211,6 +221,18 @@ async function readPage(input: string) {
   ).slice(0, jsonLd ? 8_000 : 30_000);
 
   const ogImage = meta('og:image') ?? meta('twitter:image');
+  // Logo du site : l'icône d'écran d'accueil, sinon la plus grande icône PNG (les .ico et .svg ne s'affichent pas
+  // dans l'app).
+  const icons = [...html.matchAll(/<link\b[^>]*>/gi)]
+    .map((m) => m[0])
+    .filter((tag) => /rel=["'][^"']*icon[^"']*["']/i.test(tag))
+    .map((tag) => ({
+      href: tag.match(/href=["']([^"']+)["']/i)?.[1] ?? '',
+      apple: /apple-touch-icon/i.test(tag),
+      size: Number(tag.match(/sizes=["'](\d+)/i)?.[1] ?? 0),
+    }))
+    .filter((icon) => icon.href && !/\.(ico|svg)(\?|$)/i.test(icon.href))
+    .sort((a, b) => Number(b.apple) - Number(a.apple) || b.size - a.size);
   const parts = [
     `Titre : ${decode(meta('og:title') ?? html.match(/<title[^>]*>([^<]*)/i)?.[1] ?? '')}`,
     `Site : ${decode(meta('og:site_name') ?? url.hostname)}`,
@@ -221,8 +243,56 @@ async function readPage(input: string) {
   return {
     url: res.url,
     image: ogImage ? new URL(decode(ogImage), res.url).href : null,
+    logo: icons[0] ? new URL(decode(icons[0].href), res.url).href : null,
+    host: new URL(res.url).hostname,
     text: parts.filter(Boolean).join('\n\n'),
   };
+}
+
+/** Avatar du compte pour une publication Instagram ou TikTok (photo de profil), logo du site sinon. */
+async function findAvatar(page: { url: string; host: string; logo: string | null }, handle: string) {
+  const name = handle.replace(/^@/, '').trim();
+  const profile = /^[\w.]+$/.test(name)
+    ? /(^|\.)instagram\.com$/i.test(page.host)
+      ? `https://www.instagram.com/${name}/`
+      : /(^|\.)tiktok\.com$/i.test(page.host)
+        ? `https://www.tiktok.com/@${name}`
+        : null
+    : null;
+  if (profile) {
+    const avatar = await readPage(profile)
+      .then((p) => p.image)
+      .catch(() => null);
+    if (avatar) return avatar;
+  }
+  return SOCIAL.test(page.host) ? null : page.logo;
+}
+
+const IMAGE_TYPES: Record<string, string> = {
+  'image/jpeg': 'jpg',
+  'image/png': 'png',
+  'image/webp': 'webp',
+  'image/gif': 'gif',
+};
+
+/** Copie l'image dans le bucket public `recipe-images`, dans le dossier de l'espace. Garde le lien d'origine en cas
+ *  d'échec. */
+// deno-lint-ignore no-explicit-any
+async function storeImage(db: any, space: string, url: string): Promise<string | null> {
+  try {
+    const res = await fetch(url, { headers: { 'User-Agent': BROWSER_UA }, signal: AbortSignal.timeout(15000) });
+    const type = (res.headers.get('content-type') ?? '').split(';')[0].trim();
+    if (!res.ok || !IMAGE_TYPES[type]) return url.startsWith('data:') ? null : url;
+    const bytes = new Uint8Array(await res.arrayBuffer());
+    if (bytes.length > 6_000_000) return url.startsWith('data:') ? null : url;
+    const path = `${space}/${crypto.randomUUID()}.${IMAGE_TYPES[type]}`;
+    const { error } = await db.storage.from('recipe-images').upload(path, bytes, { contentType: type });
+    if (error) throw error;
+    return db.storage.from('recipe-images').getPublicUrl(path).data.publicUrl;
+  } catch (error) {
+    console.error('store image failed', error);
+    return url.startsWith('data:') ? null : url;
+  }
 }
 
 function decode(value: string) {

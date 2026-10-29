@@ -226,11 +226,7 @@ export default function RecipeScreen() {
             disabled={!recipe.url}
             accessibilityRole={recipe.url ? 'link' : undefined}
             onPress={() => recipe.url && Linking.openURL(recipe.url)}>
-            {creator.avatar ? (
-              <Image source={creator.avatar} style={styles.avatar} />
-            ) : (
-              <View style={[styles.avatar, styles.avatarEmpty]} />
-            )}
+            {creator.avatar && <Image source={creator.avatar} style={styles.avatar} />}
             <AppText color={color.textOnBrandPrimary} style={styles.underline} numberOfLines={1}>
               {creator.name}
             </AppText>
@@ -460,7 +456,7 @@ const styles = StyleSheet.create({
   missing: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: space[16],
+    gap: space[40],
     paddingHorizontal: space[16],
   },
   // Image exportée avec ses ombres (413 × 357) : marges négatives pour garder la boîte Figma de 361 × 322.
@@ -549,9 +545,6 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
-  },
-  avatarEmpty: {
-    backgroundColor: color.borderOnBrand,
   },
   underline: {
     textDecorationLine: 'underline',

@@ -54,11 +54,12 @@ export function Tag({
   );
 }
 
-/** Figma : « Créateur » — avatar + nom du créateur de la recette. */
+/** Figma : « Créateur » — avatar + nom du créateur de la recette ; le nom seul quand l'import n'a pas trouvé
+ *  d'avatar. */
 export function Creator({ name, avatar }: { name: string; avatar?: ImageSourcePropType }) {
   return (
     <View style={styles.creator}>
-      {avatar ? <Image source={avatar} style={styles.avatar} /> : <View style={[styles.avatar, styles.avatarEmpty]} />}
+      {avatar && <Image source={avatar} style={styles.avatar} />}
       <AppText variant="label" color={color.textSecondary}>
         {name}
       </AppText>
@@ -99,8 +100,5 @@ const styles = StyleSheet.create({
     width: 24,
     height: 24,
     borderRadius: 12,
-  },
-  avatarEmpty: {
-    backgroundColor: color.borderDefault,
   },
 });
