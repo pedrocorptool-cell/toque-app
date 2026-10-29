@@ -47,6 +47,8 @@ const TABS = [
 
 /** Fin du toast d'ajout à la liste de courses, qui porte l'action « Voir ». */
 const LIST_TOAST_END = 'à la liste';
+const ESTIMATED =
+  'Les quantités n’étaient pas écrites dans la publication (sûrement dans la vidéo) : Toqué les a estimées.';
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
 /** Bouton flottant « Démarrer la recette » : 48 px de haut, à 32 px du bas de l'écran. */
@@ -290,6 +292,10 @@ export default function RecipeScreen() {
                   </AppText>
                 </View>
               ))}
+              {recipe.estimated && (
+                // En attendant la maquette dédiée : même bloc que l'astuce.
+                <TipCard icon="magic" title="Quantités estimées" text={ESTIMATED} />
+              )}
               {recipe.tip && <TipCard text={recipe.tip} />}
             </PaperCard>
           ) : (

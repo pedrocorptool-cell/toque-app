@@ -23,10 +23,6 @@ const MESSAGES: Record<ImportFailure, { title: string; message: string }> = {
     title: 'Import impossible',
     message: 'Toqué n’a pas trouvé de recette ici. Essaie avec un autre lien ou une autre photo.',
   },
-  not_in_caption: {
-    title: 'Recette introuvable',
-    message: 'Elle n’est pas dans la légende. Si elle est en commentaire, fais-en une capture et importe-la en Photo.',
-  },
   // Figma 775:7997.
   no_credits: {
     title: 'Crédits insuffisants',

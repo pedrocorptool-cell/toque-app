@@ -1,14 +1,16 @@
 import { StyleSheet, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
-import { Icon } from '@/components/icons/Icon';
+import { Icon, type IconName } from '@/components/icons/Icon';
 import { AppText } from '@/components/ui';
 import { color, font, space } from '@/theme/tokens';
 
 const CORNER = 24;
 
+type TipCardProps = { text: string; title?: string; icon?: IconName };
+
 /** Figma : bloc « Astuce » de la carte Ingrédients, coin supérieur droit replié. */
-export function TipCard({ text }: { text: string }) {
+export function TipCard({ text, title = 'Astuce', icon = 'wine' }: TipCardProps) {
   return (
     <View style={styles.tip}>
       <Svg width={CORNER} height={CORNER} style={styles.corner}>
@@ -16,10 +18,10 @@ export function TipCard({ text }: { text: string }) {
         <Path d={`M0 0L${CORNER} ${CORNER}H0Z`} fill={color.tipCorner} />
       </Svg>
       <View style={styles.badge}>
-        <Icon name="wine" size={16} color={color.textOnBrandPrimary} />
+        <Icon name={icon} size={16} color={color.textOnBrandPrimary} />
       </View>
       <AppText variant="button" style={styles.title}>
-        Astuce
+        {title}
       </AppText>
       <AppText variant="button">{text}</AppText>
     </View>

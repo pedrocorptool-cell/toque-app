@@ -31,6 +31,8 @@ export type Recipe = {
   ingredients: Ingredient[];
   steps: Step[];
   tip?: string;
+  /** Recette importée dont les quantités ne figuraient pas dans la source : l'IA les a estimées. */
+  estimated?: boolean;
 };
 
 export type Ingredient = {

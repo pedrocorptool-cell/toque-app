@@ -97,6 +97,7 @@ Deno.serve(async (req) => {
         s.timer ? { text: s.text, timer: s.timer } : { text: s.text },
       ),
       tip: recipe.tip || null,
+      estimated: Boolean(recipe.estimated),
       image,
       avatar,
       url: page?.url ?? null,
@@ -116,9 +117,11 @@ function instructions(categories: { id: string; label: string }[]) {
     'Extrais la recette de ce contenu (page web, publication de réseau social ou photo) pour l’app de cuisine Toqué.',
     'Réponds en français, même si la source est dans une autre langue, et reste fidèle à la recette d’origine.',
     'Si le contenu ne contient pas de recette, mets is_recipe à false et laisse les listes vides.',
-    'N’invente jamais d’ingrédient ni de quantité : recopie exactement ceux du contenu (« 160 g d’œufs (= 3 gros ' +
-      'œufs) » reste tel quel). Si la liste des ingrédients n’est pas dans le contenu (légende coupée, recette ' +
-      'seulement dans la vidéo), mets is_recipe à false plutôt que de deviner une recette.',
+    'Quand les ingrédients sont écrits dans le contenu, recopie exactement leurs quantités (« 160 g d’œufs (= 3 ' +
+      'gros œufs) » reste tel quel) et mets estimated à false.',
+    'Si le plat est identifiable mais que ses ingrédients ou leurs quantités ne sont pas écrits (recette seulement ' +
+      'dans la vidéo ou en commentaire), propose une recette classique et fiable de ce plat, en t’appuyant sur ce ' +
+      'que montre le contenu, et mets estimated à true.',
     'Si les ingrédients sont écrits mais pas les étapes, déduis des étapes courtes et simples à partir d’eux.',
     'title : le nom du plat, court, sans emoji.',
     'creator : l’auteur, le compte ou le site (« Marmiton », « Jow », un pseudo Instagram…), vide si inconnu.',
@@ -154,6 +157,7 @@ function schema(categoryIds: string[]) {
       'ingredients',
       'steps',
       'tip',
+      'estimated',
     ],
     properties: {
       is_recipe: { type: 'boolean' },
@@ -186,6 +190,7 @@ function schema(categoryIds: string[]) {
         },
       },
       tip: nullable('string'),
+      estimated: { type: 'boolean' },
     },
   };
 }

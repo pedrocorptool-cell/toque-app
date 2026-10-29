@@ -30,8 +30,7 @@ export function useTimerSound(id: TimerSoundId, mode: 'off' | 'once' | 'loop', o
       if (mode === 'loop') {
         clearTimeout(gap);
         gap = setTimeout(start, LOOP_GAP);
-      }
-      else latestEnd.current?.();
+      } else latestEnd.current?.();
     });
     start();
     return () => {
