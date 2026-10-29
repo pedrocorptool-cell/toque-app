@@ -6,7 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { Icon } from '@/components/icons/Icon';
 import { ImportError } from '@/components/screens/import/ImportError';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
-import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
+import { useImport } from '@/components/screens/import/useImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import { TimerDock } from '@/components/screens/TimerDock';
 import {
@@ -23,16 +23,17 @@ import {
 } from '@/components/ui';
 import {
   type Category,
-  CREATORS,
   DURATIONS,
   EMPTY_FILTERS,
   SOURCES,
   creatorOf,
+  creatorsOf,
   filterRecipes,
   hashtagsOf,
   toHashtag,
   matchesText,
   type FilterKey,
+  type Recipe,
   type Filters,
 } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -59,7 +60,7 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
-  const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
+  const [importing, setImporting, importFailed, setImportFailed, failure] = useImport();
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
   const draftCount = useMemo(
@@ -176,7 +177,7 @@ export default function HomeScreen() {
           setOpenFilter(null);
         }}>
         <FilterOptions
-          options={optionsFor(shownFilter, creatorQuery, categories)}
+          options={optionsFor(shownFilter, creatorQuery, categories, recipes)}
           selected={draft[shownFilter] as string[]}
           onChange={setDraftValues(shownFilter)}
           emptyLabel="Aucun créateur ne correspond."
@@ -194,6 +195,7 @@ export default function HomeScreen() {
       <ImportLoading visible={!!importing} onCancel={() => setImporting(null)} />
       <ImportError
         visible={!!importFailed}
+        reason={failure}
         onRetry={() => {
           setImportFailed(null);
           setImporting(importFailed);
@@ -204,16 +206,28 @@ export default function HomeScreen() {
   );
 }
 
-function optionsFor(key: FilterKey, creatorQuery: string, categories: Category[]): FilterOption<string>[] {
+function optionsFor(
+  key: FilterKey,
+  creatorQuery: string,
+  categories: Category[],
+  recipes: Recipe[],
+): FilterOption<string>[] {
   switch (key) {
     case 'category':
       return categories.map((c) => ({ id: c.id, label: c.hashtag ?? toHashtag(c.label) }));
     case 'creator':
-      return CREATORS.filter((c) => matchesText(c.label, creatorQuery)).map((c) => ({
-        id: c.id,
-        label: c.label,
-        leading: <Image source={c.avatar} style={styles.creatorAvatar} />,
-      }));
+      // Les créateurs des recettes enregistrées ; ceux lus à l'import n'ont pas d'avatar.
+      return creatorsOf(recipes)
+        .filter((c) => matchesText(c.name, creatorQuery))
+        .map((c) => ({
+          id: c.id,
+          label: c.name,
+          leading: c.avatar ? (
+            <Image source={c.avatar} style={styles.creatorAvatar} />
+          ) : (
+            <View style={[styles.creatorAvatar, styles.creatorAvatarEmpty]} />
+          ),
+        }));
     case 'duration':
       return DURATIONS.map((d) => ({ id: d.id, label: d.label }));
     case 'source':
@@ -295,6 +309,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+  },
+  creatorAvatarEmpty: {
+    backgroundColor: color.borderDefault,
   },
   sourceLogo: {
     width: 24,

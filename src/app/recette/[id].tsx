@@ -1,7 +1,7 @@
 import * as Clipboard from 'expo-clipboard';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Image, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
+import { Image, Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { BlurGlow } from '@/components/art/BlurGlow';
@@ -28,7 +28,7 @@ import {
 } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { useProfile } from '@/data/ProfileContext';
-import { CREATORS, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
+import { creatorOf, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { haptics } from '@/data/haptics';
 import { useShopping } from '@/data/ShoppingContext';
@@ -147,7 +147,7 @@ export default function RecipeScreen() {
     );
   }
 
-  const creator = CREATORS.find((c) => c.id === recipe.creator)!;
+  const creator = creatorOf(recipe);
   const saved = savedHashtagsOf(recipe, categories);
   const ingredients = recipe.ingredients.map((i) => formatIngredient(i, servings, recipe.servings));
 
@@ -220,12 +220,21 @@ export default function RecipeScreen() {
         </View>
 
         <View style={styles.creatorBar}>
-          <View style={styles.half}>
-            <Image source={creator.avatar} style={styles.avatar} />
-            <AppText color={color.textOnBrandPrimary} style={styles.underline}>
-              {creator.label}
+          {/* Recette importée par lien : le créateur ouvre la page d'origine. */}
+          <Tappable
+            style={styles.half}
+            disabled={!recipe.url}
+            accessibilityRole={recipe.url ? 'link' : undefined}
+            onPress={() => recipe.url && Linking.openURL(recipe.url)}>
+            {creator.avatar ? (
+              <Image source={creator.avatar} style={styles.avatar} />
+            ) : (
+              <View style={[styles.avatar, styles.avatarEmpty]} />
+            )}
+            <AppText color={color.textOnBrandPrimary} style={styles.underline} numberOfLines={1}>
+              {creator.name}
             </AppText>
-          </View>
+          </Tappable>
           <View style={styles.divider} />
           {/* Recette déjà classée : ses catégories remplacent « Enregistrer » et ouvrent la même sheet. */}
           <Tappable
@@ -540,6 +549,9 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+  },
+  avatarEmpty: {
+    backgroundColor: color.borderOnBrand,
   },
   underline: {
     textDecorationLine: 'underline',

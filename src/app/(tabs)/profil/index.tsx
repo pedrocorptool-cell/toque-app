@@ -5,7 +5,7 @@ import { StyleSheet, View } from 'react-native';
 import { Icon, type IconName } from '@/components/icons/Icon';
 import { ImportError } from '@/components/screens/import/ImportError';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
-import { useSimulatedImport } from '@/components/screens/import/useSimulatedImport';
+import { useImport } from '@/components/screens/import/useImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
 import { AppText, Avatar, Dialog, ListCard, ListRow, TextButton, useToast, Tappable } from '@/components/ui';
@@ -22,7 +22,7 @@ export default function ProfilScreen() {
   const { leave } = useSpace();
   const toast = useToast();
   const [guideOpen, setGuideOpen] = useState(false);
-  const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
+  const [importing, setImporting, importFailed, setImportFailed, failure] = useImport();
   const [logoutOpen, setLogoutOpen] = useState(false);
 
   return (
@@ -89,6 +89,7 @@ export default function ProfilScreen() {
       <ImportLoading visible={!!importing} onCancel={() => setImporting(null)} />
       <ImportError
         visible={!!importFailed}
+        reason={failure}
         onRetry={() => {
           setImportFailed(null);
           setImporting(importFailed);

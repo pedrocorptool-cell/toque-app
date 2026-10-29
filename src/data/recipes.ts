@@ -18,8 +18,11 @@ export type Recipe = {
   /** Durée de préparation, en minutes. */
   duration: number;
   categories: CategoryId[];
-  creator: CreatorId;
+  /** Un créateur de la démo (avec son avatar), ou le nom lu par l'IA : site, auteur, compte. */
+  creator: CreatorId | (string & {});
   source: SourceId;
+  /** Page d'origine d'une recette importée par lien. */
+  url?: string;
   kcal: number;
   /** Nombre de parts pour lequel les quantités sont écrites. */
   servings: number;
@@ -253,7 +256,7 @@ export const RECIPES: Recipe[] = [
 
 export type Filters = {
   category: CategoryId[];
-  creator: CreatorId[];
+  creator: string[];
   duration: DurationId[];
   source: SourceId[];
 };
@@ -294,9 +297,19 @@ export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
     : undefined;
 }
 
-export function creatorOf(recipe: Recipe) {
-  const creator = CREATORS.find((c) => c.id === recipe.creator)!;
-  return { name: creator.label, avatar: creator.avatar };
+/** Avatar et nom du créateur ; sans avatar pour un créateur lu à l'import. */
+export function creatorOf(recipe: Recipe): { id: string; name: string; avatar?: ImageSourcePropType } {
+  const creator = CREATORS.find((c) => c.id === recipe.creator);
+  return creator
+    ? { id: creator.id, name: creator.label, avatar: creator.avatar }
+    : { id: recipe.creator, name: recipe.creator || 'Inconnu' };
+}
+
+/** Créateurs des recettes enregistrées, pour le filtre « Créateur ». */
+export function creatorsOf(recipes: Recipe[]) {
+  const seen = new Map<string, ReturnType<typeof creatorOf>>();
+  for (const recipe of recipes) if (!seen.has(recipe.creator)) seen.set(recipe.creator, creatorOf(recipe));
+  return [...seen.values()].sort((a, b) => a.name.localeCompare(b.name, 'fr'));
 }
 
 /** Insensible à la casse et aux accents : « vege » trouve « Végé ». */

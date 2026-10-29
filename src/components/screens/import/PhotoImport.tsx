@@ -7,10 +7,18 @@ import { color, space } from '@/theme/tokens';
 
 import { IconOption } from './ImportOption';
 
-const PICKER: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.8 };
+// La photo part en base64 vers l'IA : une qualité moyenne suffit à lire le texte et allège l'envoi.
+const PICKER: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.5, base64: true };
+
+export type PickedPhoto = { uri: string; base64?: string; mimeType?: string };
+const picked = (asset: ImagePicker.ImagePickerAsset): PickedPhoto => ({
+  uri: asset.uri,
+  base64: asset.base64 ?? undefined,
+  mimeType: asset.mimeType ?? undefined,
+});
 
 /** Hors maquette : appareil photo ou galerie, mêmes cartes que le premier écran d'import. */
-export function PhotoImport({ onImport }: { onImport: (uri: string) => void }) {
+export function PhotoImport({ onImport }: { onImport: (photo: PickedPhoto) => void }) {
   const [denied, setDenied] = useState(false);
 
   const fromCamera = async () => {
@@ -18,12 +26,12 @@ export function PhotoImport({ onImport }: { onImport: (uri: string) => void }) {
     if (permission && !permission.granted && !permission.canAskAgain) return setDenied(true);
     // Pas d'appareil photo (web, simulateur) : la galerie prend le relais.
     const result = await ImagePicker.launchCameraAsync(PICKER).catch(() => ImagePicker.launchImageLibraryAsync(PICKER));
-    if (!result.canceled) onImport(result.assets[0].uri);
+    if (!result.canceled) onImport(picked(result.assets[0]));
   };
 
   const fromLibrary = async () => {
     const result = await ImagePicker.launchImageLibraryAsync(PICKER);
-    if (!result.canceled) onImport(result.assets[0].uri);
+    if (!result.canceled) onImport(picked(result.assets[0]));
   };
 
   return (

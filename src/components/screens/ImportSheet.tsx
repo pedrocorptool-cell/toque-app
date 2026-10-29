@@ -1,8 +1,10 @@
+import * as Clipboard from 'expo-clipboard';
 import { useEffect, useRef, useState } from 'react';
 import { AppState, Image, Linking, Platform, StyleSheet, View } from 'react-native';
 
 import { AppText, BottomSheet } from '@/components/ui';
-import { SOCIAL_LINKS, SOCIALS, type ImportRequest, type SocialId } from '@/data/imports';
+import { SOCIAL_LINKS, SOCIALS, socialOf, type ImportRequest, type SocialId } from '@/data/imports';
+import { supabase } from '@/data/supabase';
 import { SOURCES } from '@/data/recipes';
 import { space } from '@/theme/tokens';
 
@@ -51,13 +53,18 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
   const latestStart = useRef(onStart);
   latestStart.current = onStart;
 
-  // Prototype : le partage depuis le réseau ne peut pas revenir dans l'app. Au retour dans Toqué après avoir
-  // ouvert le réseau, on fait comme si une publication venait d'être partagée.
+  // Le partage vers Toqué demande une app compilée, pas Expo Go : en attendant, au retour dans Toqué après avoir
+  // ouvert le réseau, on importe le lien de publication copié (« Copier le lien »). Hors ligne, la publication est
+  // simulée.
   useEffect(() => {
-    const sub = AppState.addEventListener('change', (state) => {
-      if (state !== 'active' || !awaitingShare.current) return;
-      latestStart.current({ method: 'social', network: awaitingShare.current });
+    const sub = AppState.addEventListener('change', async (state) => {
+      const network = awaitingShare.current;
+      if (state !== 'active' || !network) return;
       awaitingShare.current = null;
+      if (!supabase) return latestStart.current({ method: 'social', network });
+      const copied = (await Clipboard.getStringAsync().catch(() => '')).trim();
+      const url = copied.match(/https?:\/\/\S+/)?.[0];
+      if (url && socialOf(url)) latestStart.current({ method: 'social', network: socialOf(url)!, url });
     });
     return () => sub.remove();
   }, []);
@@ -99,7 +106,7 @@ export function ImportSheet({ visible, onClose, onStart, initialStep = 'menu' }:
         <SocialImport network={network} onNetworkChange={setNetwork} onOpen={() => openNetwork()} />
       )}
       {view === 'web' && <WebImport onImport={(url) => onStart({ method: 'web', url })} />}
-      {view === 'photo' && <PhotoImport onImport={(uri) => onStart({ method: 'photo', uri })} />}
+      {view === 'photo' && <PhotoImport onImport={(photo) => onStart({ method: 'photo', ...photo })} />}
     </BottomSheet>
   );
 }

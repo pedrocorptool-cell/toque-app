@@ -2,6 +2,7 @@ import { Image, Modal, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, Button, TextButton } from '@/components/ui';
+import type { ImportFailure } from '@/data/imports';
 import { color, font, space } from '@/theme/tokens';
 
 const ILLUS = require('@/assets/images/illus/missing-recipe.png');
@@ -10,10 +11,19 @@ type ImportErrorProps = {
   visible: boolean;
   onRetry: () => void;
   onClose: () => void;
+  reason?: ImportFailure;
+};
+
+const MESSAGES: Record<ImportFailure, string> = {
+  unreachable: 'Vérifie ta connexion et que le lien mène bien à une recette, puis réessaie.',
+  failed: 'Vérifie ta connexion et que le lien mène bien à une recette, puis réessaie.',
+  not_a_recipe: 'Toqué n’a pas trouvé de recette ici. Essaie avec un autre lien ou une autre photo.',
+  // En attendant l'écran dédié de Pierre.
+  no_credits: 'Les crédits IA sont épuisés. Recharge-les sur la console Anthropic, puis réessaie.',
 };
 
 /** Figma « Import/ Erreur » (741:617) : même mise en page que « Recette introuvable », avec « Réessayer ». */
-export function ImportError({ visible, onRetry, onClose }: ImportErrorProps) {
+export function ImportError({ visible, onRetry, onClose, reason = 'failed' }: ImportErrorProps) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} animationType="fade" statusBarTranslucent onRequestClose={onClose}>
@@ -23,7 +33,7 @@ export function ImportError({ visible, onRetry, onClose }: ImportErrorProps) {
           Import impossible
         </AppText>
         <AppText color={color.textOnBrandSecondary} style={styles.message}>
-          Vérifie ta connexion et que le lien mène bien à une recette, puis réessaie.
+          {MESSAGES[reason]}
         </AppText>
         <Button variant="secondary" label="Réessayer" onPress={onRetry} />
         <TextButton tone="onBrand" label="Retour" onPress={onClose} />

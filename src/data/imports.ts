@@ -1,6 +1,7 @@
 import type { ImageSourcePropType } from 'react-native';
 
-import type { CreatorId, Recipe, SourceId } from './recipes';
+import type { Category, CreatorId, Recipe, SourceId } from './recipes';
+import { supabase } from './supabase';
 
 /** Réseaux proposés par « Importer via » (Figma : « Bottom Sheet/ Import/ RS »). */
 export type SocialId = Extract<SourceId, 'instagram' | 'facebook' | 'tiktok'>;
@@ -16,9 +17,10 @@ export const SOCIAL_LINKS: Record<SocialId, { app: string; web: string }> = {
 const SOCIAL_CREATOR: Record<SocialId, CreatorId> = { instagram: 'whoogys', facebook: 'jow', tiktok: 'etchebest' };
 
 export type ImportRequest =
-  | { method: 'social'; network: SocialId }
+  /** Sans `url` : prototype hors ligne, la publication partagée est simulée. */
+  | { method: 'social'; network: SocialId; url?: string }
   | { method: 'web'; url: string }
-  | { method: 'photo'; uri: string };
+  | { method: 'photo'; uri: string; base64?: string; mimeType?: string };
 
 /**
  * Prototype sans serveur : un import ne peut pas vraiment échouer. Un lien contenant « erreur » simule l'échec,
@@ -121,3 +123,81 @@ const NAAN_EXPRESS: Omit<Recipe, 'id'> = {
     { text: 'Badigeonner de beurre à l’ail à la sortie de la poêle.' },
   ],
 };
+
+/** Pourquoi un import a échoué, pour l'écran d'erreur. */
+export type ImportFailure = 'unreachable' | 'not_a_recipe' | 'no_credits' | 'failed';
+export class ImportFailed extends Error {
+  constructor(readonly reason: ImportFailure) {
+    super(reason);
+  }
+}
+
+/** Le lien vient-il d'un réseau social ? La recette importée prend alors son logo comme source. */
+export function socialOf(url: string): SocialId | null {
+  const host = url
+    .replace(/^https?:\/\//i, '')
+    .split('/')[0]
+    .toLowerCase();
+  if (/(^|\.)instagram\.com$/.test(host)) return 'instagram';
+  if (/(^|\.)tiktok\.com$/.test(host)) return 'tiktok';
+  if (/(^|\.)(facebook\.com|fb\.watch)$/.test(host)) return 'facebook';
+  return null;
+}
+
+type ReadRecipe = Pick<Recipe, 'title' | 'duration' | 'servings' | 'kcal' | 'ingredients' | 'steps' | 'categories'> & {
+  creator: string | null;
+  tip: string | null;
+  image: string | null;
+  url: string | null;
+};
+
+const PLACEHOLDER = require('@/assets/images/demo/pasta.jpg') as ImageSourcePropType;
+
+/**
+ * Lit la recette avec l'IA, par la fonction Supabase `import-recipe` (voir `supabase/functions`). La clé
+ * Anthropic reste côté Supabase.
+ */
+export async function importRecipe(request: ImportRequest, categories: Category[]): Promise<Recipe> {
+  if (!supabase) throw new ImportFailed('failed');
+  const url = request.method === 'photo' ? null : request.url;
+  let page: { kind: 'url'; url: string } | { kind: 'image'; data: string; mediaType?: string };
+  if (url) page = { kind: 'url', url };
+  else if (request.method === 'photo' && request.base64)
+    page = { kind: 'image', data: request.base64, mediaType: request.mimeType };
+  else throw new ImportFailed('failed');
+  const body = { ...page, categories: categories.map((c) => ({ id: c.id, label: c.label })) };
+  const { data, error } = await supabase.functions.invoke<ReadRecipe>('import-recipe', { body });
+  if (error || !data) throw new ImportFailed(await failureOf(error));
+
+  const source: SourceId = request.method === 'photo' ? 'photo' : (socialOf(url!) ?? 'web');
+  return {
+    id: `import-${Date.now()}`,
+    title: data.title,
+    // Une photo garde le cliché pris ; un lien prend l'image de la page, sinon une vignette par défaut.
+    image: request.method === 'photo' ? { uri: request.uri } : data.image ? { uri: data.image } : PLACEHOLDER,
+    duration: data.duration,
+    categories: data.categories,
+    creator: data.creator ?? (source === 'photo' ? 'Photo' : 'Web'),
+    source,
+    kcal: data.kcal,
+    servings: data.servings,
+    ingredients: data.ingredients,
+    steps: data.steps,
+    ...(data.tip ? { tip: data.tip } : {}),
+    ...(data.url ? { url: data.url } : url ? { url } : {}),
+  };
+}
+
+/** Le code renvoyé par la fonction (`no_credits`, `not_a_recipe`…), ou une coupure réseau. */
+async function failureOf(error: unknown): Promise<ImportFailure> {
+  const context = (error as { context?: Response } | null)?.context;
+  if (!context || typeof context.json !== 'function') return 'unreachable';
+  const code = await context
+    .json()
+    .then((body: { error?: string }) => body.error)
+    .catch(() => undefined);
+  if (code === 'no_credits') return 'no_credits';
+  if (code === 'not_a_recipe') return 'not_a_recipe';
+  if (code === 'page_unreachable') return 'unreachable';
+  return 'failed';
+}
