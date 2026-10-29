@@ -42,10 +42,21 @@ export async function askNotificationPermission(): Promise<NotificationPermissio
  */
 export async function scheduleTimerEnd(id: string, seconds: number, body: string, sound: TimerSoundId) {
   if (!supported || seconds <= 0) return;
+  // Android n'accepte que des minuscules et des « _ » dans le nom des ressources : den-den.wav devient den_den.wav.
+  const file = sound.replace(/-/g, '_');
+  // Sur Android, le son se règle par canal de notification, un canal par sonnerie.
+  const channelId = `timer_${file}`;
+  if (Platform.OS === 'android') {
+    await Notifications.setNotificationChannelAsync(channelId, {
+      name: 'Fin des minuteurs',
+      importance: Notifications.AndroidImportance.HIGH,
+      sound: `${file}.wav`,
+    }).catch(() => {});
+  }
   await Notifications.scheduleNotificationAsync({
     identifier: id,
-    content: { title: 'Minuteur terminé', body, sound: `${sound}.wav` },
-    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds },
+    content: { title: 'Minuteur terminé', body, sound: `${file}.wav` },
+    trigger: { type: Notifications.SchedulableTriggerInputTypes.TIME_INTERVAL, seconds, channelId },
   }).catch(() => {});
 }
 

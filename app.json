@@ -49,10 +49,22 @@
         {
           "sounds": [
             "./assets/sounds/notification/timer.wav",
-            "./assets/sounds/notification/den-den.wav",
-            "./assets/sounds/notification/ultra-instinct.wav",
+            "./assets/sounds/notification/den_den.wav",
+            "./assets/sounds/notification/ultra_instinct.wav",
             "./assets/sounds/notification/outro.wav"
           ]
+        }
+      ],
+      [
+        "expo-share-intent",
+        {
+          "androidIntentFilters": [
+            "text/*"
+          ],
+          "iosActivationRules": {
+            "NSExtensionActivationSupportsWebURLWithMaxCount": 1,
+            "NSExtensionActivationSupportsWebPageWithMaxCount": 1
+          }
         }
       ]
     ],

@@ -1,5 +1,6 @@
-import { useMemo, useState } from 'react';
 import { router } from 'expo-router';
+import { useShareIntentContext } from 'expo-share-intent';
+import { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -36,6 +37,7 @@ import {
   type Recipe,
   type Filters,
 } from '@/data/recipes';
+import { socialOf } from '@/data/imports';
 import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space } from '@/theme/tokens';
 
@@ -61,6 +63,17 @@ export default function HomeScreen() {
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
   const [importing, setImporting, importFailed, setImportFailed, failure] = useImport();
+
+  // « Partager vers Toqué » depuis Instagram, TikTok, un navigateur… : le lien partagé lance l'import.
+  const { hasShareIntent, shareIntent, resetShareIntent } = useShareIntentContext();
+  useEffect(() => {
+    if (!hasShareIntent) return;
+    const url = shareIntent.webUrl ?? shareIntent.text?.match(/https?:\/\/\S+/)?.[0];
+    resetShareIntent();
+    if (!url) return;
+    const network = socialOf(url);
+    setImporting(network ? { method: 'social', network, url } : { method: 'web', url });
+  }, [hasShareIntent, shareIntent, resetShareIntent, setImporting]);
 
   const results = useMemo(() => filterRecipes(recipes, query, filters), [recipes, query, filters]);
   const draftCount = useMemo(

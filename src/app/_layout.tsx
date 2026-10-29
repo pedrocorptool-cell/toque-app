@@ -5,11 +5,13 @@ import {
   useFonts,
 } from '@expo-google-fonts/zalando-sans';
 import { Kalam_400Regular } from '@expo-google-fonts/kalam';
+import Constants, { ExecutionEnvironment } from 'expo-constants';
 import { Stack } from 'expo-router';
+import { ShareIntentProvider } from 'expo-share-intent';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
-import { View } from 'react-native';
+import { Platform, View } from 'react-native';
 
 import { LaunchSplash } from '@/components/screens/LaunchSplash';
 import { TimerAlert } from '@/components/screens/TimerAlert';
@@ -22,11 +24,16 @@ import { color } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
+// « Partager vers Toqué » n'existe que dans l'app compilée : ni Expo Go ni le web n'ont le module natif.
+const SHARE_DISABLED = Platform.OS === 'web' || Constants.executionEnvironment === ExecutionEnvironment.StoreClient;
+
 export default function RootLayout() {
   return (
-    <SpaceProvider>
-      <App />
-    </SpaceProvider>
+    <ShareIntentProvider options={{ disabled: SHARE_DISABLED, resetOnBackground: false }}>
+      <SpaceProvider>
+        <App />
+      </SpaceProvider>
+    </ShareIntentProvider>
   );
 }
 
