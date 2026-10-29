@@ -5,7 +5,6 @@ import {
   useFonts,
 } from '@expo-google-fonts/zalando-sans';
 import { Kalam_400Regular } from '@expo-google-fonts/kalam';
-import { Rubik_900Black } from '@expo-google-fonts/rubik';
 import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
@@ -25,7 +24,8 @@ export default function RootLayout() {
     ZalandoSans_300Light,
     ZalandoSans_400Regular,
     ZalandoSans_500Medium,
-    Rubik_900Black,
+    // Fournie par Pierre ; police « Demo », réservée à un usage perso.
+    AvoinDemo_700Bold: require('@/assets/fonts/AvoinDemo-Bold.otf'),
     Kalam_400Regular,
   });
 

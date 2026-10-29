@@ -147,15 +147,15 @@ export const font = {
   light: 'ZalandoSans_300Light',
   regular: 'ZalandoSans_400Regular',
   medium: 'ZalandoSans_500Medium',
-  /** Titre de recette. Figma utilise « Avoin Demo » (non libre) : remplacé par Rubik Black. */
-  display: 'Rubik_900Black',
+  /** Titre de recette et « Bon appétit » (Figma « Avoin Demo » Bold). */
+  display: 'AvoinDemo_700Bold',
   /** Mention manuscrite « Fais maison! » de l'écran de fin. */
   handwritten: 'Kalam_400Regular',
 } as const;
 
 // Styles de texte relevés dans la maquette (Figma n'a pas de styles de texte déclarés).
 export const text = {
-  display: { fontFamily: font.display, fontSize: 40, lineHeight: 44, letterSpacing: 0.8, textTransform: 'uppercase' },
+  display: { fontFamily: font.display, fontSize: 40, lineHeight: 42, letterSpacing: 0.8, textTransform: 'uppercase' },
   title: { fontFamily: font.medium, fontSize: 20 },
   cardTitle: { fontFamily: font.medium, fontSize: 18 },
   /** Titre des écrans vides et d'attente (« Aucune recette », « Import en cours »). */
