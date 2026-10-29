@@ -207,6 +207,8 @@ export default function RecipeScreen() {
           ps: String(ps),
           by: String(by),
           bh: String(bh),
+          // Les quantités de chaque étape suivent les parts choisies sur la fiche.
+          parts: String(servings),
         };
         router.push({ pathname: '/pas-a-pas/[id]', params });
       });

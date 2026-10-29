@@ -22,6 +22,8 @@ import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Tappable } from '@/components/ui';
 import { haptics } from '@/data/haptics';
+import { useProfile } from '@/data/ProfileContext';
+import { formatIngredient, stepIngredients } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -56,6 +58,7 @@ export default function StepByStepScreen() {
     ps?: string;
     by?: string;
     bh?: string;
+    parts?: string;
   }>();
   const { id } = params;
   // En cuisine, les mains sont prises : l'écran reste allumé tant que le mode étape par étape est ouvert.
@@ -65,6 +68,8 @@ export default function StepByStepScreen() {
   const { timers: allTimers, timerFor, toggle, beforeTimerStart, setFocusedRecipeId } = useTimers();
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
+  const { defaultServings } = useProfile();
+  const servings = Number(params.parts) || defaultServings;
 
   const [index, setIndex] = useState(0);
   const [timersOpen, setTimersOpen] = useState(false);
@@ -189,6 +194,7 @@ export default function StepByStepScreen() {
   const finished = index === recipe.steps.length;
   ending.current = finished;
   const step = recipe.steps[index];
+  const ingredients = stepIngredients(recipe, index).map((i) => formatIngredient(i, servings, recipe.servings));
   const timer = timerFor(recipe.id, index);
 
   // Pendant le trajet, la pastille n'apparaît qu'à l'arrivée de la carte.
@@ -314,6 +320,19 @@ export default function StepByStepScreen() {
                 <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
                   {step.text}
                 </AppText>
+                {/* Hors maquette : les ingrédients de l'étape, aux quantités des parts choisies. */}
+                {ingredients.length > 0 && (
+                  <View style={styles.ingredients}>
+                    {ingredients.map((line) => (
+                      <View key={line} style={styles.ingredient}>
+                        <View style={styles.bullet} />
+                        <AppText color={color.textOnBrandSecondary} style={styles.flex}>
+                          {line}
+                        </AppText>
+                      </View>
+                    ))}
+                  </View>
+                )}
                 {/* Lancé, le minuteur rejoint la pastille du bas ; il revient s'il est arrêté depuis la sheet. */}
                 {step.timer !== undefined && !timer && (
                   <View ref={cardRef}>
@@ -489,6 +508,23 @@ const styles = StyleSheet.create({
   instruction: {
     fontSize: 24,
     lineHeight: 32,
+  },
+  ingredients: {
+    gap: space[8],
+  },
+  ingredient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
+  bullet: {
+    width: 6,
+    height: 6,
+    backgroundColor: color.textOnBrandSecondary,
+    transform: [{ rotate: '45deg' }],
+  },
+  flex: {
+    flex: 1,
   },
   bottomRow: {
     flexDirection: 'row',

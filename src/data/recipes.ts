@@ -44,6 +44,8 @@ export type Ingredient = {
 
 export type Step = {
   text: string;
+  /** Ingrédients utilisés dans l'étape (indices dans `ingredients`), lus par l'IA à l'import. */
+  ingredients?: number[];
   /** Minuteur proposé dans l'étape, en secondes. */
   timer?: number;
 };
@@ -326,6 +328,39 @@ export function creatorsOf(recipes: Recipe[]) {
 /** Insensible à la casse et aux accents : « vege » trouve « Végé ». */
 function normalize(value: string) {
   return value.normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().trim();
+}
+
+// Mots qui ne désignent pas l'ingrédient lui-même : unités, mesures, liaisons.
+const NOT_INGREDIENT = new Set(
+  'cuillere cuilleres soupe cafe pincee pincees tranche tranches gousse gousses brin brins botte bottes sachet sachets boite boites verre verres tasse tasses morceau morceaux feuille feuilles quelques environ grosse grosses petit petite petits petites gros frais fraiche coupe coupes'.split(
+    ' ',
+  ),
+);
+
+/** Mots significatifs d'un nom d'ingrédient (« g de chocolat noir » → chocolat, noir), réduits à leur début pour
+ *  que « œuf » trouve « œufs ». */
+function ingredientWords(name: string) {
+  return normalize(name.replace(/œ/g, 'oe'))
+    .split(/[^a-z]+/)
+    .filter((w) => w.length >= 4 && !NOT_INGREDIENT.has(w))
+    .map((w) => w.slice(0, 5));
+}
+
+/**
+ * Ingrédients d'une étape, pour le mode étape par étape : ceux indiqués par l'IA à l'import, sinon ceux dont le nom
+ * apparaît dans le texte de l'étape (recettes importées avant, recettes de démo).
+ */
+export function stepIngredients(recipe: Recipe, index: number): Ingredient[] {
+  const step = recipe.steps[index];
+  if (!step) return [];
+  if (step.ingredients) return step.ingredients.map((i) => recipe.ingredients[i]).filter(Boolean);
+  const words = normalize(step.text.replace(/œ/g, 'oe'))
+    .split(/[^a-z]+/)
+    .map((w) => w.slice(0, 5));
+  return recipe.ingredients.filter((ingredient) => {
+    const own = ingredientWords(ingredient.name);
+    return own.length > 0 && own.some((w) => words.includes(w));
+  });
 }
 
 export function matchesText(label: string, query: string) {

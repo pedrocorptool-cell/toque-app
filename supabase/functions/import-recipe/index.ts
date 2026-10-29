@@ -93,9 +93,13 @@ Deno.serve(async (req) => {
       ingredients: recipe.ingredients.map((i: { qty: number | null; name: string }) =>
         i.qty == null ? { name: i.name } : { qty: i.qty, name: i.name },
       ),
-      steps: recipe.steps.map((s: { text: string; timer: number | null }) =>
-        s.timer ? { text: s.text, timer: s.timer } : { text: s.text },
-      ),
+      steps: recipe.steps.map((s: { text: string; timer: number | null; ingredients?: number[] }) => ({
+        text: s.text,
+        ...(s.timer ? { timer: s.timer } : {}),
+        ingredients: (s.ingredients ?? []).filter(
+          (i, at, all) => Number.isInteger(i) && i >= 0 && i < recipe.ingredients.length && all.indexOf(i) === at,
+        ),
+      })),
       tip: recipe.tip || null,
       estimated: Boolean(recipe.estimated),
       image,
@@ -133,7 +137,8 @@ function instructions(categories: { id: string; label: string }[]) {
       'après la quantité, unité comprise : { qty: 200, name: "g de farine" }, { qty: 2, name: "œufs" }, ' +
       '{ qty: 10, name: "cl de crème" }.',
     'steps : une action par étape, phrase courte à l’infinitif. timer : la durée en secondes quand l’étape demande ' +
-      'd’attendre (cuisson, repos), sinon null.',
+      'd’attendre (cuisson, repos), sinon null. ingredients : les numéros (à partir de 0, dans l’ordre de la liste ' +
+      'ingredients) des ingrédients utilisés dans cette étape, liste vide si aucun.',
     'tip : une astuce donnée par la source, ou null.',
     categories.length
       ? `category : la catégorie qui convient le mieux, une seule, parmi ${categories.map((c) => `${c.id} (${c.label})`).join(', ')} ; null si aucune ne convient.`
@@ -185,8 +190,12 @@ function schema(categoryIds: string[]) {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['text', 'timer'],
-          properties: { text: { type: 'string' }, timer: nullable('integer') },
+          required: ['text', 'timer', 'ingredients'],
+          properties: {
+            text: { type: 'string' },
+            timer: nullable('integer'),
+            ingredients: { type: 'array', items: { type: 'integer' } },
+          },
         },
       },
       tip: nullable('string'),
