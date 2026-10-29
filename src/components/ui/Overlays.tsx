@@ -5,7 +5,6 @@ import {
   KeyboardAvoidingView,
   Modal,
   PanResponder,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -96,7 +95,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
 
   return (
     <Modal visible={mounted} transparent animationType="none" onRequestClose={onClose} statusBarTranslucent>
-      <KeyboardAvoidingView style={styles.sheetRoot} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.sheetRoot} behavior="padding">
         <Animated.View style={[StyleSheet.absoluteFill, styles.scrim, { opacity: progress }]}>
           <Pressable style={StyleSheet.absoluteFill} onPress={onClose} accessibilityLabel="Fermer" />
         </Animated.View>

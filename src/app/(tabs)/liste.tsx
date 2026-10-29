@@ -5,7 +5,6 @@ import {
   Keyboard,
   KeyboardAvoidingView,
   LayoutAnimation,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -158,7 +157,7 @@ export default function ListeScreen() {
         </AppText>
       </View>
 
-      <KeyboardAvoidingView style={styles.sheet} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
+      <KeyboardAvoidingView style={styles.sheet} behavior="padding">
         <ScrollView
           contentContainerStyle={[styles.content, docked && { paddingBottom: space[16] + TIMER_DOCK_SPACE }]}
           keyboardShouldPersistTaps="handled"
