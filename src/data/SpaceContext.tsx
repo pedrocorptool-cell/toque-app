@@ -10,6 +10,7 @@ import {
   restoreSpace,
   saveProfile,
   toRow,
+  withTimeout,
   type Row,
   type SpaceData,
   type StoredProfile,
@@ -55,7 +56,8 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
 
   useEffect(() => {
     if (!supabase) return;
-    restoreSpace()
+    // Garde-fou : même si la session locale ne répond pas, l'app s'ouvre (sur l'onboarding).
+    withTimeout(restoreSpace(), 8000)
       .then((space) => space && setSnapshot({ ...space, onboarded: true, version: 1 }))
       .catch((error) => console.warn('[Toqué] restoreSpace', error))
       .finally(() => setReady(true));

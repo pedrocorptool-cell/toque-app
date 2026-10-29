@@ -9,6 +9,7 @@ import { Stack } from 'expo-router';
 import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
+import { View } from 'react-native';
 
 import { LaunchSplash } from '@/components/screens/LaunchSplash';
 import { TimerAlert } from '@/components/screens/TimerAlert';
@@ -47,7 +48,8 @@ function App() {
     if (done) SplashScreen.hideAsync();
   }, [done]);
 
-  if (!done) return null;
+  // Fond du splash plutôt qu'un écran blanc, au cas où le splash natif disparaît avant (Expo Go).
+  if (!done) return <View style={{ flex: 1, backgroundColor: color.bgBrandPage }} />;
 
   return (
     <ProfileProvider>

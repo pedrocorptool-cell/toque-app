@@ -36,6 +36,14 @@ export class JoinError extends Error {
 
 const CACHE_KEY = 'toque.space';
 
+/** Rejette après `ms` : un réseau qui ne répond pas ne doit pas bloquer l'app. */
+export function withTimeout<T>(promise: Promise<T>, ms: number): Promise<T> {
+  return new Promise((resolve, reject) => {
+    const timer = setTimeout(() => reject(new Error('network timeout')), ms);
+    promise.then(resolve, reject).finally(() => clearTimeout(timer));
+  });
+}
+
 function db() {
   if (!supabase) throw new Error('Supabase non configuré');
   return supabase;
@@ -102,15 +110,23 @@ async function loadSpace(spaceId: string): Promise<SpaceData> {
   return data;
 }
 
+const RESTORE_TIMEOUT = 6000;
+const JOIN_TIMEOUT = 15000;
+
 /** Au lancement : l'espace auquel ce téléphone est rattaché, ou null s'il n'en a pas encore. */
 export async function restoreSpace(): Promise<SpaceData | null> {
   const { data } = await db().auth.getSession();
   if (!data.session) return null;
   try {
-    const member = check(
-      await db().from('space_members').select('space_id').eq('user_id', data.session.user.id).maybeSingle(),
+    return await withTimeout(
+      (async () => {
+        const member = check(
+          await db().from('space_members').select('space_id').eq('user_id', data.session!.user.id).maybeSingle(),
+        );
+        return member ? await loadSpace(member.space_id) : null;
+      })(),
+      RESTORE_TIMEOUT,
     );
-    return member ? await loadSpace(member.space_id) : null;
   } catch (error) {
     // Sans réseau, on rouvre l'espace tel qu'il était au dernier chargement.
     if (!isNetworkError(error as { message?: string })) console.warn('[Toqué] restoreSpace', error);
@@ -122,20 +138,7 @@ export async function restoreSpace(): Promise<SpaceData | null> {
 /** Rattache ce téléphone à l'espace de cet ID d'invitation et enregistre le pseudo saisi. */
 export async function joinSpace(code: string, name: string): Promise<SpaceData> {
   try {
-    const auth = db().auth;
-    const { data } = await auth.getSession();
-    if (!data.session) {
-      const { error } = await auth.signInAnonymously();
-      if (error) throw error;
-    }
-    const { data: spaceId, error } = await db().rpc('join_space', { p_code: code });
-    if (error) throw error;
-    if (!spaceId) throw new JoinError('not_found');
-    const space = await loadSpace(spaceId as string);
-    space.profile = { ...space.profile, name };
-    await saveProfile(space.spaceId, space.profile);
-    remember(space);
-    return space;
+    return await withTimeout(join(code, name), JOIN_TIMEOUT);
   } catch (error) {
     if (error instanceof JoinError) throw error;
     const err = error as { message?: string; status?: number };
@@ -144,6 +147,23 @@ export async function joinSpace(code: string, name: string): Promise<SpaceData> 
     console.warn('[Toqué] joinSpace', error);
     throw new JoinError('unknown');
   }
+}
+
+async function join(code: string, name: string): Promise<SpaceData> {
+  const auth = db().auth;
+  const { data } = await auth.getSession();
+  if (!data.session) {
+    const { error } = await auth.signInAnonymously();
+    if (error) throw error;
+  }
+  const { data: spaceId, error } = await db().rpc('join_space', { p_code: code });
+  if (error) throw error;
+  if (!spaceId) throw new JoinError('not_found');
+  const space = await loadSpace(spaceId as string);
+  space.profile = { ...space.profile, name };
+  await saveProfile(space.spaceId, space.profile);
+  remember(space);
+  return space;
 }
 
 /** Détache ce téléphone de son espace : les recettes restent dans la base, retrouvables avec l'ID. */
