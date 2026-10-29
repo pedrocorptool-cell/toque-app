@@ -116,8 +116,11 @@ export function AvatarChooser({
             extrapolate: 'clamp',
           });
           return (
+            // Sans voile : la zone n'est pas ronde, et sur Android l'appui part dès qu'on pose le doigt pour faire
+            // défiler. Le délai laisse le défilement prendre la main avant tout retour visuel.
             <Tappable
-              feedback="card"
+              feedback="opacity"
+              unstable_pressDelay={120}
               key={k}
               accessibilityRole="radio"
               accessibilityLabel={item.label}
