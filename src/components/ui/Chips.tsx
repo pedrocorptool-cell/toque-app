@@ -60,7 +60,8 @@ export function Creator({ name, avatar }: { name: string; avatar?: ImageSourcePr
   return (
     <View style={styles.creator}>
       {avatar && <Image source={avatar} style={styles.avatar} />}
-      <AppText variant="label" color={color.textSecondary}>
+      {/* Un nom trop long se coupe avec « … », jamais sur deux lignes. */}
+      <AppText variant="label" color={color.textSecondary} numberOfLines={1} style={styles.creatorName}>
         {name}
       </AppText>
     </View>
@@ -92,13 +93,18 @@ const styles = StyleSheet.create({
     flexShrink: 1,
   },
   creator: {
+    minWidth: 0,
     flexDirection: 'row',
     alignItems: 'center',
     gap: space[4],
+  },
+  creatorName: {
+    flexShrink: 1,
   },
   avatar: {
     width: 24,
     height: 24,
     borderRadius: 12,
+    flexShrink: 0,
   },
 });
