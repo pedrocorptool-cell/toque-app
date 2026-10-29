@@ -307,13 +307,18 @@ export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
 }
 
 /** Avatar et nom du créateur ; sans avatar pour un créateur lu à l'import. */
+/** « Mallory Austin | Bad Batch Baking » → « Mallory Austin » : le nom du compte, sans son slogan. */
+function shortName(name: string) {
+  return name.split(/\s+[|•·–—-]\s+/)[0].trim();
+}
+
 export function creatorOf(recipe: Recipe): { id: string; name: string; avatar?: ImageSourcePropType } {
   const creator = CREATORS.find((c) => c.id === recipe.creator);
   return creator
     ? { id: creator.id, name: creator.label, avatar: creator.avatar }
     : {
         id: recipe.creator,
-        name: recipe.creator || 'Inconnu',
+        name: shortName(recipe.creator) || 'Inconnu',
         ...(recipe.creatorAvatar ? { avatar: { uri: recipe.creatorAvatar } } : {}),
       };
 }

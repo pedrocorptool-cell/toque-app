@@ -128,7 +128,8 @@ function instructions(categories: { id: string; label: string }[]) {
       'que montre le contenu, et mets estimated à true.',
     'Si les ingrédients sont écrits mais pas les étapes, déduis des étapes courtes et simples à partir d’eux.',
     'title : le nom du plat, court, sans emoji.',
-    'creator : l’auteur, le compte ou le site (« Marmiton », « Jow », un pseudo Instagram…), vide si inconnu.',
+    'creator : l’auteur, le compte ou le site (« Marmiton », « Jow », un pseudo Instagram…), court : juste le nom, ' +
+      'sans slogan ni description (« Mallory Austin | Bad Batch Baking » devient « Mallory Austin »), vide si inconnu.',
     'creator_handle : pour une publication de réseau social, le pseudo du compte qui l’a publiée, sans @ ; sinon vide.',
     'duration : le temps total en minutes (préparation et cuisson), estimé si absent.',
     'servings : le nombre de parts pour lequel les quantités sont écrites.',

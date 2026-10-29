@@ -264,7 +264,7 @@ export default function RecipeScreen() {
             accessibilityRole={recipe.url ? 'link' : undefined}
             onPress={() => recipe.url && Linking.openURL(recipe.url)}>
             {creator.avatar && <Image source={creator.avatar} style={styles.avatar} />}
-            <AppText color={color.textOnBrandPrimary} style={styles.underline} numberOfLines={1}>
+            <AppText color={color.textOnBrandPrimary} style={[styles.underline, styles.shrink]} numberOfLines={1}>
               {creator.name}
             </AppText>
           </Tappable>
@@ -603,6 +603,11 @@ const styles = StyleSheet.create({
     width: 32,
     height: 32,
     borderRadius: 16,
+    flexShrink: 0,
+  },
+  // Un nom long se coupe avec « … » au lieu de pousser l'avatar hors de l'écran.
+  shrink: {
+    flexShrink: 1,
   },
   underline: {
     textDecorationLine: 'underline',
