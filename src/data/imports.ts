@@ -125,7 +125,7 @@ const NAAN_EXPRESS: Omit<Recipe, 'id'> = {
 };
 
 /** Pourquoi un import a échoué, pour l'écran d'erreur. */
-export type ImportFailure = 'unreachable' | 'not_a_recipe' | 'no_credits' | 'failed';
+export type ImportFailure = 'unreachable' | 'not_a_recipe' | 'not_in_caption' | 'no_credits' | 'failed';
 export class ImportFailed extends Error {
   constructor(readonly reason: ImportFailure) {
     super(reason);
@@ -168,7 +168,11 @@ export async function importRecipe(request: ImportRequest, categories: Category[
   else throw new ImportFailed('failed');
   const body = { ...page, categories: categories.map((c) => ({ id: c.id, label: c.label })) };
   const { data, error } = await supabase.functions.invoke<ReadRecipe>('import-recipe', { body });
-  if (error || !data) throw new ImportFailed(await failureOf(error));
+  if (error || !data) {
+    const reason = await failureOf(error);
+    // Sur un réseau social, la recette est souvent dans un commentaire, que la fonction ne peut pas lire.
+    throw new ImportFailed(reason === 'not_a_recipe' && request.method === 'social' ? 'not_in_caption' : reason);
+  }
 
   const source: SourceId = request.method === 'photo' ? 'photo' : (socialOf(url!) ?? 'web');
   return {
