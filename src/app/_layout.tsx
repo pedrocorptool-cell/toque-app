@@ -10,6 +10,7 @@ import * as SplashScreen from 'expo-splash-screen';
 import { StatusBar } from 'expo-status-bar';
 import { useEffect } from 'react';
 
+import { LaunchSplash } from '@/components/screens/LaunchSplash';
 import { TimerAlert } from '@/components/screens/TimerAlert';
 import { ProfileProvider } from '@/data/ProfileContext';
 import { RecipesProvider } from '@/data/RecipesContext';
@@ -55,6 +56,7 @@ export default function RootLayout() {
               />
             </Stack>
             <TimerAlert />
+            <LaunchSplash />
           </TimersProvider>
         </ShoppingProvider>
       </RecipesProvider>
