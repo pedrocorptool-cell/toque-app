@@ -98,14 +98,15 @@ export function FinishStep({ image, photoTaken, onTakePhoto, onDone, onBack }: F
   return (
     <View style={[styles.screen, { paddingTop, paddingBottom: insets.bottom + space[24] }]}>
       <View style={styles.main}>
-        <AppText variant="display" color={color.textOnBrandPrimary} style={styles.center}>
+        {/* Au-dessus du halo, qui déborde maintenant vers le haut. */}
+        <AppText variant="display" color={color.textOnBrandPrimary} style={[styles.center, styles.title]}>
           Bon appétit
         </AppText>
 
         <View>
           {/* Halo de la photo, de toute la largeur de l'écran, derrière le timbre (hors de son ombre). */}
           <View style={[styles.glow, { left: -(screenWidth - STAMP_WIDTH) / 2 }]} pointerEvents="none">
-            <BlurGlow source={image} width={screenWidth} height={STAMP_HEIGHT} blur={blur.glow} />
+            <BlurGlow source={image} width={screenWidth} height={STAMP_HEIGHT} blur={blur.glow} bleed />
           </View>
           <Animated.View style={[styles.stamp, stampMotion]}>
             <StampPaper />
@@ -259,6 +260,9 @@ const styles = StyleSheet.create({
   },
   homemade: {
     transform: [{ rotate: '-4deg' }],
+  },
+  title: {
+    zIndex: 1,
   },
   homemadeText: {
     fontFamily: font.handwritten,
