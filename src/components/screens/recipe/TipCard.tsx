@@ -2,7 +2,7 @@ import { StyleSheet, View } from 'react-native';
 import Svg, { Path, Rect } from 'react-native-svg';
 
 import { Icon, type IconName } from '@/components/icons/Icon';
-import { AppText, TextButton } from '@/components/ui';
+import { AppText } from '@/components/ui';
 import { color, font, space } from '@/theme/tokens';
 
 const CORNER = 24;
@@ -11,11 +11,12 @@ type TipCardProps = {
   text: string;
   title?: string;
   icon?: IconName;
-  action?: { label: string; icon?: IconName; onPress: () => void };
+  /** Lien souligné à la fin du texte (Figma 779:8514). */
+  link?: { label: string; onPress: () => void };
 };
 
 /** Figma : bloc « Astuce » de la carte Ingrédients, coin supérieur droit replié. */
-export function TipCard({ text, title = 'Astuce', icon = 'wine', action }: TipCardProps) {
+export function TipCard({ text, title = 'Astuce', icon = 'wine', link }: TipCardProps) {
   return (
     <View style={styles.tip}>
       <Svg width={CORNER} height={CORNER} style={styles.corner}>
@@ -28,12 +29,14 @@ export function TipCard({ text, title = 'Astuce', icon = 'wine', action }: TipCa
       <AppText variant="button" style={styles.title}>
         {title}
       </AppText>
-      <AppText variant="button">{text}</AppText>
-      {action && (
-        <View style={styles.action}>
-          <TextButton label={action.label} icon={action.icon} onPress={action.onPress} />
-        </View>
-      )}
+      <AppText variant="button">
+        {text}
+        {link && (
+          <AppText variant="button" accessibilityRole="link" onPress={link.onPress} style={styles.link}>
+            {` ${link.label}`}
+          </AppText>
+        )}
+      </AppText>
     </View>
   );
 }
@@ -61,7 +64,7 @@ const styles = StyleSheet.create({
   title: {
     fontFamily: font.medium,
   },
-  action: {
-    alignItems: 'flex-start',
+  link: {
+    textDecorationLine: 'underline',
   },
 });
