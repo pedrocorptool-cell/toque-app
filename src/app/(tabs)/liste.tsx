@@ -105,32 +105,23 @@ export default function ListeScreen() {
 
   const startNewItem = () => requestFocus(addItem());
 
-  // Pas d'écran vide : sans article à acheter, une ligne vierge attend la saisie. Elle passe en saisie, clavier
-  // ouvert, quand on arrive sur l'onglet, pas après « Tout supprimer » ni quand on coche le dernier article.
+  // Pas d'écran vide : sans article à acheter, une ligne vierge attend la saisie. C'est l'utilisateur qui la
+  // touche pour écrire : le clavier ne s'ouvre jamais tout seul (il masquerait le toast de « Tout supprimer »).
   const blankId = toBuy.length === 1 && !toBuy[0].label.trim() ? toBuy[0].id : null;
-  const focusBlank = useRef(false);
   const latestToBuy = useRef(toBuy);
   latestToBuy.current = toBuy;
-  const [arrival, setArrival] = useState(0);
   useEffect(() => {
     if (toBuy.length === 0) addItem();
   }, [toBuy.length, addItem]);
   useFocusEffect(
-    useCallback(() => {
-      focusBlank.current = true;
-      setArrival((n) => n + 1);
-      return () => {
-        focusBlank.current = false;
+    useCallback(
+      () => () => {
         // Les lignes laissées vierges disparaissent quand on quitte l'onglet.
         latestToBuy.current.filter((i) => !i.label.trim()).forEach((i) => remove(i.id));
-      };
-    }, []),
+      },
+      [],
+    ),
   );
-  useEffect(() => {
-    if (!focusBlank.current) return;
-    if (blankId) requestFocus(blankId);
-    if (blankId || toBuy.length > 0) focusBlank.current = false;
-  }, [arrival, blankId, toBuy.length]);
 
   /** La croix supprime la ligne et passe la saisie à celle du dessous (du dessus pour la dernière). */
   const removeAndFocusNext = (index: number) => {
@@ -257,7 +248,6 @@ export default function ListeScreen() {
           setClearOpen(false);
           setCleared(items);
           setToast('Liste supprimée');
-          // Pas de saisie automatique ensuite : le clavier masquerait le toast et son « Annuler ».
           clear();
         }}
       />
