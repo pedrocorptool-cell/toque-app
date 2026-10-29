@@ -263,10 +263,12 @@ export default function RecipeScreen() {
             disabled={!recipe.url}
             accessibilityRole={recipe.url ? 'link' : undefined}
             onPress={() => recipe.url && Linking.openURL(recipe.url)}>
-            {creator.avatar && <Image source={creator.avatar} style={styles.avatar} />}
-            <AppText color={color.textOnBrandPrimary} style={[styles.underline, styles.shrink]} numberOfLines={1}>
-              {creator.name}
-            </AppText>
+            <View style={styles.creator}>
+              {creator.avatar && <Image source={creator.avatar} style={styles.avatar} />}
+              <AppText color={color.textOnBrandPrimary} style={[styles.underline, styles.shrink]} numberOfLines={1}>
+                {creator.name}
+              </AppText>
+            </View>
           </Tappable>
           <View style={styles.divider} />
           {/* Recette déjà classée : ses catégories remplacent « Enregistrer » et ouvrent la même sheet. */}
@@ -605,7 +607,13 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     flexShrink: 0,
   },
-  // Un nom long se coupe avec « … » au lieu de pousser l'avatar hors de l'écran.
+  // Figma : avatar et nom tiennent dans 164 px ; un nom plus long se coupe avec « … ».
+  creator: {
+    maxWidth: 164,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
   shrink: {
     flexShrink: 1,
   },
