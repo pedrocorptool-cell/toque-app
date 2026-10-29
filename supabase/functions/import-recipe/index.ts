@@ -262,7 +262,9 @@ async function readPage(input: string) {
   ];
   return {
     url: res.url,
-    image: ogImage ? new URL(decode(ogImage), res.url).href : null,
+    // Vidéo Instagram ou TikTok : la vignette de l'og:image porte un bouton lecture incrusté, l'image du post
+    // (page d'intégration, oEmbed) n'en a pas.
+    image: post?.image ?? (ogImage ? new URL(decode(ogImage), res.url).href : null),
     logo: icons[0] ? new URL(decode(icons[0].href), res.url).href : null,
     host: new URL(res.url).hostname,
     avatar: post?.avatar ?? null,
@@ -335,7 +337,9 @@ function textOf(html: string) {
 
 /** Légende entière d'une publication Instagram (page d'intégration) ou TikTok (oEmbed), et pour Instagram la photo
  *  de profil du compte. */
-async function postOf(url: string): Promise<{ caption: string | null; avatar?: string | null } | null> {
+async function postOf(
+  url: string,
+): Promise<{ caption: string | null; avatar?: string | null; image?: string | null } | null> {
   const insta = url.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reels?|tv)\/([\w-]+)/i);
   if (insta) {
     const res = await fetch(`https://www.instagram.com/p/${insta[1]}/embed/captioned/`, {
@@ -348,8 +352,13 @@ async function postOf(url: string): Promise<{ caption: string | null; avatar?: s
       html.match(/<div class="Caption"[^>]*>([\s\S]*?)<div class="CaptionComments"/i)?.[1] ??
       html.match(/<div class="Caption"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1];
     const avatar = html.match(/class="Avatar[^"]*"[\s\S]{0,400}?<img[^>]*src="([^"]+)"/i)?.[1];
-    console.log('instagram embed', { caption: Boolean(block), avatar: Boolean(avatar) });
-    return { caption: block ? textOf(block).slice(0, 15_000) : null, avatar: avatar ? decode(avatar) : null };
+    const image = html.match(/<img[^>]*class="EmbeddedMediaImage"[^>]*src="([^"]+)"/i)?.[1];
+    console.log('instagram embed', { caption: Boolean(block), avatar: Boolean(avatar), image: Boolean(image) });
+    return {
+      caption: block ? textOf(block).slice(0, 15_000) : null,
+      avatar: avatar ? decode(avatar) : null,
+      image: image ? decode(image) : null,
+    };
   }
   if (/tiktok\.com/i.test(url)) {
     const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
@@ -359,7 +368,7 @@ async function postOf(url: string): Promise<{ caption: string | null; avatar?: s
     const data = await res.json();
     const caption =
       [data.author_unique_id && `Compte : ${data.author_unique_id}`, data.title].filter(Boolean).join('\n') || null;
-    return { caption };
+    return { caption, image: typeof data.thumbnail_url === 'string' ? data.thumbnail_url : null };
   }
   return null;
 }
