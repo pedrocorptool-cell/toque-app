@@ -303,7 +303,7 @@ export function Toast({ message, onClose, action, style }: ToastProps) {
         <AppText variant="label" style={styles.toastText}>
           {shown}
         </AppText>
-        {shownAction && <TextButton label={shownAction.label} onPress={shownAction.onPress} />}
+        {shownAction && <TextButton size="small" label={shownAction.label} onPress={shownAction.onPress} />}
         {onClose && (
           <Tappable accessibilityRole="button" accessibilityLabel="Fermer" onPress={onClose} hitSlop={space[12]}>
             <Icon name="close" />

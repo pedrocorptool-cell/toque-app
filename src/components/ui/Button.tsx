@@ -51,15 +51,17 @@ type TextButtonProps = {
   icon?: IconName;
   /** `onBrand` : en blanc, sur les fonds bruns. */
   tone?: 'default' | 'danger' | 'onBrand';
+  /** `small` : en 14 px, comme le texte qu'il accompagne (toasts). */
+  size?: 'default' | 'small';
 };
 
 /** Figma : « CTA/ Secondary » — action texte avec icône optionnelle. */
-export function TextButton({ label, onPress, icon, tone = 'default' }: TextButtonProps) {
+export function TextButton({ label, onPress, icon, tone = 'default', size = 'default' }: TextButtonProps) {
   const tint = { default: color.textPrimary, danger: color.feedbackDanger, onBrand: color.textOnBrandPrimary }[tone];
   return (
     <Tappable accessibilityRole="button" onPress={onPress} hitSlop={space[8]} style={styles.text}>
       {icon && <Icon name={icon} color={tint} />}
-      <AppText variant="button" color={tint}>
+      <AppText variant={size === 'small' ? 'label' : 'button'} color={tint}>
         {label}
       </AppText>
     </Tappable>
