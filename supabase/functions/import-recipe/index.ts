@@ -227,7 +227,8 @@ async function readPage(input: string) {
     jsonLd ? 8_000 : 30_000,
   );
   // La page d'une publication ne montre qu'un extrait de la légende : la légende complète vient à part.
-  const caption = await captionOf(res.url).catch(() => null);
+  const post = await postOf(res.url).catch(() => null);
+  const caption = post?.caption;
 
   const ogImage = meta('og:image') ?? meta('twitter:image');
   // Logo du site : l'icône d'écran d'accueil, sinon la plus grande icône PNG (les .ico et .svg ne s'affichent pas
@@ -255,12 +256,18 @@ async function readPage(input: string) {
     image: ogImage ? new URL(decode(ogImage), res.url).href : null,
     logo: icons[0] ? new URL(decode(icons[0].href), res.url).href : null,
     host: new URL(res.url).hostname,
+    avatar: post?.avatar ?? null,
     text: parts.filter(Boolean).join('\n\n'),
   };
 }
 
 /** Avatar du compte pour une publication Instagram ou TikTok (photo de profil), logo du site sinon. */
-async function findAvatar(page: { url: string; host: string; logo: string | null }, handle: string) {
+async function findAvatar(
+  page: { url: string; host: string; logo: string | null; avatar: string | null },
+  handle: string,
+) {
+  // Photo de profil lue sur la page d'intégration du post : la page du profil demande souvent de se connecter.
+  if (page.avatar) return page.avatar;
   const name = handle.replace(/^@/, '').trim();
   const profile = /^[\w.]+$/.test(name)
     ? /(^|\.)instagram\.com$/i.test(page.host)
@@ -317,8 +324,9 @@ function textOf(html: string) {
   );
 }
 
-/** Légende entière d'une publication Instagram (page d'intégration) ou TikTok (oEmbed). */
-async function captionOf(url: string): Promise<string | null> {
+/** Légende entière d'une publication Instagram (page d'intégration) ou TikTok (oEmbed), et pour Instagram la photo
+ *  de profil du compte. */
+async function postOf(url: string): Promise<{ caption: string | null; avatar?: string | null } | null> {
   const insta = url.match(/instagram\.com\/(?:[\w.]+\/)?(?:p|reels?|tv)\/([\w-]+)/i);
   if (insta) {
     const res = await fetch(`https://www.instagram.com/p/${insta[1]}/embed/captioned/`, {
@@ -330,7 +338,9 @@ async function captionOf(url: string): Promise<string | null> {
     const block =
       html.match(/<div class="Caption"[^>]*>([\s\S]*?)<div class="CaptionComments"/i)?.[1] ??
       html.match(/<div class="Caption"[^>]*>([\s\S]*?)<\/div>\s*<\/div>/i)?.[1];
-    return block ? textOf(block).slice(0, 15_000) : null;
+    const avatar = html.match(/class="Avatar[^"]*"[\s\S]{0,400}?<img[^>]*src="([^"]+)"/i)?.[1];
+    console.log('instagram embed', { caption: Boolean(block), avatar: Boolean(avatar) });
+    return { caption: block ? textOf(block).slice(0, 15_000) : null, avatar: avatar ? decode(avatar) : null };
   }
   if (/tiktok\.com/i.test(url)) {
     const res = await fetch(`https://www.tiktok.com/oembed?url=${encodeURIComponent(url)}`, {
@@ -338,9 +348,9 @@ async function captionOf(url: string): Promise<string | null> {
     });
     if (!res.ok) return null;
     const data = await res.json();
-    return (
-      [data.author_unique_id && `Compte : ${data.author_unique_id}`, data.title].filter(Boolean).join('\n') || null
-    );
+    const caption =
+      [data.author_unique_id && `Compte : ${data.author_unique_id}`, data.title].filter(Boolean).join('\n') || null;
+    return { caption };
   }
   return null;
 }
