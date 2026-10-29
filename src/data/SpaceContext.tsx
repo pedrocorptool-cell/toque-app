@@ -29,8 +29,9 @@ export type Snapshot = Omit<SpaceData, 'spaceId'> & {
 type SpaceState = {
   ready: boolean;
   snapshot: Snapshot;
-  /** Lève une `JoinError` si l'ID ne rattache pas le téléphone. */
-  join: (code: string, name: string) => Promise<void>;
+  /** Lève une `JoinError` si l'ID ne rattache pas le téléphone. Renvoie true si l'onboarding avait déjà été fait
+   *  dans cet espace : l'avatar est alors retrouvé. */
+  join: (code: string, name: string) => Promise<boolean>;
   leave: () => Promise<void>;
 };
 
@@ -69,7 +70,11 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
       snapshot,
       join: async (code, name) => {
         const space = supabase ? await joinSpace(code, name) : { ...OFFLINE, code, profile: { name }, spaceId: null };
-        setSnapshot((current) => ({ ...space, onboarded: false, version: current.version + 1 }));
+        const profile: StoredProfile = space.profile;
+        // Les espaces créés avant le drapeau `onboarded` comptent comme configurés s'ils ont un avatar.
+        const returning = profile.onboarded ?? Boolean(profile.avatar);
+        setSnapshot((current) => ({ ...space, onboarded: returning, version: current.version + 1 }));
+        return returning;
       },
       leave: async () => {
         if (supabase) await leaveSpace();

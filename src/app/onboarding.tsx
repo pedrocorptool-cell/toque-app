@@ -188,9 +188,11 @@ export default function OnboardingScreen() {
         visible={spaceOpen}
         onClose={() => setSpaceOpen(false)}
         onCreate={async (created) => {
-          await join(created.toqueId, created.name);
+          const returning = await join(created.toqueId, created.name);
           setSpaceOpen(false);
-          goTo(LAST);
+          // Espace déjà configuré (réinstallation, reconnexion) : l'avatar est retrouvé, pas besoin de le redemander.
+          if (returning) router.dismissTo('/');
+          else goTo(LAST);
         }}
       />
     </View>

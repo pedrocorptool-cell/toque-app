@@ -11,6 +11,8 @@ export type StoredProfile = {
   avatar?: Avatar;
   defaultServings?: number;
   timerSound?: TimerSoundId;
+  /** Onboarding terminé (avatar choisi) : une reconnexion le saute. */
+  onboarded?: boolean;
   seeded?: boolean;
 };
 

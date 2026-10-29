@@ -30,7 +30,7 @@ const DEFAULT_AVATAR: Avatar = { kind: 'toque', id: 'onion', background: color.a
 
 const accountOf = (snapshot: Snapshot): Account => ({ name: snapshot.profile.name ?? '', toqueId: snapshot.code });
 
-/** Réglages enregistrés avec l'espace ; `onboarded` reste sur le téléphone. */
+/** Réglages enregistrés avec l'espace, avec l'onboarding terminé pour ne pas le refaire à une reconnexion. */
 export function ProfileProvider({ children }: { children: ReactNode }) {
   const { snapshot } = useSpace();
   const { profile } = snapshot;
@@ -49,8 +49,8 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   }, [snapshot]);
 
   const stored = useMemo(
-    () => ({ name: account.name, avatar, defaultServings, timerSound }),
-    [account.name, avatar, defaultServings, timerSound],
+    () => ({ name: account.name, avatar, defaultServings, timerSound, onboarded }),
+    [account.name, avatar, defaultServings, timerSound, onboarded],
   );
   useProfileSync(stored);
 
