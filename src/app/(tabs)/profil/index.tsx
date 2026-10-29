@@ -12,12 +12,14 @@ import { AppText, Avatar, Dialog, ListCard, ListRow, TextButton, useToast, Tappa
 import { partsLabel, TIMER_SOUNDS } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { useRecipes } from '@/data/RecipesContext';
+import { useSpace } from '@/data/SpaceContext';
 import { color, radius, space } from '@/theme/tokens';
 
 /** Figma : « Profil » — identité, paramètres, import et déconnexion. */
 export default function ProfilScreen() {
   const { account, avatar, defaultServings, timerSound } = useProfile();
   const { categories } = useRecipes();
+  const { leave } = useSpace();
   const toast = useToast();
   const [guideOpen, setGuideOpen] = useState(false);
   const [importing, setImporting, importFailed, setImportFailed] = useSimulatedImport();
@@ -102,7 +104,8 @@ export default function ProfilScreen() {
         confirmLabel="Oui, me déconnecter"
         onConfirm={() => {
           setLogoutOpen(false);
-          toast.show('La déconnexion n’existe pas dans le prototype');
+          // Sans espace, l'onglet renvoie vers l'onboarding pour saisir un ID.
+          leave().catch(() => toast.show('Pas de connexion, réessaie plus tard'));
         }}
       />
     </>

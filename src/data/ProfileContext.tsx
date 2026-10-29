@@ -1,8 +1,10 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
 import { color } from '@/theme/tokens';
 
 import type { Avatar, TimerSoundId } from './profile';
+import type { Snapshot } from './SpaceContext';
+import { useProfileSync, useSpace } from './SpaceContext';
 
 /** Pseudo et ID de l'espace Toqué, saisis à l'onboarding ; vides tant que le téléphone n'a pas d'espace. */
 export type Account = { name: string; toqueId: string };
@@ -24,15 +26,33 @@ type ProfileState = {
 
 const ProfileContext = createContext<ProfileState | null>(null);
 
-// En mémoire comme le reste, jusqu'au branchement de la base.
-const NO_ACCOUNT: Account = { name: '', toqueId: '' };
+const DEFAULT_AVATAR: Avatar = { kind: 'toque', id: 'onion', background: color.accentCreme };
 
+const accountOf = (snapshot: Snapshot): Account => ({ name: snapshot.profile.name ?? '', toqueId: snapshot.code });
+
+/** Réglages enregistrés avec l'espace ; `onboarded` reste sur le téléphone. */
 export function ProfileProvider({ children }: { children: ReactNode }) {
-  const [account, setAccount] = useState(NO_ACCOUNT);
-  const [avatar, setAvatar] = useState<Avatar>({ kind: 'toque', id: 'onion', background: color.accentCreme });
-  const [defaultServings, setDefaultServings] = useState(2);
-  const [timerSound, setTimerSound] = useState<TimerSoundId>('timer');
-  const [onboarded, setOnboarded] = useState(false);
+  const { snapshot } = useSpace();
+  const { profile } = snapshot;
+  const [account, setAccount] = useState(accountOf(snapshot));
+  const [avatar, setAvatar] = useState<Avatar>(profile.avatar ?? DEFAULT_AVATAR);
+  const [defaultServings, setDefaultServings] = useState(profile.defaultServings ?? 2);
+  const [timerSound, setTimerSound] = useState<TimerSoundId>(profile.timerSound ?? 'timer');
+  const [onboarded, setOnboarded] = useState(snapshot.onboarded);
+
+  useEffect(() => {
+    setAccount(accountOf(snapshot));
+    setAvatar(snapshot.profile.avatar ?? DEFAULT_AVATAR);
+    setDefaultServings(snapshot.profile.defaultServings ?? 2);
+    setTimerSound(snapshot.profile.timerSound ?? 'timer');
+    setOnboarded(snapshot.onboarded);
+  }, [snapshot]);
+
+  const stored = useMemo(
+    () => ({ name: account.name, avatar, defaultServings, timerSound }),
+    [account.name, avatar, defaultServings, timerSound],
+  );
+  useProfileSync(stored);
 
   const value = useMemo<ProfileState>(
     () => ({

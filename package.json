@@ -6,7 +6,9 @@
     "@expo-google-fonts/kalam": "^0.4.1",
     "@expo-google-fonts/zalando-sans": "^0.4.1",
     "@expo/ui": "~57.0.25",
+    "@react-native-async-storage/async-storage": "^2.2.0",
     "@shopify/react-native-skia": "2.6.2",
+    "@supabase/supabase-js": "^2.118.0",
     "expo": "~57.0.30",
     "expo-audio": "~57.0.5",
     "expo-clipboard": "~57.0.2",
@@ -35,6 +37,7 @@
     "react-native-safe-area-context": "~5.7.0",
     "react-native-screens": "~4.26.0",
     "react-native-svg": "15.15.4",
+    "react-native-url-polyfill": "^4.0.0",
     "react-native-web": "~0.21.4",
     "react-native-worklets": "0.10.1"
   },

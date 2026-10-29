@@ -1,8 +1,9 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-/** Article de la liste de courses : ingrédient déjà mis à l'échelle (« 300 g de rigatoni »)
- *  ou saisi à la main. */
-export type ShoppingItem = { id: string; label: string; checked: boolean; recipeId?: string };
+import { newItemId as newId, type ShoppingItem } from './shopping';
+import { useRowSync, useSpace } from './SpaceContext';
+
+export type { ShoppingItem };
 
 type ShoppingState = {
   items: ShoppingItem[];
@@ -20,23 +21,15 @@ type ShoppingState = {
   move: (id: string, to: number) => void;
 };
 
-let lastId = 0;
-const newId = () => `item-${++lastId}`;
-
-/** Quelques articles de démo, dans l'esprit de la maquette (3 à acheter, 2 cochés). */
-const DEMO: ShoppingItem[] = [
-  { id: newId(), label: 'Lait demi-écrémé', checked: false },
-  { id: newId(), label: '6 œufs', checked: false },
-  { id: newId(), label: 'Beurre doux', checked: false },
-  { id: newId(), label: 'Farine', checked: true },
-  { id: newId(), label: 'Sucre en poudre', checked: true },
-];
-
 const ShoppingContext = createContext<ShoppingState | null>(null);
 
-/** Liste de courses du prototype, en mémoire : elle revient à la démo au redémarrage de l'app. */
+/** Liste de courses de l'espace, enregistrée dans la base à chaque modification. */
 export function ShoppingProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState(DEMO);
+  const { snapshot } = useSpace();
+  const [items, setItems] = useState(snapshot.shopping);
+
+  useEffect(() => setItems(snapshot.shopping), [snapshot]);
+  useRowSync('shopping_items', items, snapshot.shopping);
 
   const value = useMemo<ShoppingState>(
     () => ({

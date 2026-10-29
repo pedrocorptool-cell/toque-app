@@ -1,6 +1,8 @@
-import { createContext, useContext, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
 
-import { CATEGORIES, RECIPES, type Category, type CategoryId, type Recipe } from './recipes';
+import { type Category, type CategoryId, type Recipe } from './recipes';
+import { encodeRecipe } from './space';
+import { useRowSync, useSpace } from './SpaceContext';
 
 type RecipesState = {
   recipes: Recipe[];
@@ -20,10 +22,18 @@ type RecipesState = {
 
 const RecipesContext = createContext<RecipesState | null>(null);
 
-/** État partagé du prototype, en mémoire : tout revient à zéro au redémarrage de l'app. */
+/** Recettes et catégories de l'espace, enregistrées dans la base à chaque modification. */
 export function RecipesProvider({ children }: { children: ReactNode }) {
-  const [recipes, setRecipes] = useState(RECIPES);
-  const [categories, setCategories] = useState(CATEGORIES);
+  const { snapshot } = useSpace();
+  const [recipes, setRecipes] = useState(snapshot.recipes);
+  const [categories, setCategories] = useState(snapshot.categories);
+
+  useEffect(() => {
+    setRecipes(snapshot.recipes);
+    setCategories(snapshot.categories);
+  }, [snapshot]);
+  useRowSync('recipes', recipes, snapshot.recipes, encodeRecipe);
+  useRowSync('categories', categories, snapshot.categories);
 
   const value = useMemo<RecipesState>(
     () => ({

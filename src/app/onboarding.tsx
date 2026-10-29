@@ -8,6 +8,7 @@ import { SpaceSheet } from '@/components/screens/onboarding/SpaceSheet';
 import { AvatarChooser } from '@/components/screens/profile/AvatarChooser';
 import { AppText, Button, IconButton, Logo, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
+import { useSpace } from '@/data/SpaceContext';
 import type { AvatarId } from '@/data/profile';
 import { color, font, radius, space } from '@/theme/tokens';
 
@@ -51,7 +52,8 @@ const ART_GAP = space[40];
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
   const { width } = useWindowDimensions();
-  const { account, setAccount, avatar, setAvatar, setOnboarded } = useProfile();
+  const { account, avatar, setAvatar, setOnboarded } = useProfile();
+  const { join } = useSpace();
   // Revue depuis le profil : l'espace existe déjà, l'avatar se valide sans créer de compte.
   const [hadAccount] = useState(Boolean(account.toqueId));
   const hasAccount = Boolean(account.toqueId);
@@ -185,8 +187,8 @@ export default function OnboardingScreen() {
       <SpaceSheet
         visible={spaceOpen}
         onClose={() => setSpaceOpen(false)}
-        onCreate={(created) => {
-          setAccount(created);
+        onCreate={async (created) => {
+          await join(created.toqueId, created.name);
           setSpaceOpen(false);
           goTo(LAST);
         }}

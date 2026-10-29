@@ -15,12 +15,23 @@ import { TimerAlert } from '@/components/screens/TimerAlert';
 import { ProfileProvider } from '@/data/ProfileContext';
 import { RecipesProvider } from '@/data/RecipesContext';
 import { ShoppingProvider } from '@/data/ShoppingContext';
+import { SpaceProvider, useSpace } from '@/data/SpaceContext';
 import { TimersProvider } from '@/data/TimersContext';
 import { color } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
 
 export default function RootLayout() {
+  return (
+    <SpaceProvider>
+      <App />
+    </SpaceProvider>
+  );
+}
+
+/** L'écran de lancement reste affiché le temps de charger les polices et de retrouver l'espace du téléphone. */
+function App() {
+  const { ready } = useSpace();
   const [loaded, error] = useFonts({
     ZalandoSans_300Light,
     ZalandoSans_400Regular,
@@ -30,11 +41,13 @@ export default function RootLayout() {
     Kalam_400Regular,
   });
 
-  useEffect(() => {
-    if (loaded || error) SplashScreen.hideAsync();
-  }, [loaded, error]);
+  const done = (loaded || !!error) && ready;
 
-  if (!loaded && !error) return null;
+  useEffect(() => {
+    if (done) SplashScreen.hideAsync();
+  }, [done]);
+
+  if (!done) return null;
 
   return (
     <ProfileProvider>

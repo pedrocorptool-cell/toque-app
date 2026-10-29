@@ -3,32 +3,51 @@ import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText, BottomSheet, Button } from '@/components/ui';
 import { isToqueId } from '@/data/profile';
+import { JoinError, type JoinErrorKind } from '@/data/space';
 import { color, radius, space, text } from '@/theme/tokens';
 
 type SpaceSheetProps = {
   visible: boolean;
   onClose: () => void;
-  onCreate: (account: { name: string; toqueId: string }) => void;
+  /** Rattache le téléphone à l'espace ; lève une `JoinError` si l'ID ne convient pas. */
+  onCreate: (account: { name: string; toqueId: string }) => Promise<void>;
 };
 
 /**
  * Figma « Onbarding » (748:6064) : après la 3e étape, le pseudo et l'ID d'invitation donné par Pierre
- * rattachent le téléphone à son espace. Tant que la base n'est pas branchée, seul le format de l'ID est vérifié.
+ * rattachent le téléphone à son espace. Le format de l'ID est vérifié ici, son existence par la base.
  */
+const MESSAGES: Record<JoinErrorKind | 'format', string> = {
+  format: 'Cet ID ne ressemble pas à un ID Toqué, par exemple FolleCourgette#0001.',
+  not_found: 'Cet ID n’existe pas. Vérifie les majuscules et les chiffres après le #.',
+  too_many: 'Trop d’essais. Réessaie dans 15 minutes.',
+  offline: 'Pas de connexion. Vérifie ton réseau et réessaie.',
+  unknown: 'Impossible de rejoindre ton espace pour l’instant. Réessaie plus tard.',
+};
+
 export function SpaceSheet({ visible, onClose, onCreate }: SpaceSheetProps) {
   const [name, setName] = useState('');
   const [toqueId, setToqueId] = useState('');
-  const [idError, setIdError] = useState(false);
+  const [idError, setIdError] = useState<keyof typeof MESSAGES | null>(null);
+  const [busy, setBusy] = useState(false);
   const idField = useRef<TextInput>(null);
 
   useEffect(() => {
-    if (visible) setIdError(false);
+    if (visible) setIdError(null);
   }, [visible]);
 
-  const submit = () => {
+  const submit = async () => {
     const id = toqueId.trim();
-    if (!isToqueId(id)) return setIdError(true);
-    onCreate({ name: name.trim(), toqueId: id });
+    if (busy || !name.trim()) return;
+    if (!isToqueId(id)) return setIdError('format');
+    setBusy(true);
+    try {
+      await onCreate({ name: name.trim(), toqueId: id });
+    } catch (error) {
+      setIdError(error instanceof JoinError ? error.kind : 'unknown');
+    } finally {
+      setBusy(false);
+    }
   };
 
   return (
@@ -54,7 +73,7 @@ export function SpaceSheet({ visible, onClose, onCreate }: SpaceSheetProps) {
           value={toqueId}
           onChangeText={(value) => {
             setToqueId(value);
-            if (idError) setIdError(false);
+            if (idError) setIdError(null);
           }}
           placeholder="Ton ID Toqué"
           placeholderTextColor={color.textSecondary}
@@ -67,11 +86,16 @@ export function SpaceSheet({ visible, onClose, onCreate }: SpaceSheetProps) {
         />
         {idError && (
           <AppText variant="label" color={color.feedbackDanger} accessibilityLiveRegion="polite">
-            Cet ID ne ressemble pas à un ID Toqué, par exemple FolleCourgette#0001.
+            {MESSAGES[idError]}
           </AppText>
         )}
       </View>
-      <Button block label="Continuer" disabled={!name.trim() || !toqueId.trim()} onPress={submit} />
+      <Button
+        block
+        label={busy ? 'Vérification…' : 'Continuer'}
+        disabled={busy || !name.trim() || !toqueId.trim()}
+        onPress={submit}
+      />
     </BottomSheet>
   );
 }

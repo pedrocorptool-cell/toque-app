@@ -44,6 +44,9 @@ export type Step = {
 const PASTA = require('@/assets/images/demo/pasta.jpg');
 const NAAN = require('@/assets/images/demo/naan.jpg');
 
+/** Vignettes livrées avec l'app, enregistrées par leur nom dans la base (une photo garde son adresse). */
+export const BUNDLED_IMAGES: Record<string, number> = { pasta: PASTA, naan: NAAN };
+
 export type Category = {
   id: CategoryId;
   label: string;
