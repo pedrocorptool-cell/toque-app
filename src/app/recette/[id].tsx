@@ -1,4 +1,5 @@
 import * as Clipboard from 'expo-clipboard';
+import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
 import { Image, Linking, ScrollView, StyleSheet, useWindowDimensions, View } from 'react-native';
@@ -10,6 +11,7 @@ import { PaperCard } from '@/components/screens/recipe/PaperCard';
 import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
 import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
+import { PICKER, picked } from '@/components/screens/import/PhotoImport';
 import { TipCard } from '@/components/screens/recipe/TipCard';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import {
@@ -27,6 +29,7 @@ import {
   Tappable,
 } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
+import { importRecipe } from '@/data/imports';
 import { useProfile } from '@/data/ProfileContext';
 import { creatorOf, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -48,7 +51,8 @@ const TABS = [
 /** Fin du toast d'ajout à la liste de courses, qui porte l'action « Voir ». */
 const LIST_TOAST_END = 'à la liste';
 const ESTIMATED =
-  'Les quantités n’étaient pas écrites dans la publication (sûrement dans la vidéo) : Toqué les a estimées.';
+  'Les quantités n’étaient pas écrites dans la publication : Toqué les a estimées. Si la recette est en ' +
+  'commentaire, fais-en une capture pour la corriger.';
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
 /** Bouton flottant « Démarrer la recette » : 48 px de haut, à 32 px du bas de l'écran. */
@@ -63,7 +67,7 @@ const CTA_SPACE = CTA_BOTTOM + 48 + space[16];
 export default function RecipeScreen() {
   // « etape » : index de l'étape à montrer, quand on revient sur la fiche depuis la carte d'un minuteur.
   const { id, importee, etape } = useLocalSearchParams<{ id: string; importee?: string; etape?: string }>();
-  const { recipes, removeRecipe, categories, setRecipeCategories } = useRecipes();
+  const { recipes, removeRecipe, categories, setRecipeCategories, updateRecipe } = useRecipes();
   const { addFromRecipe } = useShopping();
   const insets = useSafeAreaInsets();
   const { width: screenWidth } = useWindowDimensions();
@@ -130,6 +134,32 @@ export default function RecipeScreen() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const blurRef = useRef<View>(null);
+
+  // Recette estimée : une capture du commentaire qui donne la recette remplace ingrédients et étapes, en gardant
+  // le titre, l'image et le créateur du post.
+  const [correcting, setCorrecting] = useState(false);
+  const correct = async () => {
+    const result = await ImagePicker.launchImageLibraryAsync(PICKER);
+    if (result.canceled || !recipe) return;
+    setCorrecting(true);
+    try {
+      const read = await importRecipe({ method: 'photo', ...picked(result.assets[0]) }, categories);
+      updateRecipe(recipe.id, {
+        servings: read.servings,
+        duration: read.duration,
+        kcal: read.kcal,
+        ingredients: read.ingredients,
+        steps: read.steps,
+        tip: read.tip ?? recipe.tip,
+        estimated: undefined,
+      });
+      setToast('Recette corrigée avec ta capture');
+    } catch {
+      setToast('Toqué n’a pas trouvé la recette sur cette capture');
+    } finally {
+      setCorrecting(false);
+    }
+  };
 
   useEffect(() => {
     if (!toast) return;
@@ -294,7 +324,16 @@ export default function RecipeScreen() {
               ))}
               {recipe.estimated && (
                 // En attendant la maquette dédiée : même bloc que l'astuce.
-                <TipCard icon="magic" title="Quantités estimées" text={ESTIMATED} />
+                <TipCard
+                  icon="magic"
+                  title="Quantités estimées"
+                  text={ESTIMATED}
+                  action={{
+                    label: correcting ? 'Lecture de la capture…' : 'Corriger avec une capture',
+                    icon: 'images',
+                    onPress: () => !correcting && correct(),
+                  }}
+                />
               )}
               {recipe.tip && <TipCard text={recipe.tip} />}
             </PaperCard>

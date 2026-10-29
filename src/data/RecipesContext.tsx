@@ -18,6 +18,8 @@ type RecipesState = {
   setRecipeCategories: (id: string, categories: CategoryId[]) => void;
   /** Remplace la vignette par la photo du plat prise en fin de recette. */
   setRecipeImage: (id: string, uri: string) => void;
+  /** Remplace une partie de la recette (quantités corrigées depuis une capture). */
+  updateRecipe: (id: string, patch: Partial<Recipe>) => void;
 };
 
 const RecipesContext = createContext<RecipesState | null>(null);
@@ -50,6 +52,7 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
       setRecipeCategories: (id, ids) =>
         setRecipes((list) => list.map((r) => (r.id === id ? { ...r, categories: ids } : r))),
       setRecipeImage: (id, uri) => setRecipes((list) => list.map((r) => (r.id === id ? { ...r, image: { uri } } : r))),
+      updateRecipe: (id, patch) => setRecipes((list) => list.map((r) => (r.id === id ? { ...r, ...patch } : r))),
     }),
     [recipes, categories],
   );

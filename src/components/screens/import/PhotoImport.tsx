@@ -8,10 +8,10 @@ import { color, space } from '@/theme/tokens';
 import { IconOption } from './ImportOption';
 
 // La photo part en base64 vers l'IA : une qualité moyenne suffit à lire le texte et allège l'envoi.
-const PICKER: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.5, base64: true };
+export const PICKER: ImagePicker.ImagePickerOptions = { mediaTypes: ['images'], quality: 0.5, base64: true };
 
 export type PickedPhoto = { uri: string; base64?: string; mimeType?: string };
-const picked = (asset: ImagePicker.ImagePickerAsset): PickedPhoto => ({
+export const picked = (asset: ImagePicker.ImagePickerAsset): PickedPhoto => ({
   uri: asset.uri,
   base64: asset.base64 ?? undefined,
   mimeType: asset.mimeType ?? undefined,
