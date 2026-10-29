@@ -35,7 +35,20 @@ const PAUSE = 600;
  * Figma « Import en cours » : plein écran brun, assiette et couverts. Les trois ingrédients tombent l'un après
  * l'autre dans l'assiette, puis la boucle reprend après une courte pause.
  */
-export function ImportLoading({ visible, onCancel }: { visible: boolean; onCancel: () => void }) {
+type ImportLoadingProps = {
+  visible: boolean;
+  onCancel: () => void;
+  /** Même écran pour la correction d'une recette par capture, avec son propre texte. */
+  title?: string;
+  message?: string;
+};
+
+export function ImportLoading({
+  visible,
+  onCancel,
+  title = 'Import en cours',
+  message = 'On importe ta recette, elle sera prête d’ici un instant !',
+}: ImportLoadingProps) {
   const insets = useSafeAreaInsets();
   return (
     <Modal visible={visible} animationType="fade" statusBarTranslucent onRequestClose={onCancel}>
@@ -49,10 +62,10 @@ export function ImportLoading({ visible, onCancel }: { visible: boolean; onCance
           </View>
           <View style={styles.texts}>
             <AppText variant="headline" color={color.textOnBrandPrimary} style={styles.center}>
-              Import en cours
+              {title}
             </AppText>
             <AppText color={color.textOnBrandSecondary} style={[styles.center, styles.message]}>
-              On importe ta recette, elle sera prête d’ici un instant !
+              {message}
             </AppText>
           </View>
         </View>

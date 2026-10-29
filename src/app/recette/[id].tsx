@@ -11,6 +11,7 @@ import { PaperCard } from '@/components/screens/recipe/PaperCard';
 import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
 import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
+import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { PICKER, picked } from '@/components/screens/import/PhotoImport';
 import { TipCard } from '@/components/screens/recipe/TipCard';
 import { TimerSheet } from '@/components/screens/TimerSheet';
@@ -136,12 +137,16 @@ export default function RecipeScreen() {
   // Recette estimée : une capture du commentaire qui donne la recette remplace ingrédients et étapes, en gardant
   // le titre, l'image et le créateur du post.
   const [correcting, setCorrecting] = useState(false);
+  // « Annuler » sur l'écran d'attente : la réponse qui arrive ensuite est ignorée.
+  const correction = useRef(0);
   const correct = async () => {
     const result = await ImagePicker.launchImageLibraryAsync(PICKER);
     if (result.canceled || !recipe) return;
+    const run = ++correction.current;
     setCorrecting(true);
     try {
       const read = await importRecipe({ method: 'photo', ...picked(result.assets[0]) }, categories);
+      if (run !== correction.current) return;
       updateRecipe(recipe.id, {
         servings: read.servings,
         duration: read.duration,
@@ -151,11 +156,11 @@ export default function RecipeScreen() {
         tip: read.tip ?? recipe.tip,
         estimated: undefined,
       });
-      setToast('Recette corrigée avec ta capture');
+      setToast('Quantités mises à jour');
     } catch {
-      setToast('Toqué n’a pas trouvé la recette sur cette capture');
+      if (run === correction.current) setToast('Toqué n’a pas trouvé la recette sur cette capture');
     } finally {
-      setCorrecting(false);
+      if (run === correction.current) setCorrecting(false);
     }
   };
 
@@ -327,8 +332,8 @@ export default function RecipeScreen() {
                   title="Quantités estimées"
                   text={ESTIMATED}
                   link={{
-                    label: correcting ? 'lecture de la capture…' : 'ajoute-les avec une capture.',
-                    onPress: () => !correcting && correct(),
+                    label: 'ajoute-les avec une capture.',
+                    onPress: correct,
                   }}
                 />
               )}
@@ -378,6 +383,15 @@ export default function RecipeScreen() {
         </View>
       )}
 
+      <ImportLoading
+        visible={correcting}
+        title="Mise à jour des quantités"
+        message="On lit ta capture et on met ta recette à jour !"
+        onCancel={() => {
+          correction.current++;
+          setCorrecting(false);
+        }}
+      />
       <Toast
         message={toast}
         onClose={() => setToast(null)}
