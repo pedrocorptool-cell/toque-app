@@ -106,7 +106,7 @@ export default function ListeScreen() {
   const startNewItem = () => requestFocus(addItem());
 
   // Pas d'écran vide : sans article à acheter, une ligne vierge attend la saisie. Elle passe en saisie, clavier
-  // ouvert, quand on arrive sur l'onglet ou après « Tout supprimer », pas quand on coche le dernier article.
+  // ouvert, quand on arrive sur l'onglet, pas après « Tout supprimer » ni quand on coche le dernier article.
   const blankId = toBuy.length === 1 && !toBuy[0].label.trim() ? toBuy[0].id : null;
   const focusBlank = useRef(false);
   const latestToBuy = useRef(toBuy);
@@ -257,12 +257,8 @@ export default function ListeScreen() {
           setClearOpen(false);
           setCleared(items);
           setToast('Liste supprimée');
+          // Pas de saisie automatique ensuite : le clavier masquerait le toast et son « Annuler ».
           clear();
-          // Après la fermeture du dialogue, qui rend sinon le focus au bouton « Tout supprimer ».
-          setTimeout(() => {
-            focusBlank.current = true;
-            setArrival((n) => n + 1);
-          }, 300);
         }}
       />
     </View>
