@@ -13,7 +13,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
-import { CheckedRow, ROW_PITCH, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
+import { CheckedRow, LINE_HEIGHT, ROW_GAP, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
 import { haptics } from '@/data/haptics';
@@ -67,6 +67,9 @@ export default function ListeScreen() {
   // Glisser-déposer par la poignée : la ligne suit le doigt, les autres s'écartent d'une ligne.
   const [drag, setDrag] = useState<Drag | null>(null);
   const dragY = useRef(new Animated.Value(0)).current;
+  // Hauteur de chaque ligne : un article long en fait plusieurs, le pas du déplacement suit.
+  const heights = useRef(new Map<string, number>()).current;
+  const pitchOf = (index: number) => (heights.get(toBuy[index]?.id) ?? LINE_HEIGHT) + ROW_GAP;
 
   const startDrag = (id: string, from: number) => {
     Keyboard.dismiss();
@@ -78,7 +81,11 @@ export default function ListeScreen() {
     dragY.setValue(dy);
     setDrag((d) => {
       if (!d) return d;
-      const to = Math.max(0, Math.min(toBuy.length - 1, d.from + Math.round(dy / ROW_PITCH)));
+      // La ligne prend la place d'une voisine dès qu'elle en a franchi la moitié.
+      let to = d.from;
+      let passed = 0;
+      while (dy > 0 && to + 1 < toBuy.length && dy > passed + pitchOf(to + 1) / 2) passed += pitchOf(++to);
+      while (dy < 0 && to > 0 && -dy > passed + pitchOf(to - 1) / 2) passed += pitchOf(--to);
       return to === d.to ? d : { ...d, to };
     });
   };
@@ -98,8 +105,9 @@ export default function ListeScreen() {
   /** Décalage des autres lignes pendant un déplacement. */
   const shiftOf = (index: number) => {
     if (!drag) return 0;
-    if (drag.from < drag.to && index > drag.from && index <= drag.to) return -ROW_PITCH;
-    if (drag.from > drag.to && index >= drag.to && index < drag.from) return ROW_PITCH;
+    const pitch = pitchOf(drag.from);
+    if (drag.from < drag.to && index > drag.from && index <= drag.to) return -pitch;
+    if (drag.from > drag.to && index >= drag.to && index < drag.from) return pitch;
     return 0;
   };
 
@@ -188,6 +196,7 @@ export default function ListeScreen() {
                 onDragStart={() => startDrag(item.id, index)}
                 onDragMove={moveDrag}
                 onDragEnd={endDrag}
+                onHeight={(h) => heights.set(item.id, h)}
               />
             ))}
 

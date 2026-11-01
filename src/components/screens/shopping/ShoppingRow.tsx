@@ -7,8 +7,10 @@ import type { ShoppingItem } from '@/data/ShoppingContext';
 import { motion } from '@/theme/motion';
 import { color, space, text } from '@/theme/tokens';
 
-/** Hauteur d'une ligne (24 px) plus l'écart entre deux lignes (16 px) : le pas du glisser-déposer. */
-export const ROW_PITCH = 24 + space[16];
+/** Hauteur d'une ligne de texte (24 px), celle de la case : un article sur une ligne. */
+export const LINE_HEIGHT = 24;
+/** Écart entre deux articles : avec la hauteur réelle de chaque ligne, le pas du glisser-déposer. */
+export const ROW_GAP = space[16];
 
 type ToBuyRowProps = {
   item: ShoppingItem;
@@ -29,6 +31,8 @@ type ToBuyRowProps = {
   onDragStart: () => void;
   onDragMove: (dy: number) => void;
   onDragEnd: () => void;
+  /** Hauteur réelle de la ligne : un article long passe sur plusieurs lignes. */
+  onHeight: (height: number) => void;
 };
 
 /** Figma « Liste » : poignée, case à cocher, texte modifiable sur place, croix quand la ligne est en saisie. */
@@ -56,7 +60,9 @@ export function ToBuyRow(props: ToBuyRowProps) {
   }, [focusRequest]);
 
   return (
-    <Animated.View style={[styles.row, dragging && styles.dragging, { transform: [{ translateY: offset }] }]}>
+    <Animated.View
+      onLayout={(e) => props.onHeight(e.nativeEvent.layout.height)}
+      style={[styles.row, dragging && styles.dragging, { transform: [{ translateY: offset }] }]}>
       <View {...pan.panHandlers} style={styles.handle} accessibilityLabel={`Déplacer ${item.label}`}>
         <Icon name="grip" color={color.textPrimary} />
       </View>
@@ -64,11 +70,17 @@ export function ToBuyRow(props: ToBuyRowProps) {
       <TextInput
         ref={input}
         value={item.label}
-        onChangeText={props.onRename}
+        // Le texte passe à la ligne tout seul ; Entrée garde son rôle (article suivant), jamais de saut de ligne.
+        multiline
+        scrollEnabled={false}
+        onChangeText={(label) => props.onRename(label.replace(/\n/g, ' '))}
         onFocus={props.onFocus}
         onBlur={props.onBlur}
         onSubmitEditing={props.onSubmit}
         submitBehavior="submit"
+        // Le web ne connaît pas submitBehavior : sans ça, Entrée ajouterait un saut de ligne dans un champ multiligne.
+        // Il ne fait pas non plus grandir le champ : une ligne au départ, puis la hauteur du texte (style input).
+        {...(Platform.OS === 'web' && { blurOnSubmit: true, numberOfLines: 1 })}
         returnKeyType="next"
         placeholder="Nouvel article"
         placeholderTextColor={color.textSecondary}
@@ -128,7 +140,7 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
       <View style={styles.checkedLabel}>
         <AppText
           color={color.textSecondary}
-          style={multiline && styles.struck}
+          style={[styles.lines, multiline && styles.struck]}
           onTextLayout={(e) => setMultiline(e.nativeEvent.lines.length > 1)}>
           {item.label}
         </AppText>
@@ -141,10 +153,11 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
 }
 
 const styles = StyleSheet.create({
+  // Sur plusieurs lignes, la case, la poignée et la croix restent en face de la première.
   row: {
-    minHeight: 24,
+    minHeight: LINE_HEIGHT,
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: space[8],
     backgroundColor: color.bgPage,
   },
@@ -160,17 +173,24 @@ const styles = StyleSheet.create({
   },
   input: {
     ...text.body,
+    lineHeight: LINE_HEIGHT,
     flex: 1,
     padding: 0,
+    paddingTop: 0,
+    paddingBottom: 0,
+    textAlignVertical: 'top',
     color: color.textPrimary,
     // Sur le web, le navigateur entoure le champ actif ; la croix suffit à montrer la saisie.
-    ...(Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)),
+    ...(Platform.OS === 'web' && ({ outlineStyle: 'none', fieldSizing: 'content', resize: 'none' } as object)),
   },
   checkedRow: {
     paddingLeft: 24 + space[8],
   },
   checkedLabel: {
     flexShrink: 1,
+  },
+  lines: {
+    lineHeight: LINE_HEIGHT,
   },
   struck: {
     textDecorationLine: 'line-through',
