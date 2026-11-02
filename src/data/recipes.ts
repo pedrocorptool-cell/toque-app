@@ -357,9 +357,11 @@ export function stepIngredients(recipe: Recipe, index: number): Ingredient[] {
   const words = normalize(step.text.replace(/œ/g, 'oe'))
     .split(/[^a-z]+/)
     .map((w) => w.slice(0, 5));
+  // Seul le mot principal compte (« chocolat » dans « chocolat blanc ») : « cuire à blanc » ne fait pas venir le
+  // chocolat blanc.
   return recipe.ingredients.filter((ingredient) => {
-    const own = ingredientWords(ingredient.name);
-    return own.length > 0 && own.some((w) => words.includes(w));
+    const main = ingredientWords(ingredient.name)[0];
+    return main !== undefined && words.includes(main);
   });
 }
 
