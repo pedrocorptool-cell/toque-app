@@ -92,9 +92,12 @@ export default function StepByStepScreen() {
     }, [id, setFocusedRecipeId]),
   );
 
-  // Minuteurs lancés, de cette recette et des autres : regroupés dans une pastille parmi les actions du bas (le
-  // plus proche de sonner affiché).
-  const timers = orderTimers(allTimers, id);
+  // Minuteurs lancés de cette recette seulement : regroupés dans une pastille parmi les actions du bas (le plus
+  // proche de sonner affiché). Ceux des autres recettes restent sur leur card de la home.
+  const timers = orderTimers(
+    allTimers.filter((t) => t.recipeId === id),
+    id,
+  );
   const nextTimer = [...timers].sort((x, y) => x.remaining - y.remaining)[0];
 
   // Un minuteur arrive à zéro : la sheet s'ouvre, comme sur la fiche.
