@@ -1,6 +1,14 @@
 import { router } from 'expo-router';
 import { useEffect, useRef, useState } from 'react';
-import { AccessibilityInfo, Animated, BackHandler, StyleSheet, View, useWindowDimensions } from 'react-native';
+import {
+  AccessibilityInfo,
+  Animated,
+  BackHandler,
+  StyleSheet,
+  type GestureResponderEvent,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ART, OnboardingArt, type ArtName } from '@/components/screens/onboarding/OnboardingArt';
@@ -42,6 +50,8 @@ const DOT_ACTIVE = 16;
 /** Figma : texte sur 4 lignes de 38 px, à 40 px sous l'illustration. */
 const TEXT_HEIGHT = 4 * 38;
 const ART_GAP = space[40];
+/** Distance d'un glissé vers l'étape suivante, en px. */
+const SWIPE = 40;
 
 /**
  * Figma « Onbarding » (578:7999) : quatre écrans sur le fond brun, au premier lancement et depuis le profil.
@@ -58,6 +68,11 @@ export default function OnboardingScreen() {
   const [hadAccount] = useState(Boolean(account.toqueId));
   const hasAccount = Boolean(account.toqueId);
   const [spaceOpen, setSpaceOpen] = useState(false);
+  // Sans espace, la page de l'avatar n'existe pas encore : on ne peut pas l'atteindre en glissant. Elle apparaît une
+  // fois le compte créé, et on y va dès qu'elle est en place.
+  const pages = hasAccount ? STEPS : STEPS.slice(0, LAST);
+  const [avatarPending, setAvatarPending] = useState(false);
+  const touchX = useRef(0);
   const [avatarId, setAvatarId] = useState<AvatarId>(avatar.kind === 'toque' ? avatar.id : 'onion');
   const [background, setBackground] = useState(avatar.kind === 'toque' ? avatar.background : color.accentCreme);
   const [index, setIndex] = useState(0);
@@ -126,7 +141,7 @@ export default function OnboardingScreen() {
       <View style={styles.pager} onLayout={(e) => setPageHeight(e.nativeEvent.layout.height)}>
         <Animated.FlatList
           ref={pager}
-          data={STEPS}
+          data={pages}
           keyExtractor={(step) => step.key}
           horizontal
           pagingEnabled
@@ -137,12 +152,20 @@ export default function OnboardingScreen() {
             useNativeDriver: false,
             listener: (e: { nativeEvent: { contentOffset: { x: number } } }) => {
               const i = Math.round(e.nativeEvent.contentOffset.x / width);
-              if (i !== index && i >= 0 && i <= (hasAccount ? LAST : LAST - 1)) setIndex(i);
+              if (i !== index && i >= 0 && i < pages.length) setIndex(i);
             },
           })}
-          onMomentumScrollEnd={(e) => {
-            // Glissé jusqu'à l'avatar sans espace : retour à la 3e étape, la sheet s'ouvre.
-            if (!hasAccount && Math.round(e.nativeEvent.contentOffset.x / width) === LAST) askSpace();
+          // Glisser vers la gauche sur la 3e étape fait comme « Continuer » : sans espace, la sheet s'ouvre.
+          onTouchStart={(e) => (touchX.current = pageXOf(e))}
+          onTouchEnd={(e) => {
+            const swipedNext = touchX.current - pageXOf(e) > SWIPE;
+            if (swipedNext && !hasAccount && index === LAST - 1 && !spaceOpen) askSpace();
+          }}
+          onContentSizeChange={(w) => {
+            if (avatarPending && w >= STEPS.length * width - 1) {
+              setAvatarPending(false);
+              goTo(LAST);
+            }
           }}
           scrollEventThrottle={16}
           renderItem={({ item, index: i }) =>
@@ -192,11 +215,17 @@ export default function OnboardingScreen() {
           setSpaceOpen(false);
           // Espace déjà configuré (réinstallation, reconnexion) : l'avatar est retrouvé, pas besoin de le redemander.
           if (returning) router.dismissTo('/');
-          else goTo(LAST);
+          else setAvatarPending(true);
         }}
       />
     </View>
   );
+}
+
+/** Abscisse du doigt : le web passe l'événement du navigateur, où elle est dans `changedTouches`. */
+function pageXOf(e: GestureResponderEvent) {
+  const event = e.nativeEvent as GestureResponderEvent['nativeEvent'] & { changedTouches?: { pageX: number }[] };
+  return event.pageX ?? event.changedTouches?.[0]?.pageX ?? 0;
 }
 
 /** Les trois présentations : l'avatar, qui crée le compte, n'a pas de pastille (Figma 748:6241). */
