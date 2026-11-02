@@ -2,9 +2,7 @@ import type { ReactNode } from 'react';
 import { ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, IconButton, Logo, Toast, type ToastState } from '@/components/ui';
-import { useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
 import { color, radius, space } from '@/theme/tokens';
 
@@ -20,7 +18,6 @@ type ProfileScreenProps = {
 export function ProfileScreen({ title, back, toast, children }: ProfileScreenProps) {
   const insets = useSafeAreaInsets();
   // Pastille des minuteurs par-dessus la feuille : le contenu et le toast lui laissent la place.
-  const docked = useTimers().timers.length > 0;
   return (
     <View style={styles.screen}>
       <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
@@ -37,20 +34,11 @@ export function ProfileScreen({ title, back, toast, children }: ProfileScreenPro
         </View>
       </View>
 
-      <ScrollView
-        style={styles.sheet}
-        contentContainerStyle={[styles.content, docked && { paddingBottom: space[16] + TIMER_DOCK_SPACE }]}
-        keyboardShouldPersistTaps="handled">
+      <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
         {children}
       </ScrollView>
 
-      <TimerDock />
-
-      <Toast
-        message={toast.message}
-        onClose={toast.hide}
-        style={[styles.toast, docked && { bottom: space[16] + TIMER_DOCK_SPACE }]}
-      />
+      <Toast message={toast.message} onClose={toast.hide} style={styles.toast} />
     </View>
   );
 }
@@ -65,7 +53,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[16],
     paddingBottom: space[24],
   },
+  // Même hauteur que la ligne de la home (icône du profil de 40 px) : le logo ne bouge pas d'un onglet à l'autre.
   topRow: {
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',

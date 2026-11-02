@@ -9,7 +9,7 @@ import { ImportError } from '@/components/screens/import/ImportError';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { useImport } from '@/components/screens/import/useImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
-import { TimerDock } from '@/components/screens/TimerDock';
+import { CookingCards } from '@/components/screens/CookingCards';
 import {
   AppText,
   Tappable,
@@ -141,6 +141,7 @@ export default function HomeScreen() {
         </View>
 
         <View style={styles.content}>
+          <CookingCards />
           {results.map((recipe) => (
             <RecipeCard
               key={recipe.id}
@@ -175,8 +176,6 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
-
-      <TimerDock style={styles.timerDock} />
 
       <FilterSheet
         visible={openFilter !== null}
@@ -274,7 +273,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[16],
     paddingBottom: space[24],
   },
+  // Même hauteur que la ligne de la home (icône du profil de 40 px) : le logo ne bouge pas d'un onglet à l'autre.
   topRow: {
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
@@ -290,8 +291,7 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: space[16],
     padding: space[16],
-    // Laisse de la place à la pastille du minuteur pour ne pas masquer la dernière carte.
-    paddingBottom: space[16] + 48 + space[16],
+    paddingBottom: space[24],
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     backgroundColor: color.bgPage,
@@ -313,9 +313,6 @@ const styles = StyleSheet.create({
   noRecipeText: {
     textAlign: 'center',
     lineHeight: 24,
-  },
-  timerDock: {
-    bottom: space[16],
   },
   // Figma « Home » : rond bleu de 40 px en haut à droite, icône du profil au centre.
   profile: {

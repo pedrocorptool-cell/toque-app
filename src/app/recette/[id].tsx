@@ -31,6 +31,7 @@ import {
 } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { importRecipe } from '@/data/imports';
+import { useCooking } from '@/data/CookingContext';
 import { useProfile } from '@/data/ProfileContext';
 import { creatorOf, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -82,6 +83,7 @@ export default function RecipeScreen() {
   const { defaultServings } = useProfile();
   const [servings, setServings] = useState(defaultServings);
   const { timers: allTimers, timerFor, toggle, beforeTimerStart, remove, setFocusedRecipeId } = useTimers();
+  const inProgress = useCooking().cookingOf(id);
   const [timersOpen, setTimersOpen] = useState(false);
 
   // Écran au premier plan : la sheet ne doit pas s'ouvrir par-dessus le mode étape par étape.
@@ -382,7 +384,17 @@ export default function RecipeScreen() {
       {tab === 'steps' && (
         <View pointerEvents="box-none" style={[styles.cta, { bottom: CTA_BOTTOM + insets.bottom }]}>
           <View style={styles.ctaHalo}>
-            <Button icon="play" label="Démarrer la recette" onPress={startStepByStep} />
+            <Button
+              icon="play"
+              label={
+                inProgress
+                  ? inProgress.step >= recipe.steps.length
+                    ? 'Reprendre · photo du plat'
+                    : `Reprendre · étape ${inProgress.step + 1}/${recipe.steps.length}`
+                  : 'Démarrer la recette'
+              }
+              onPress={startStepByStep}
+            />
           </View>
         </View>
       )}

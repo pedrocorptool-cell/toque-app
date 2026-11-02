@@ -21,6 +21,7 @@ import { Icon, type IconName } from '@/components/icons/Icon';
 import { FinishStep } from '@/components/screens/recipe/FinishStep';
 import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Tappable } from '@/components/ui';
+import { useCooking } from '@/data/CookingContext';
 import { haptics } from '@/data/haptics';
 import { useProfile } from '@/data/ProfileContext';
 import { formatIngredient, stepIngredients } from '@/data/recipes';
@@ -69,9 +70,17 @@ export default function StepByStepScreen() {
   const insets = useSafeAreaInsets();
   const recipe = recipes.find((r) => r.id === id);
   const { defaultServings } = useProfile();
-  const servings = Number(params.parts) || defaultServings;
+  // Recette en cours : on reprend à l'étape où on s'était arrêté, aux mêmes parts.
+  const { cookingOf, track, end } = useCooking();
+  const [resumed] = useState(() => (id ? cookingOf(id) : undefined));
+  const servings = Number(params.parts) || resumed?.parts || defaultServings;
 
-  const [index, setIndex] = useState(0);
+  const [index, setIndex] = useState(() => Math.min(resumed?.step ?? 0, recipe?.steps.length ?? 0));
+  // Ouvrir le mode étape par étape ou changer d'étape : la recette est en cours (card sur la home).
+  useEffect(() => {
+    if (recipe) track(recipe.id, index, servings);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [recipe?.id, index]);
   const [timersOpen, setTimersOpen] = useState(false);
   const [photoTaken, setPhotoTaken] = useState(false);
 
@@ -294,7 +303,11 @@ export default function StepByStepScreen() {
             image={recipe.image}
             photoTaken={photoTaken}
             onTakePhoto={takePhoto}
-            onDone={close}
+            onDone={() => {
+              // « Terminer » : la recette n'est plus en cours, ses minuteurs s'arrêtent.
+              end(recipe.id);
+              close();
+            }}
             onBack={() => goTo(index - 1)}
           />
         </Animated.View>

@@ -14,11 +14,9 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, LINE_HEIGHT, ROW_GAP, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
-import { TIMER_DOCK_SPACE, TimerDock } from '@/components/screens/TimerDock';
 import { AppText, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
 import { haptics } from '@/data/haptics';
 import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
-import { useTimers } from '@/data/TimersContext';
 import { color, radius, space } from '@/theme/tokens';
 
 type Drag = { id: string; from: number; to: number };
@@ -31,7 +29,6 @@ const SECTION_CHANGE = LayoutAnimation.create(200, 'easeInEaseOut', 'opacity');
 /** Figma : « Liste » (244:3444) — liste de courses, articles à acheter puis articles cochés. */
 export default function ListeScreen() {
   const insets = useSafeAreaInsets();
-  const docked = useTimers().timers.length > 0;
   const { items, addItem, rename, toggle, remove, clear, restore, move } = useShopping();
   const toBuy = items.filter((i) => !i.checked);
   const checked = items.filter((i) => i.checked);
@@ -157,10 +154,7 @@ export default function ListeScreen() {
       </View>
 
       <KeyboardAvoidingView style={styles.sheet} behavior="padding">
-        <ScrollView
-          contentContainerStyle={[styles.content, docked && { paddingBottom: space[16] + TIMER_DOCK_SPACE }]}
-          keyboardShouldPersistTaps="handled"
-          scrollEnabled={!drag}>
+        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" scrollEnabled={!drag}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <AppText variant="overline" color={color.textSecondary}>
@@ -224,8 +218,6 @@ export default function ListeScreen() {
         </ScrollView>
       </KeyboardAvoidingView>
 
-      <TimerDock />
-
       <Toast
         message={toast}
         onClose={() => {
@@ -244,7 +236,7 @@ export default function ListeScreen() {
               }
             : undefined
         }
-        style={[styles.toast, docked && { bottom: space[16] + TIMER_DOCK_SPACE }]}
+        style={styles.toast}
       />
 
       <Dialog
@@ -274,7 +266,9 @@ const styles = StyleSheet.create({
     paddingHorizontal: space[16],
     paddingBottom: space[24],
   },
+  // Même hauteur que la ligne de la home (icône du profil de 40 px) : le logo ne bouge pas d'un onglet à l'autre.
   topRow: {
+    minHeight: 40,
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
