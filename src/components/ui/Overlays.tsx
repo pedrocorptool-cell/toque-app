@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useRef, useState, type MutableRefObject, type ReactNode } from 'react';
 import {
   Animated,
   Easing,
@@ -9,6 +9,7 @@ import {
   ScrollView,
   StyleSheet,
   View,
+  type ScrollViewProps,
   type StyleProp,
   type ViewStyle,
 } from 'react-native';
@@ -42,6 +43,9 @@ export const SHEET_DURATION = 250;
 const DISMISS_DISTANCE = 120;
 const DISMISS_VELOCITY = 0.8;
 
+/** Défilement du contenu de la sheet : glisser vers le bas ferme la sheet seulement quand la liste est en haut. */
+const SheetScrollContext = createContext<MutableRefObject<number> | null>(null);
+
 type SheetModalProps = {
   visible: boolean;
   onClose: () => void;
@@ -61,10 +65,13 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
   const drag = useRef(new Animated.Value(0)).current;
   const latestClose = useRef(onClose);
   latestClose.current = onClose;
+  const scrollY = useRef(0);
 
   const pan = useRef(
     PanResponder.create({
-      // Laisse le toucher aux boutons et aux listes qui défilent : la sheet ne prend que les glissements vers le bas.
+      // Un glissé franc vers le bas ferme la sheet d'où qu'il parte (bouton, ligne, champ, liste remontée en haut),
+      // comme sur iOS. Les touchers, les glissés de côté et le défilement d'une liste descendue restent au contenu.
+      onMoveShouldSetPanResponderCapture: (_, g) => g.dy > 12 && g.dy > Math.abs(g.dx) * 2 && scrollY.current <= 0,
       onMoveShouldSetPanResponder: (_, g) => g.dy > 8 && g.dy > Math.abs(g.dx) * 1.5,
       onPanResponderMove: (_, g) => drag.setValue(Math.max(0, g.dy)),
       onPanResponderRelease: (_, g) => {
@@ -80,6 +87,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
     if (visible) {
       setMounted(true);
       drag.setValue(0);
+      scrollY.current = 0;
     }
     Animated.timing(progress, {
       toValue: visible ? 1 : 0,
@@ -103,7 +111,7 @@ function SheetModal({ visible, onClose, sheetStyle, children }: SheetModalProps)
           {...pan.panHandlers}
           onLayout={(e) => setHeight(e.nativeEvent.layout.height)}
           style={[styles.sheet, sheetStyle, { transform: [{ translateY }] }]}>
-          {children}
+          <SheetScrollContext.Provider value={scrollY}>{children}</SheetScrollContext.Provider>
         </Animated.View>
       </KeyboardAvoidingView>
     </Modal>
@@ -165,11 +173,26 @@ export function FilterSheet({ visible, onClose, title, header, children, onClear
         <CloseButton onPress={onClose} />
       </View>
       {header}
-      <ScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
+      <SheetScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
         {children}
-      </ScrollView>
+      </SheetScrollView>
       <FilterFooter onClear={onClear} onSubmit={onSubmit} count={count} />
     </SheetModal>
+  );
+}
+
+/** Liste qui défile dans une sheet : indique à la sheet si elle est remontée en haut. */
+export function SheetScrollView(props: ScrollViewProps) {
+  const scrollY = useContext(SheetScrollContext);
+  return (
+    <ScrollView
+      scrollEventThrottle={16}
+      {...props}
+      onScroll={(e) => {
+        if (scrollY) scrollY.current = e.nativeEvent.contentOffset.y;
+        props.onScroll?.(e);
+      }}
+    />
   );
 }
 
