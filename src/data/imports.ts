@@ -206,3 +206,31 @@ async function failureOf(error: unknown): Promise<ImportFailure> {
   if (code === 'page_unreachable') return 'unreachable';
   return 'failed';
 }
+
+/** Image déjà dans le stockage de l'espace : visible sur tous les téléphones et sur le web. */
+export const isStoredImage = (uri: string) => uri.includes('/storage/v1/object/public/recipe-images/');
+
+/**
+ * Copie une image dans le stockage de l'espace, par la fonction `import-recipe` (sans l'IA) : photo restée sur le
+ * téléphone (photo du plat, import d'une capture) ou lien d'un réseau social, qui expire. Rend l'adresse copiée, ou
+ * `null` si la copie n'a pas pu se faire.
+ */
+export async function storeRecipeImage(uri: string): Promise<string | null> {
+  if (!supabase) return null;
+  let body: { kind: 'store'; url: string } | { kind: 'store'; data: string; mediaType: string };
+  if (/^https?:\/\//.test(uri)) body = { kind: 'store', url: uri };
+  else {
+    const blob = await (await fetch(uri)).blob();
+    const dataUrl = await new Promise<string>((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(String(reader.result));
+      reader.onerror = () => reject(reader.error);
+      reader.readAsDataURL(blob);
+    });
+    const match = dataUrl.match(/^data:([^;,]+)?(?:;[^,]*)?;base64,(.+)$/);
+    if (!match) return null;
+    body = { kind: 'store', mediaType: match[1] ?? 'image/jpeg', data: match[2] };
+  }
+  const { data, error } = await supabase.functions.invoke<{ image: string | null }>('import-recipe', { body });
+  return error ? null : (data?.image ?? null);
+}

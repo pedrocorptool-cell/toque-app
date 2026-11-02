@@ -6,7 +6,9 @@ import { createClient } from 'npm:@supabase/supabase-js@2.118.0';
 
 type Body =
   | { kind: 'url'; url: string; categories?: { id: string; label: string }[] }
-  | { kind: 'image'; data: string; mediaType: string; categories?: { id: string; label: string }[] };
+  | { kind: 'image'; data: string; mediaType: string; categories?: { id: string; label: string }[] }
+  /** Copie seule d'une image (photo du plat, image restée sur le téléphone ou sur un réseau social), sans l'IA. */
+  | { kind: 'store'; url?: string; data?: string; mediaType?: string };
 
 /** Codes lus par l'app pour choisir son écran d'erreur. */
 type ErrorCode = 'unauthorized' | 'bad_request' | 'not_a_recipe' | 'page_unreachable' | 'no_credits' | 'ai_failed';
@@ -39,6 +41,19 @@ Deno.serve(async (req) => {
     body = await req.json();
   } catch {
     return fail('bad_request', 400);
+  }
+
+  if (body.kind === 'store') {
+    const source =
+      typeof body.url === 'string' && /^https?:\/\//.test(body.url)
+        ? body.url
+        : typeof body.data === 'string'
+          ? `data:${IMAGE_TYPES[body.mediaType ?? ''] ? body.mediaType : 'image/jpeg'};base64,${body.data}`
+          : null;
+    if (!source) return fail('bad_request', 400);
+    const stored = await storeImage(db, space, source);
+    // En cas d'échec, storeImage rend le lien d'origine : l'app garde alors l'image qu'elle a.
+    return json({ image: stored?.includes('/recipe-images/') ? stored : null });
   }
 
   let content: Anthropic.Beta.BetaContentBlockParam[];

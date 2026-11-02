@@ -1,4 +1,7 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from 'react';
+import { createContext, useContext, useEffect, useMemo, useRef, useState, type ReactNode } from 'react';
+import { Platform } from 'react-native';
+
+import { isStoredImage, storeRecipeImage } from './imports';
 
 import { type Category, type CategoryId, type Recipe } from './recipes';
 import { encodeRecipe } from './space';
@@ -37,6 +40,27 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   useRowSync('recipes', recipes, snapshot.recipes, encodeRecipe);
   useRowSync('categories', categories, snapshot.categories);
 
+  // Image restée sur le téléphone (photo du plat, capture) ou sur un réseau social : copiée dans le stockage de
+  // l'espace pour s'afficher partout et ne pas expirer. Une tentative par image et par lancement de l'app.
+  const tried = useRef(new Set<string>());
+  useEffect(() => {
+    for (const recipe of recipes) {
+      const uri = uriOf(recipe);
+      if (!uri || isStoredImage(uri) || tried.current.has(uri)) continue;
+      // Le web ne peut lire que les liens en ligne : un fichier d'un téléphone n'est lisible que sur ce téléphone.
+      if (Platform.OS === 'web' && !/^(https?|blob):/.test(uri)) continue;
+      tried.current.add(uri);
+      storeRecipeImage(uri)
+        .then((stored) => {
+          if (!stored) return;
+          setRecipes((list) =>
+            list.map((r) => (r.id === recipe.id && uriOf(r) === uri ? { ...r, image: { uri: stored } } : r)),
+          );
+        })
+        .catch(() => {});
+    }
+  }, [recipes]);
+
   const value = useMemo<RecipesState>(
     () => ({
       recipes,
@@ -58,6 +82,12 @@ export function RecipesProvider({ children }: { children: ReactNode }) {
   );
 
   return <RecipesContext.Provider value={value}>{children}</RecipesContext.Provider>;
+}
+
+/** Adresse de l'image d'une recette ; les images de démo, dans l'app, n'en ont pas. */
+function uriOf(recipe: Recipe) {
+  const image = recipe.image as { uri?: unknown } | number;
+  return typeof image === 'object' && image && typeof image.uri === 'string' ? image.uri : null;
 }
 
 export function useRecipes() {
