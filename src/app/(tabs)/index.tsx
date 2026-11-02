@@ -1,4 +1,4 @@
-import { router } from 'expo-router';
+import { router, useLocalSearchParams } from 'expo-router';
 import { useShareIntentContext } from 'expo-share-intent';
 import { useEffect, useMemo, useState } from 'react';
 import { Image, ScrollView, StyleSheet, View } from 'react-native';
@@ -12,7 +12,7 @@ import { ImportSheet } from '@/components/screens/ImportSheet';
 import { TimerDock } from '@/components/screens/TimerDock';
 import {
   AppText,
-  Fab,
+  Tappable,
   FilterChip,
   FilterOptions,
   FilterSheet,
@@ -62,6 +62,11 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
+  // Le + de la barre d'onglets passe un paramètre nouveau à chaque appui : la sheet d'import s'ouvre.
+  const { importer } = useLocalSearchParams<{ importer?: string }>();
+  useEffect(() => {
+    if (importer) setImportOpen(true);
+  }, [importer]);
   const [importing, setImporting, importFailed, setImportFailed, failure] = useImport();
 
   // « Partager vers Toqué » depuis Instagram, TikTok, un navigateur… : le lien partagé lance l'import.
@@ -103,6 +108,14 @@ export default function HomeScreen() {
         <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
           <View style={styles.topRow}>
             <Logo />
+            <Tappable
+              accessibilityRole="button"
+              accessibilityLabel="Profil"
+              onPress={() => router.navigate('/profil')}
+              hitSlop={space[4]}
+              style={styles.profile}>
+              <Icon name="profile" color={color.textPrimary} />
+            </Tappable>
           </View>
           <AppText variant="title" color={color.textOnBrandPrimary}>
             Vos recettes
@@ -164,10 +177,6 @@ export default function HomeScreen() {
       </ScrollView>
 
       <TimerDock style={styles.timerDock} />
-
-      <View style={styles.fab}>
-        <Fab onPress={() => setImportOpen(true)} />
-      </View>
 
       <FilterSheet
         visible={openFilter !== null}
@@ -281,8 +290,8 @@ const styles = StyleSheet.create({
     flex: 1,
     gap: space[16],
     padding: space[16],
-    // Laisse de la place au bouton + pour ne pas masquer la dernière carte.
-    paddingBottom: space[16] + 56 + space[16],
+    // Laisse de la place à la pastille du minuteur pour ne pas masquer la dernière carte.
+    paddingBottom: space[16] + 48 + space[16],
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
     backgroundColor: color.bgPage,
@@ -305,14 +314,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     lineHeight: 24,
   },
-  // En bas à gauche, centrée sur le bouton + (pastille de 48, bouton de 56).
   timerDock: {
-    bottom: space[16] + 4,
-  },
-  fab: {
-    position: 'absolute',
-    right: space[16],
     bottom: space[16],
+  },
+  // Figma « Home » : rond bleu de 40 px en haut à droite, icône du profil au centre.
+  profile: {
+    width: 40,
+    height: 40,
+    borderRadius: radius.pill,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: color.accentBlue,
   },
   creatorAvatar: {
     width: 32,

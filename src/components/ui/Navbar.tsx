@@ -6,24 +6,28 @@ import { Icon, type IconName } from '@/components/icons/Icon';
 import { color, space } from '@/theme/tokens';
 
 import { AppText } from './AppText';
+import { Fab } from './IconButton';
 import { Tappable } from './Tappable';
 
 const TABS: Record<string, { label: string; icon: IconName }> = {
   index: { label: 'Recettes', icon: 'book' },
   liste: { label: 'Liste', icon: 'basket' },
-  profil: { label: 'Profil', icon: 'profile' },
 };
 
-/** Figma : « Navbar » (Recettes / Liste / Profil), branchée comme barre d'onglets. */
+/**
+ * Figma « Home » (essai) : Recettes, le bouton + au centre, Liste. Le profil s'ouvre depuis l'icône en haut de la
+ * home : son onglet existe toujours mais n'a plus de place dans la barre.
+ */
 export function Navbar({ state, navigation }: BottomTabBarProps) {
   const insets = useSafeAreaInsets();
+  const tabs = state.routes.map((route, index) => ({ route, index })).filter(({ route }) => TABS[route.name]);
   return (
     <View style={[styles.bar, { paddingBottom: space[8] + insets.bottom }]}>
-      {state.routes.map((route, index) => {
+      {tabs.map(({ route, index }, position) => {
         const tab = TABS[route.name];
         if (!tab) return null;
         const focused = state.index === index;
-        return (
+        const item = (
           <Tappable
             key={route.key}
             accessibilityRole="tab"
@@ -39,6 +43,14 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
             </AppText>
           </Tappable>
         );
+        if (position !== 0) return item;
+        // Le + ouvre l'import sur la home, quel que soit l'onglet affiché.
+        return [
+          item,
+          <View key="fab" style={styles.fab}>
+            <Fab onPress={() => navigation.navigate('index', { importer: String(Date.now()) })} />
+          </View>,
+        ];
       })}
     </View>
   );
@@ -47,12 +59,16 @@ export function Navbar({ state, navigation }: BottomTabBarProps) {
 const styles = StyleSheet.create({
   bar: {
     flexDirection: 'row',
+    alignItems: 'center',
     gap: space[8],
     paddingHorizontal: space[24],
     paddingTop: space[8],
     borderTopWidth: 1,
     borderTopColor: color.bgPage,
     backgroundColor: color.bgSurface,
+  },
+  fab: {
+    alignSelf: 'center',
   },
   item: {
     flex: 1,
