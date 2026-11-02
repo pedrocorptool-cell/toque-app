@@ -277,8 +277,24 @@ export const EMPTY_FILTERS: Filters = { category: [], creator: [], duration: [],
 /** Quantité ajustée au nombre de parts choisi : « 1,5 », « 300 ». */
 export function formatIngredient(ingredient: Ingredient, servings: number, base: number) {
   if (ingredient.qty === undefined) return ingredient.name;
-  const qty = Math.round(((ingredient.qty * servings) / base) * 10) / 10;
-  return `${String(qty).replace('.', ',')} ${ingredient.name}`;
+  return `${scaledQty(ingredient.qty, servings, base)} ${ingredient.name}`;
+}
+
+function scaledQty(qty: number, servings: number, base: number) {
+  return String(Math.round(((qty * servings) / base) * 10) / 10).replace('.', ',');
+}
+
+// Unités collées au nombre, comme dans les maquettes : « 80g », « 20cl ».
+const METRIC = new Set(['g', 'kg', 'mg', 'l', 'cl', 'ml', 'dl']);
+
+/** Quantité courte à glisser dans le texte d'une étape : « 80g », « 2 gousses », « 3 ». */
+function shortQuantity(ingredient: Ingredient, servings: number, base: number) {
+  const qty = scaledQty(ingredient.qty!, servings, base);
+  const name = ingredient.name.trim();
+  const unit = name.match(/^(.+?)\s+(?:de|d['’])\s*/i)?.[1] ?? name.split(/\s+/)[0];
+  if (METRIC.has(unit.toLowerCase())) return `${qty}${unit}`;
+  // Sans « de », le premier mot est l'ingrédient lui-même (« 3 œufs ») : le nombre suffit.
+  return name.match(/^(.+?)\s+(?:de|d['’])\s*/i) ? `${qty} ${unit}` : qty;
 }
 
 /** Hashtags des cartes de la home. */
@@ -363,6 +379,45 @@ export function stepIngredients(recipe: Recipe, index: number): Ingredient[] {
     const main = ingredientWords(ingredient.name)[0];
     return main !== undefined && words.includes(main);
   });
+}
+
+/**
+ * Texte d'une étape avec la quantité de chaque ingrédient juste après sa mention : « Faire fondre le chocolat (80g) ».
+ * Les ingrédients de l'étape que le texte ne nomme pas restent à part (`rest`), pour être listés sous l'étape.
+ */
+export function stepWithQuantities(recipe: Recipe, index: number, servings: number) {
+  const step = recipe.steps[index];
+  if (!step) return { text: '', rest: [] as Ingredient[] };
+  const words = [...step.text.matchAll(/[\p{L}œŒ]+/gu)].map((m) => ({
+    key: normalize(m[0].replace(/œ/gi, 'oe')).slice(0, 5),
+    end: m.index! + m[0].length,
+    start: m.index!,
+  }));
+  const inserts: { at: number; label: string }[] = [];
+  const rest: Ingredient[] = [];
+  for (const ingredient of stepIngredients(recipe, index)) {
+    const own = ingredientWords(ingredient.name);
+    const first = words.findIndex((w) => w.key === own[0] && !inserts.some((i) => i.at === w.end));
+    if (first === -1) {
+      rest.push(ingredient);
+      continue;
+    }
+    if (ingredient.qty === undefined) continue;
+    // Une quantité déjà écrite juste avant (« 200 g de farine ») n'est pas répétée.
+    if (/\d/.test(step.text.slice(Math.max(0, words[first].start - 12), words[first].start))) continue;
+    // « chocolat noir » : la quantité vient après le nom entier.
+    let last = first;
+    while (
+      words[last + 1] &&
+      own.includes(words[last + 1].key) &&
+      step.text.slice(words[last].end, words[last + 1].start).trim() === ''
+    )
+      last++;
+    inserts.push({ at: words[last].end, label: ` (${shortQuantity(ingredient, servings, recipe.servings)})` });
+  }
+  let text = step.text;
+  for (const { at, label } of inserts.sort((a, b) => b.at - a.at)) text = text.slice(0, at) + label + text.slice(at);
+  return { text, rest };
 }
 
 export function matchesText(label: string, query: string) {

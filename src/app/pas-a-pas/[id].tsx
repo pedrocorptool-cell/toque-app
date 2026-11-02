@@ -24,7 +24,7 @@ import { AppText, IconButton, TimerCard, TimerChip, Tappable } from '@/component
 import { useCooking } from '@/data/CookingContext';
 import { haptics } from '@/data/haptics';
 import { useProfile } from '@/data/ProfileContext';
-import { formatIngredient, stepIngredients } from '@/data/recipes';
+import { formatIngredient, stepWithQuantities } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { isDone, orderTimers, useTimers } from '@/data/TimersContext';
 import { goBack } from '@/navigation/goBack';
@@ -206,7 +206,9 @@ export default function StepByStepScreen() {
   const finished = index === recipe.steps.length;
   ending.current = finished;
   const step = recipe.steps[index];
-  const ingredients = stepIngredients(recipe, index).map((i) => formatIngredient(i, servings, recipe.servings));
+  // Les quantités sont dans le texte ; seuls les ingrédients qu'il ne nomme pas restent listés dessous.
+  const { text: stepText, rest } = stepWithQuantities(recipe, index, servings);
+  const ingredients = rest.map((i) => formatIngredient(i, servings, recipe.servings));
   const timer = timerFor(recipe.id, index);
 
   // Pendant le trajet, la pastille n'apparaît qu'à l'arrivée de la carte.
@@ -334,7 +336,7 @@ export default function StepByStepScreen() {
               </View>
               <Animated.View style={[styles.step, { opacity: enter, transform: [{ translateX }] }]}>
                 <AppText style={styles.instruction} color={color.textOnBrandPrimary}>
-                  {step.text}
+                  {stepText}
                 </AppText>
                 {/* Hors maquette : les ingrédients de l'étape, aux quantités des parts choisies. */}
                 {ingredients.length > 0 && (

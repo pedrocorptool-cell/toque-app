@@ -33,7 +33,7 @@ import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { importRecipe } from '@/data/imports';
 import { useCooking } from '@/data/CookingContext';
 import { useProfile } from '@/data/ProfileContext';
-import { creatorOf, formatIngredient, savedHashtagsOf, type Recipe } from '@/data/recipes';
+import { creatorOf, formatIngredient, savedHashtagsOf, stepWithQuantities, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
 import { haptics } from '@/data/haptics';
 import { useShopping } from '@/data/ShoppingContext';
@@ -362,7 +362,7 @@ export default function RecipeScreen() {
                           {index + 1}
                         </AppText>
                       </View>
-                      <AppText color={color.textSecondary}>{step.text}</AppText>
+                      <AppText color={color.textSecondary}>{stepWithQuantities(recipe, index, servings).text}</AppText>
                       {step.timer !== undefined && (
                         <TimerPill
                           remaining={timer?.remaining ?? step.timer}
