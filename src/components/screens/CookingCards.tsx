@@ -86,38 +86,42 @@ function CookingCard({ entry, width, onStop }: { entry: Entry; width: number; on
       ? 'Photo du plat'
       : `Étape ${cooking.step + 1}/${total}`;
 
+  // La croix est posée sur la card, pas dedans : un bouton ne peut pas en contenir un autre.
   return (
-    <Tappable
-      accessibilityRole="button"
-      accessibilityLabel={`Reprendre ${recipe.title}, ${status}`}
-      onPress={() => router.push({ pathname: '/pas-a-pas/[id]', params: { id: recipe.id } })}
-      style={[styles.card, { width }]}>
-      <View style={styles.top}>
-        <View style={styles.badge}>
-          <AppText variant="label" color={color.premiumText}>
-            En cours
-          </AppText>
+    <View style={{ width }}>
+      <Tappable
+        accessibilityRole="button"
+        accessibilityLabel={`Reprendre ${recipe.title}, ${status}`}
+        onPress={() => router.push({ pathname: '/pas-a-pas/[id]', params: { id: recipe.id } })}
+        style={styles.card}>
+        <View style={styles.top}>
+          <View style={styles.badge}>
+            <AppText variant="label" color={color.premiumText}>
+              En cours
+            </AppText>
+          </View>
         </View>
-        <Tappable
-          accessibilityRole="button"
-          accessibilityLabel={`Arrêter ${recipe.title}`}
-          onPress={onStop}
-          hitSlop={space[12]}>
-          <Icon name="close" color={color.textOnBrandPrimary} />
-        </Tappable>
-      </View>
-      <View style={styles.body}>
-        <Image source={recipe.image} style={styles.image} />
-        <View style={styles.texts}>
-          <AppText variant="cardTitle" color={color.textOnBrandPrimary} numberOfLines={1}>
-            {recipe.title}
-          </AppText>
-          <AppText style={styles.status} color={color.textOnBrandPrimary}>
-            {status}
-          </AppText>
+        <View style={styles.body}>
+          <Image source={recipe.image} style={styles.image} />
+          <View style={styles.texts}>
+            <AppText variant="cardTitle" color={color.textOnBrandPrimary} numberOfLines={1}>
+              {recipe.title}
+            </AppText>
+            <AppText style={styles.status} color={color.textOnBrandPrimary}>
+              {status}
+            </AppText>
+          </View>
         </View>
-      </View>
-    </Tappable>
+      </Tappable>
+      <Tappable
+        accessibilityRole="button"
+        accessibilityLabel={`Arrêter ${recipe.title}`}
+        onPress={onStop}
+        hitSlop={space[12]}
+        style={styles.close}>
+        <Icon name="close" color={color.textOnBrandPrimary} />
+      </Tappable>
+    </View>
   );
 }
 
@@ -141,6 +145,11 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+  },
+  close: {
+    position: 'absolute',
+    top: space[16],
+    right: space[16],
   },
   badge: {
     padding: space[4],
