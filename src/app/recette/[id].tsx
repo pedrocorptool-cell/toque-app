@@ -493,7 +493,8 @@ const styles = StyleSheet.create({
   hero: {
     alignItems: 'center',
     gap: space[32],
-    paddingTop: space[8],
+    // 32 px entre les boutons du haut et la photo.
+    paddingTop: space[32],
     paddingHorizontal: space[16],
     paddingBottom: space[24],
   },
