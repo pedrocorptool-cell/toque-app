@@ -324,9 +324,13 @@ export function savedHashtagsOf(recipe: Recipe, categories: Category[]) {
 
 /** Avatar et nom du créateur ; sans avatar pour un créateur lu à l'import. */
 export function creatorOf(recipe: Recipe): { id: string; name: string; avatar?: ImageSourcePropType } {
-  const creator = CREATORS.find((c) => c.id === recipe.creator);
+  // Un import lit le créateur en toutes lettres (« Marmiton ») : il retrouve l'avatar du créateur connu du même nom.
+  const creator =
+    CREATORS.find((c) => c.id === recipe.creator) ??
+    (recipe.creatorAvatar ? undefined : CREATORS.find((c) => normalize(c.label) === normalize(recipe.creator)));
   return creator
-    ? { id: creator.id, name: creator.label, avatar: creator.avatar }
+    ? // L'id reste celui de la recette : le filtre « Créateur » compare recipe.creator.
+      { id: recipe.creator, name: creator.label, avatar: creator.avatar }
     : {
         id: recipe.creator,
         name: recipe.creator || 'Inconnu',

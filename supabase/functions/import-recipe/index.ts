@@ -311,7 +311,21 @@ async function findAvatar(
       .catch(() => null);
     if (avatar) return avatar;
   }
-  return SOCIAL.test(page.host) ? null : page.logo;
+  if (SOCIAL.test(page.host)) return null;
+  return page.logo ?? (await faviconOf(page.host));
+}
+
+/** Site sans icône PNG dans sa page (Marmiton ne déclare que des .ico / .svg) : l'icône que Google a de ce site,
+ *  en 128 px. Google répond 404 quand il n'en a pas. */
+async function faviconOf(host: string) {
+  const url = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(host)}&sz=128`;
+  try {
+    const res = await fetch(url, { signal: AbortSignal.timeout(5000) });
+    await res.body?.cancel();
+    return res.ok ? url : null;
+  } catch {
+    return null;
+  }
 }
 
 const IMAGE_TYPES: Record<string, string> = {
