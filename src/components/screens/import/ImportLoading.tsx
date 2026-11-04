@@ -38,7 +38,7 @@ const PAUSE = 600;
 type ImportLoadingProps = {
   visible: boolean;
   onCancel: () => void;
-  /** Même écran pour la correction d'une recette par capture, avec son propre texte. */
+  /** Même écran pour la correction d'une recette par capture, avec son propre texte (vide : titre seul). */
   title?: string;
   message?: string;
 };
@@ -64,9 +64,11 @@ export function ImportLoading({
             <AppText variant="headline" color={color.textOnBrandPrimary} style={styles.center}>
               {title}
             </AppText>
-            <AppText color={color.textOnBrandSecondary} style={[styles.center, styles.message]}>
-              {message}
-            </AppText>
+            {!!message && (
+              <AppText color={color.textOnBrandSecondary} style={[styles.center, styles.message]}>
+                {message}
+              </AppText>
+            )}
           </View>
         </View>
         <TextButton tone="onBrand" label="Annuler" onPress={onCancel} />

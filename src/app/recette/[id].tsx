@@ -235,7 +235,15 @@ export default function RecipeScreen() {
         <View style={[styles.topBar, { paddingTop: insets.top + space[16] }]}>
           <IconButton icon="chevronLeft" accessibilityLabel="Retour" onPress={() => goBack()} />
           <View style={styles.topActions}>
-            <IconButton icon="qrCode" accessibilityLabel="Partager" onPress={() => setShareOpen(true)} />
+            {/* Figma « Tests Action Bar » : « Modifier » remplace le partage, qui reste dans le menu « … ». */}
+            <Tappable
+              feedback="surface"
+              accessibilityRole="button"
+              onPress={() => router.push({ pathname: '/modifier/[id]', params: { id: recipe.id } })}
+              style={styles.editButton}>
+              <Icon name="edit" color={color.textOnBrandPrimary} />
+              <AppText color={color.textOnBrandPrimary}>Modifier</AppText>
+            </Tappable>
             <IconButton icon="more" accessibilityLabel="Plus d’actions" onPress={() => setMenuOpen(true)} />
           </View>
         </View>
@@ -520,6 +528,16 @@ function Stat({ value, unit }: { value: number; unit: string }) {
 }
 
 const styles = StyleSheet.create({
+  editButton: {
+    height: 40,
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+    paddingLeft: space[8],
+    paddingRight: space[16],
+    borderRadius: radius.pill,
+    backgroundColor: color.actionIconBg,
+  },
   screen: {
     flex: 1,
     backgroundColor: color.bgBrandPage,

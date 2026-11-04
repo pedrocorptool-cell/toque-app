@@ -1,25 +1,15 @@
 import { useFocusEffect } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
-import {
-  Animated,
-  Keyboard,
-  KeyboardAvoidingView,
-  LayoutAnimation,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  View,
-} from 'react-native';
+import { Keyboard, KeyboardAvoidingView, LayoutAnimation, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
 import { CheckedRow, LINE_HEIGHT, ROW_GAP, ToBuyRow } from '@/components/screens/shopping/ShoppingRow';
 import { AppText, Dialog, Logo, Toast, useReduceMotion, Tappable } from '@/components/ui';
+import { useReorder } from '@/components/ui/useReorder';
 import { haptics } from '@/data/haptics';
 import { useShopping, type ShoppingItem } from '@/data/ShoppingContext';
 import { color, radius, space } from '@/theme/tokens';
-
-type Drag = { id: string; from: number; to: number };
 
 /** Passage d'un article entre « À acheter » et « Articles cochés » : fondu et resserrement en 200 ms. */
 /** Temps laissé pour annuler « Tout supprimer ». */
@@ -62,51 +52,12 @@ export default function ListeScreen() {
   }, [cleared]);
 
   // Glisser-déposer par la poignée : la ligne suit le doigt, les autres s'écartent d'une ligne.
-  const [drag, setDrag] = useState<Drag | null>(null);
-  const dragY = useRef(new Animated.Value(0)).current;
-  // Hauteur de chaque ligne : un article long en fait plusieurs, le pas du déplacement suit.
-  const heights = useRef(new Map<string, number>()).current;
-  const pitchOf = (index: number) => (heights.get(toBuy[index]?.id) ?? LINE_HEIGHT) + ROW_GAP;
-
-  const startDrag = (id: string, from: number) => {
-    Keyboard.dismiss();
-    dragY.setValue(0);
-    haptics.lift();
-    setDrag({ id, from, to: from });
-  };
-  const moveDrag = (dy: number) => {
-    dragY.setValue(dy);
-    setDrag((d) => {
-      if (!d) return d;
-      // La ligne prend la place d'une voisine dès qu'elle en a franchi la moitié.
-      let to = d.from;
-      let passed = 0;
-      while (dy > 0 && to + 1 < toBuy.length && dy > passed + pitchOf(to + 1) / 2) passed += pitchOf(++to);
-      while (dy < 0 && to > 0 && -dy > passed + pitchOf(to - 1) / 2) passed += pitchOf(--to);
-      return to === d.to ? d : { ...d, to };
-    });
-  };
-  // Un petit cran à chaque emplacement franchi.
-  const lastSlot = useRef<number | null>(null);
-  useEffect(() => {
-    const slot = drag?.to ?? null;
-    if (slot !== null && lastSlot.current !== null && slot !== lastSlot.current) haptics.selection();
-    lastSlot.current = slot;
-  }, [drag?.to]);
-  const endDrag = () => {
-    if (drag && drag.to !== drag.from) move(drag.id, drag.to);
-    dragY.setValue(0);
-    setDrag(null);
-  };
-
-  /** Décalage des autres lignes pendant un déplacement. */
-  const shiftOf = (index: number) => {
-    if (!drag) return 0;
-    const pitch = pitchOf(drag.from);
-    if (drag.from < drag.to && index > drag.from && index <= drag.to) return -pitch;
-    if (drag.from > drag.to && index >= drag.to && index < drag.from) return pitch;
-    return 0;
-  };
+  const reorder = useReorder(
+    toBuy.map((i) => i.id),
+    move,
+    ROW_GAP,
+    LINE_HEIGHT,
+  );
 
   const startNewItem = () => requestFocus(addItem());
 
@@ -154,7 +105,10 @@ export default function ListeScreen() {
       </View>
 
       <KeyboardAvoidingView style={styles.sheet} behavior="padding">
-        <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" scrollEnabled={!drag}>
+        <ScrollView
+          contentContainerStyle={styles.content}
+          keyboardShouldPersistTaps="handled"
+          scrollEnabled={!reorder.dragging}>
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
               <AppText variant="overline" color={color.textSecondary}>
@@ -179,18 +133,18 @@ export default function ListeScreen() {
                 focused={focusedId === item.id}
                 removable={item.id !== blankId}
                 focusRequest={focusRequest?.id === item.id ? focusRequest.n : 0}
-                dragging={drag?.id === item.id}
-                offset={drag?.id === item.id ? dragY : shiftOf(index)}
+                dragging={reorder.dragging === item.id}
+                offset={reorder.offsetOf(item.id, index)}
                 onToggle={() => item.label.trim() && toggleSmoothly(item.id)}
                 onRename={(label) => rename(item.id, label)}
                 onFocus={() => setFocusedId(item.id)}
                 onBlur={() => setFocusedId((id) => (id === item.id ? null : id))}
                 onSubmit={() => (item.label.trim() ? startNewItem() : Keyboard.dismiss())}
                 onRemove={() => removeAndFocusNext(index)}
-                onDragStart={() => startDrag(item.id, index)}
-                onDragMove={moveDrag}
-                onDragEnd={endDrag}
-                onHeight={(h) => heights.set(item.id, h)}
+                onDragStart={() => reorder.start(item.id, index)}
+                onDragMove={reorder.move}
+                onDragEnd={reorder.end}
+                onHeight={(h) => reorder.setHeight(item.id, h)}
               />
             ))}
 

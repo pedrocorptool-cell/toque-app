@@ -70,6 +70,8 @@ function App() {
                 {/* Le mode étape par étape s'ouvre par-dessus la fiche, sur fond transparent : il anime lui-même
                   la photo et le flou de la fiche jusqu'à leur place (voir pas-a-pas/[id].tsx). */}
                 <Stack.Screen name="onboarding" options={{ animation: 'fade' }} />
+                {/* « Modifier la recette » monte par-dessus la fiche, comme une feuille. */}
+                <Stack.Screen name="modifier/[id]" options={{ animation: 'slide_from_bottom' }} />
                 <Stack.Screen
                   name="pas-a-pas/[id]"
                   options={{
