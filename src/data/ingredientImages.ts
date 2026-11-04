@@ -6,8 +6,7 @@ import type { Ingredient } from '@/data/recipes';
  * Images d'ingrédients : Fluent Emoji 3D de Microsoft (licence MIT), livrées dans l'app en 96 px.
  * Trois niveaux, du plus juste au plus sûr : l'image de l'ingrédient, celle de sa famille, puis l'icône générique
  * (Figma 986:2). Mieux vaut l'icône générique qu'une image fausse.
- *
- * Les clés et les familles sont aussi listées dans supabase/functions/import-recipe : l'IA en choisit une à l'import.
+ * L'image est déduite du nom de l'ingrédient.
  */
 export const INGREDIENT_IMAGES = {
   apple: require('@/assets/images/ingredients/red_apple.png'),
@@ -110,7 +109,7 @@ const img = (image: IngredientImage) => ({ image });
 const fam = (family: IngredientFamily) => ({ family });
 
 /**
- * Reconnaissance par le nom, pour les recettes d'avant la clé de l'IA et les lignes écrites à la main. Le mot qui
+ * Reconnaissance par le nom. Le mot qui
  * vient en premier dans la ligne l'emporte (« gigot d'agneau de lait » est un gigot), et à égalité le plus long
  * (« pâte brisée » n'est pas des pâtes). Les noms sont comparés sans accents ni apostrophes.
  */
@@ -268,15 +267,9 @@ export function matchIngredient(name: string): Rule[1] | undefined {
   return best?.match;
 }
 
-const isImage = (key?: string): key is IngredientImage => !!key && key in INGREDIENT_IMAGES;
-const isFamily = (key?: string): key is IngredientFamily => !!key && key in FAMILY_IMAGES;
-
 /** Image d'un ingrédient : la sienne, sinon celle de sa famille ; `undefined` pour l'icône générique. */
 export function ingredientImageOf(ingredient: Ingredient): ImageSourcePropType | undefined {
-  if (isImage(ingredient.image)) return INGREDIENT_IMAGES[ingredient.image];
   const match = matchIngredient(ingredient.name);
-  if (match && 'image' in match) return INGREDIENT_IMAGES[match.image];
-  if (isFamily(ingredient.family)) return FAMILY_IMAGES[ingredient.family];
-  if (match) return FAMILY_IMAGES[match.family];
-  return undefined;
+  if (!match) return undefined;
+  return 'image' in match ? INGREDIENT_IMAGES[match.image] : FAMILY_IMAGES[match.family];
 }
