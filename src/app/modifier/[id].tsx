@@ -198,7 +198,12 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
       image: nextImage,
       creator: creator.id,
       creatorAvatar: creator.id === recipe.creator ? recipe.creatorAvatar : avatar?.uri,
-      ingredients: kept.map((r) => parseIngredient(r.text)),
+      ingredients: kept.map((r) => {
+        const before = r.origin === undefined ? undefined : recipe.ingredients[r.origin];
+        // Texte inchangé : l'image choisie à l'import reste ; sinon elle sera déduite du nouveau nom.
+        const same = before && formatIngredient(before, recipe.servings, recipe.servings) === r.text;
+        return same ? before : parseIngredient(r.text);
+      }),
       steps: nextSteps,
     });
     goBack();

@@ -6,6 +6,7 @@ export { Checkbox } from './Checkbox';
 export { Creator, FilterChip, Tag } from './Chips';
 export { AiChatField, SearchField } from './Fields';
 export { Fab, IconButton } from './IconButton';
+export { IngredientIcon } from './IngredientIcon';
 export { Logo } from './Logo';
 export { Navbar } from './Navbar';
 export { BottomSheet, Dialog, DialogFrame, FilterFooter, FilterSheet, Toast } from './Overlays';

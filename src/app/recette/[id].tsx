@@ -18,6 +18,7 @@ import {
   Button,
   Dialog,
   IconButton,
+  IngredientIcon,
   ListCard,
   ListRow,
   SegmentedTabs,
@@ -316,9 +317,9 @@ export default function RecipeScreen() {
                   <AppText>Ajouter à la liste de courses</AppText>
                 </Tappable>
               }>
-              {ingredients.map((line) => (
-                <View key={line} style={styles.ingredient}>
-                  <View style={styles.bullet} />
+              {ingredients.map((line, i) => (
+                <View key={`${i}-${line}`} style={styles.ingredient}>
+                  <IngredientIcon ingredient={recipe.ingredients[i]} />
                   <AppText color={color.textSecondary} style={styles.flex}>
                     {line}
                   </AppText>
@@ -586,16 +587,11 @@ const styles = StyleSheet.create({
   fontRegular: {
     fontFamily: font.regular,
   },
+  // Figma 986:2 : l'image de l'ingrédient à 12 px de son texte.
   ingredient: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: space[8],
-  },
-  bullet: {
-    width: 6,
-    height: 6,
-    backgroundColor: color.listBullet,
-    transform: [{ rotate: '45deg' }],
+    gap: space[12],
   },
   flex: {
     flex: 1,

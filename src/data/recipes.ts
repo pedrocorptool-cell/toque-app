@@ -40,6 +40,10 @@ export type Ingredient = {
   qty?: number;
   /** Texte après la quantité, unité comprise : « cl de crème ». */
   name: string;
+  /** Image choisie par l'IA à l'import (clé de INGREDIENT_IMAGES) ; sinon elle est déduite du nom. */
+  image?: string;
+  /** Famille de l'ingrédient (clé de FAMILY_IMAGES), quand il n'a pas d'image à lui. */
+  family?: string;
 };
 
 export type Step = {

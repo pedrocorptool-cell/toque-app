@@ -105,8 +105,13 @@ Deno.serve(async (req) => {
       servings: Math.max(1, recipe.servings),
       kcal: recipe.kcal,
       categories: recipe.category ? [recipe.category] : [],
-      ingredients: recipe.ingredients.map((i: { qty: number | null; name: string }) =>
-        i.qty == null ? { name: i.name } : { qty: i.qty, name: i.name },
+      ingredients: recipe.ingredients.map(
+        (i: { qty: number | null; name: string; image: string | null; family: string | null }) => ({
+          ...(i.qty == null ? {} : { qty: i.qty }),
+          name: i.name,
+          ...(i.image ? { image: i.image } : {}),
+          ...(i.family ? { family: i.family } : {}),
+        }),
       ),
       steps: recipe.steps.map((s: { text: string; timer: number | null; ingredients?: number[] }) => ({
         text: s.text,
@@ -150,7 +155,10 @@ function instructions(categories: { id: string; label: string }[]) {
     'kcal : une estimation des calories par part.',
     'ingredients : qty est le nombre seul, pour servings parts (null si aucun : « Sel, poivre ») ; name est le texte ' +
       'après la quantité, unité comprise : { qty: 200, name: "g de farine" }, { qty: 2, name: "œufs" }, ' +
-      '{ qty: 10, name: "cl de crème" }.',
+      '{ qty: 10, name: "cl de crème" }. image : l’image qui montre exactement cet ingrédient (carrot pour des ' +
+      'carottes, meat_on_bone pour un gigot, stock pour un bouillon), null si aucune ne lui correspond vraiment : ' +
+      'jamais une image approchante. family : sa famille, pour l’afficher quand image est null (vegetable pour un ' +
+      'panais, starch pour de la farine, sauce pour une huile), null si aucune ne convient.',
     'steps : une action par étape, phrase courte à l’infinitif. timer : la durée en secondes quand l’étape demande ' +
       'd’attendre (cuisson, repos), sinon null. ingredients : les numéros (à partir de 0, dans l’ordre de la liste ' +
       'ingredients) des ingrédients utilisés dans cette étape, liste vide si aucun.',
@@ -163,6 +171,97 @@ function instructions(categories: { id: string; label: string }[]) {
       : 'category : null.',
   ].join('\n');
 }
+
+// Images d'ingrédients livrées dans l'app : mêmes clés que src/data/ingredientImages.ts.
+const INGREDIENT_IMAGES = [
+  'apple',
+  'avocado',
+  'bacon',
+  'baguette',
+  'banana',
+  'bean',
+  'beef',
+  'beer',
+  'bell_pepper',
+  'blueberry',
+  'bread',
+  'broccoli',
+  'butter',
+  'canned',
+  'carrot',
+  'champagne',
+  'cheese',
+  'cherry',
+  'chestnut',
+  'chicken',
+  'chili',
+  'chocolate',
+  'coconut',
+  'coffee',
+  'corn',
+  'crab',
+  'cucumber',
+  'egg',
+  'eggplant',
+  'fish',
+  'flatbread',
+  'garlic',
+  'ginger',
+  'grape',
+  'herb',
+  'honey',
+  'ice',
+  'kiwi',
+  'lemon',
+  'lime',
+  'lobster',
+  'mango',
+  'meat_on_bone',
+  'melon',
+  'milk',
+  'mushroom',
+  'noodle',
+  'octopus',
+  'olive',
+  'onion',
+  'orange',
+  'oyster',
+  'pasta',
+  'pea',
+  'peach',
+  'peanut',
+  'pear',
+  'pineapple',
+  'potato',
+  'rice',
+  'sake',
+  'salad',
+  'salt',
+  'shrimp',
+  'squid',
+  'stock',
+  'strawberry',
+  'sweet_potato',
+  'tea',
+  'tomato',
+  'water',
+  'watermelon',
+  'wine',
+];
+const INGREDIENT_FAMILIES = [
+  'vegetable',
+  'fruit',
+  'meat',
+  'seafood',
+  'dairy',
+  'starch',
+  'herb',
+  'spice',
+  'nut',
+  'sauce',
+  'sweet',
+  'drink',
+];
 
 function schema(categoryIds: string[]) {
   const nullable = (type: string) => ({ anyOf: [{ type }, { type: 'null' }] });
@@ -199,8 +298,13 @@ function schema(categoryIds: string[]) {
         items: {
           type: 'object',
           additionalProperties: false,
-          required: ['qty', 'name'],
-          properties: { qty: nullable('number'), name: { type: 'string' } },
+          required: ['qty', 'name', 'image', 'family'],
+          properties: {
+            qty: nullable('number'),
+            name: { type: 'string' },
+            image: { anyOf: [{ type: 'string', enum: INGREDIENT_IMAGES }, { type: 'null' }] },
+            family: { anyOf: [{ type: 'string', enum: INGREDIENT_FAMILIES }, { type: 'null' }] },
+          },
         },
       },
       steps: {
