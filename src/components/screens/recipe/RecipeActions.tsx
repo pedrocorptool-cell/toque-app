@@ -1,10 +1,8 @@
-import * as Clipboard from 'expo-clipboard';
 import { router } from 'expo-router';
 import { StyleSheet } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
-import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
 import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
 import { AppText, BottomSheet, Dialog, ListCard, ListRow } from '@/components/ui';
 import { SHEET_DURATION } from '@/components/ui/Overlays';
@@ -17,7 +15,8 @@ import { color } from '@/theme/tokens';
 /** Fin du toast d'ajout à la liste de courses, qui porte l'action « Voir ». */
 export const LIST_TOAST_END = 'à la liste';
 
-export type RecipeSheet = 'menu' | 'save' | 'shopping' | 'share' | 'delete';
+// Partager reviendra avec un nom de domaine pour les liens (ShareDialog est gardé pour ce moment-là).
+export type RecipeSheet = 'menu' | 'save' | 'shopping' | 'delete';
 
 type RecipeActionsProps = {
   recipe: Recipe;
@@ -32,7 +31,7 @@ type RecipeActionsProps = {
 };
 
 /**
- * Figma 706:540 « Actions recette » : modifier, enregistrer, ajouter à la liste de courses, partager, supprimer.
+ * Figma 706:540 « Actions recette » : modifier, enregistrer, ajouter à la liste de courses, supprimer.
  * Même sheet depuis le « … » de la fiche et l'appui long sur une carte de la home.
  */
 export function RecipeActions({ recipe, sheet, onSheet, servings, onToast, onDeleted }: RecipeActionsProps) {
@@ -58,7 +57,6 @@ export function RecipeActions({ recipe, sheet, onSheet, servings, onToast, onDel
           />
           <ListRow label="Enregistrer" leading={<Icon name="bookmark" />} onPress={then('save')} />
           <ListRow label="Ajouter à la liste de courses" leading={<Icon name="basket" />} onPress={then('shopping')} />
-          <ListRow label="Partager" leading={<Icon name="qrCode" />} onPress={then('share')} />
           <ListRow
             label="Supprimer"
             danger
@@ -67,16 +65,6 @@ export function RecipeActions({ recipe, sheet, onSheet, servings, onToast, onDel
           />
         </ListCard>
       </BottomSheet>
-
-      <ShareDialog
-        visible={sheet === 'share'}
-        onClose={close}
-        onCopyLink={async () => {
-          await Clipboard.setStringAsync(`https://toque.app/recette/${recipe.id}`);
-          close();
-          onToast('Lien copié');
-        }}
-      />
 
       <Dialog
         visible={sheet === 'delete'}
