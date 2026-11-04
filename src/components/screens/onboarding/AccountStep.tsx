@@ -1,7 +1,16 @@
-import { useState } from 'react';
-import { Image, KeyboardAvoidingView, Platform, ScrollView, StyleSheet, View, useWindowDimensions } from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  KeyboardAvoidingView,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  useWindowDimensions,
+} from 'react-native';
 
-import { AppText, BrandField, Button, TextButton } from '@/components/ui';
+import { AppText, BrandField, Button, TextButton, useReduceMotion } from '@/components/ui';
 import { isPseudo } from '@/data/profile';
 import { JoinError, type JoinErrorKind } from '@/data/space';
 import { color, font, space } from '@/theme/tokens';
@@ -73,12 +82,7 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={styles.main}>
-          <Image
-            source={require('@/assets/images/onboarding/badge.png')}
-            style={{ width: badgeWidth, height: (badgeWidth * BADGE.height) / BADGE.width }}
-            resizeMode="contain"
-            accessibilityIgnoresInvertColors
-          />
+          <Badge width={badgeWidth} />
           <View style={styles.texts}>
             <AppText color={color.textOnBrandPrimary} style={styles.title} accessibilityRole="header">
               {copy.title}
@@ -137,6 +141,66 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
         />
       </View>
     </KeyboardAvoidingView>
+  );
+}
+
+/** Angle du balancement au repos, en degrés, et durée d'un aller. */
+const SWAY = 2;
+const SWAY_MS = 1800;
+
+/**
+ * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis se balance au bout de ses
+ * cordons : un premier élan amorti, puis un léger va-et-vient. Il pivote en haut au centre, où les cordons partent.
+ * Fixe si « Réduire les animations » est activé.
+ */
+function Badge({ width }: { width: number }) {
+  const height = (width * BADGE.height) / BADGE.width;
+  const reduceMotion = useReduceMotion();
+  const drop = useRef(new Animated.Value(0)).current;
+  const swing = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (reduceMotion) {
+      drop.setValue(1);
+      swing.setValue(0);
+      return;
+    }
+    const ease = Easing.inOut(Easing.sin);
+    const to = (toValue: number, duration: number) =>
+      Animated.timing(swing, { toValue, duration, easing: ease, useNativeDriver: true });
+    const animation = Animated.parallel([
+      Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }),
+      Animated.sequence([
+        // L'élan de l'arrivée, qui s'amortit jusqu'au balancement de repos.
+        to(6, 500),
+        to(-4, 800),
+        to(SWAY, 900),
+        Animated.loop(Animated.sequence([to(-SWAY, SWAY_MS), to(SWAY, SWAY_MS)])),
+      ]),
+    ]);
+    animation.start();
+    return () => animation.stop();
+  }, [reduceMotion, drop, swing]);
+
+  const rotate = swing.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] });
+  return (
+    <Animated.Image
+      source={require('@/assets/images/onboarding/badge.png')}
+      resizeMode="contain"
+      accessibilityIgnoresInvertColors
+      style={{
+        width,
+        height,
+        opacity: drop.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
+        // Pivot en haut au centre : on remonte de la moitié de la hauteur, on tourne, puis on redescend.
+        transform: [
+          { translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) },
+          { translateY: -height / 2 },
+          { rotate },
+          { translateY: height / 2 },
+        ],
+      }}
+    />
   );
 }
 
