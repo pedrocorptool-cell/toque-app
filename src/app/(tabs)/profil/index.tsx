@@ -40,7 +40,7 @@ export default function ProfilScreen() {
               {account.name}
             </AppText>
             <AppText variant="label" color={color.textSecondary} numberOfLines={1}>
-              {`ID : ${account.toqueId}`}
+              {`Pseudo : ${account.toqueId}`}
             </AppText>
           </View>
           <Icon name="edit" color={color.actionSecondaryIcon} />

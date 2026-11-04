@@ -4,7 +4,7 @@ export { Button, TextButton } from './Button';
 export { ChefButton, ChefTag } from './Chef';
 export { Checkbox } from './Checkbox';
 export { Creator, FilterChip, Tag } from './Chips';
-export { AiChatField, SearchField } from './Fields';
+export { AiChatField, BrandField, SearchField } from './Fields';
 export { Fab, IconButton } from './IconButton';
 export { IngredientIcon } from './IngredientIcon';
 export { Logo } from './Logo';

@@ -9,7 +9,7 @@ import { AppText, Avatar, BottomSheet, ListCard, ListRow, useToast, Tappable } f
 import { useProfile } from '@/data/ProfileContext';
 import { color, radius, space, text } from '@/theme/tokens';
 
-/** Figma : « Profil/ Compte » — avatar, nom d'utilisateur et ID Toqué. */
+/** Figma : « Profil/ Compte » — avatar, nom d'utilisateur et pseudo Toqué. */
 export default function CompteScreen() {
   const { account, setAccount, avatar, setAvatar } = useProfile();
   const toast = useToast();
@@ -70,9 +70,9 @@ export default function CompteScreen() {
           />
 
           <AppText variant="overline" color={color.textSecondary} nativeID="toque-id">
-            ID Toqué
+            Pseudo Toqué
           </AppText>
-          {/* L'ID rattache le téléphone à l'espace : il se lit et se copie, il ne se modifie pas. */}
+          {/* Le pseudo rattache le téléphone à l'espace : il se lit et se copie, il ne se modifie pas. */}
           <View
             style={[styles.field, styles.fieldDisabled]}
             accessibilityLabelledBy="toque-id"

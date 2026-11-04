@@ -1,4 +1,4 @@
-import { StyleSheet, TextInput, View } from 'react-native';
+import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
 import { color, radius, shadow, space, text } from '@/theme/tokens';
@@ -44,6 +44,25 @@ export function SearchField({
           <Icon name="close" size={16} color={ink} />
         </Tappable>
       )}
+    </View>
+  );
+}
+
+type BrandFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
+  /** Erreur : contour rouge, le message est affiché à part. */
+  invalid?: boolean;
+};
+
+/** Figma « Onbarding » (748:6064) : champ de saisie sur le fond brun, comme la recherche sans loupe. */
+export function BrandField({ invalid, ...props }: BrandFieldProps) {
+  return (
+    <View style={[styles.search, styles.brandField, invalid && styles.brandFieldInvalid]}>
+      <TextInput
+        {...props}
+        placeholderTextColor={color.textOnBrandSecondary}
+        selectionColor={color.textOnBrandPrimary}
+        style={[styles.input, { color: color.textOnBrandPrimary }, WEB_NO_OUTLINE]}
+      />
     </View>
   );
 }
@@ -98,6 +117,13 @@ const styles = StyleSheet.create({
     borderRadius: radius.pill,
     backgroundColor: color.bgBrandField,
   },
+  brandField: {
+    borderWidth: 1,
+    borderColor: 'transparent',
+  },
+  brandFieldInvalid: {
+    borderColor: color.feedbackDanger,
+  },
   searchSurface: {
     paddingHorizontal: space[16],
     backgroundColor: color.bgSurface,
@@ -121,3 +147,6 @@ const styles = StyleSheet.create({
     opacity: 0.6,
   },
 });
+
+// Sur le web, le contour de focus du navigateur s'ajouterait au champ.
+const WEB_NO_OUTLINE = Platform.OS === 'web' ? ({ outlineStyle: 'none' } as object) : null;

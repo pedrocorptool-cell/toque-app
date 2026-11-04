@@ -2,8 +2,8 @@ import type { ImageSourcePropType } from 'react-native';
 
 import { color } from '@/theme/tokens';
 
-/** ID d'invitation d'un espace Toqué : un pseudo d'un seul mot, « # » et 4 chiffres (FolleCourgette#0001). */
-export const isToqueId = (id: string) => /^[\p{L}\d]+#\d{4}$/u.test(id);
+/** Pseudo Toqué : 2 à 24 lettres, chiffres, espaces ou « _ # . - », comme le vérifie la base. */
+export const isPseudo = (pseudo: string) => /^[\p{L}\d _#.-]{2,24}$/u.test(pseudo.trim().replace(/\s+/g, ' '));
 
 export type AvatarId = 'onion' | 'tomato' | 'olive' | 'biscuit';
 

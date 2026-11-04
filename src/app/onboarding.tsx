@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { ART, OnboardingArt, type ArtName } from '@/components/screens/onboarding/OnboardingArt';
-import { SpaceSheet } from '@/components/screens/onboarding/SpaceSheet';
+import { AccountStep, type AccountMode } from '@/components/screens/onboarding/AccountStep';
 import { AvatarChooser } from '@/components/screens/profile/AvatarChooser';
 import { AppText, Button, IconButton, Logo, TextButton } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
@@ -39,7 +39,7 @@ const STEPS: Step[] = [
     art: 'list',
     text: 'Fini les vidéos sur pause et les allers-retours entre apps. Suis chaque étape, minuteur en main.',
   },
-  // Dernière étape : le choix de l'avatar, enregistré au « Valider ». Avant elle, la sheet de l'espace Toqué.
+  // Dernière étape : le choix de l'avatar, enregistré au « Valider ». Avant elle, l'écran du pseudo Toqué.
   { key: 'avatar', text: 'Choisis ton avatar Toqué pour créer ton compte' },
 ];
 
@@ -57,7 +57,8 @@ const SWIPE = 40;
  * Figma « Onbarding » (578:7999) : quatre écrans sur le fond brun, au premier lancement et depuis le profil.
  * Retour, logo et « Ignorer » en haut ; progression et CTA en bas ; on avance au bouton ou en faisant glisser.
  * Chaque illustration s'anime quand son étape est affichée ; la dernière étape fait choisir l'avatar Toqué.
- * Sans espace Toqué, on ne passe à l'avatar qu'après la sheet du pseudo et de l'ID (Figma 748:6064).
+ * Sans espace Toqué, on ne passe à l'avatar qu'après avoir créé son pseudo ou s'être connecté (Figma 748:6064,
+ * 1013:17485).
  */
 export default function OnboardingScreen() {
   const insets = useSafeAreaInsets();
@@ -67,7 +68,8 @@ export default function OnboardingScreen() {
   // Revue depuis le profil : l'espace existe déjà, l'avatar se valide sans créer de compte.
   const [hadAccount] = useState(Boolean(account.toqueId));
   const hasAccount = Boolean(account.toqueId);
-  const [spaceOpen, setSpaceOpen] = useState(false);
+  // Écran du pseudo, par-dessus le carrousel qui reste en place pour l'avatar.
+  const [accountMode, setAccountMode] = useState<AccountMode | null>(null);
   // Sans espace, la page de l'avatar n'existe pas encore : on ne peut pas l'atteindre en glissant. Elle apparaît une
   // fois le compte créé, et on y va dès qu'elle est en place.
   const pages = hasAccount ? STEPS : STEPS.slice(0, LAST);
@@ -95,10 +97,10 @@ export default function OnboardingScreen() {
     AccessibilityInfo.announceForAccessibility(i < LAST ? `Étape ${i + 1} sur ${LAST}` : 'Choix de l’avatar');
   };
 
-  /** Avant l'avatar, l'espace Toqué : sans lui, « Continuer », « Ignorer » ou un glissé ouvrent la sheet. */
+  /** Avant l'avatar, l'espace Toqué : sans lui, « Continuer », « Ignorer » ou un glissé ouvrent l'écran du pseudo. */
   const askSpace = () => {
     goTo(LAST - 1);
-    setSpaceOpen(true);
+    setAccountMode('create');
   };
   const next = () => {
     if (index === LAST) return finish(true);
@@ -116,108 +118,125 @@ export default function OnboardingScreen() {
   // Android : le bouton retour du système revient à l'étape précédente.
   useEffect(() => {
     const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (accountMode) {
+        setAccountMode(null);
+        return true;
+      }
       if (index === 0) return false;
       goTo(index - 1);
       return true;
     });
     return () => sub.remove();
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [index]);
+  }, [index, accountMode]);
 
   return (
     <View style={[styles.screen, { paddingTop: insets.top + space[24], paddingBottom: insets.bottom + space[24] }]}>
       <View style={styles.topRow}>
         <View style={styles.side}>
-          {index > 0 && (
-            <IconButton icon="chevronLeft" accessibilityLabel="Étape précédente" onPress={() => goTo(index - 1)} />
+          {(index > 0 || accountMode) && (
+            <IconButton
+              icon="chevronLeft"
+              accessibilityLabel="Étape précédente"
+              onPress={() => (accountMode ? setAccountMode(null) : goTo(index - 1))}
+            />
           )}
         </View>
         <Logo />
         <View style={[styles.side, styles.sideEnd]}>
-          <TextButton tone="onBrand" label="Ignorer" onPress={() => (hasAccount ? finish(false) : askSpace())} />
+          {/* Le pseudo ne s'ignore pas : sans lui, pas d'espace où ranger les recettes. */}
+          {!accountMode && (
+            <TextButton tone="onBrand" label="Ignorer" onPress={() => (hasAccount ? finish(false) : askSpace())} />
+          )}
         </View>
       </View>
 
-      <View style={styles.pager} onLayout={(e) => setPageHeight(e.nativeEvent.layout.height)}>
-        <Animated.FlatList
-          ref={pager}
-          data={pages}
-          keyExtractor={(step) => step.key}
-          horizontal
-          pagingEnabled
-          bounces={false}
-          showsHorizontalScrollIndicator={false}
-          getItemLayout={(_, i) => ({ length: width, offset: i * width, index: i })}
-          onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
-            useNativeDriver: false,
-            listener: (e: { nativeEvent: { contentOffset: { x: number } } }) => {
-              const i = Math.round(e.nativeEvent.contentOffset.x / width);
-              if (i !== index && i >= 0 && i < pages.length) setIndex(i);
-            },
-          })}
-          // Glisser vers la gauche sur la 3e étape fait comme « Continuer » : sans espace, la sheet s'ouvre.
-          onTouchStart={(e) => (touchX.current = pageXOf(e))}
-          onTouchEnd={(e) => {
-            const swipedNext = touchX.current - pageXOf(e) > SWIPE;
-            if (swipedNext && !hasAccount && index === LAST - 1 && !spaceOpen) askSpace();
-          }}
-          onContentSizeChange={(w) => {
-            if (avatarPending && w >= STEPS.length * width - 1) {
-              setAvatarPending(false);
-              goTo(LAST);
-            }
-          }}
-          scrollEventThrottle={16}
-          renderItem={({ item, index: i }) =>
-            'art' in item ? (
-              <View style={[styles.page, { width, height: pageHeight }]}>
-                <OnboardingArt name={item.art} playing={i === index && !reduceMotion} scale={artScale} />
-                <AppText color={color.textOnBrandPrimary} style={styles.text} accessibilityRole="header">
-                  {item.text}
-                </AppText>
-              </View>
-            ) : (
-              // Pas de marge latérale : le carrousel d'avatars prend toute la largeur de l'écran.
-              <View style={[styles.avatarPage, { width, height: pageHeight }]}>
-                <AvatarChooser
-                  avatarId={avatarId}
-                  onAvatarChange={setAvatarId}
-                  background={background}
-                  onBackgroundChange={setBackground}>
-                  <AppText
-                    color={color.textOnBrandPrimary}
-                    style={[styles.text, styles.avatarText]}
-                    accessibilityRole="header">
-                    {hadAccount ? 'Choisis ton avatar Toqué' : item.text}
+      <View style={styles.body}>
+        <View style={styles.pager} onLayout={(e) => setPageHeight(e.nativeEvent.layout.height)}>
+          <Animated.FlatList
+            ref={pager}
+            data={pages}
+            keyExtractor={(step) => step.key}
+            horizontal
+            pagingEnabled
+            bounces={false}
+            showsHorizontalScrollIndicator={false}
+            getItemLayout={(_, i) => ({ length: width, offset: i * width, index: i })}
+            onScroll={Animated.event([{ nativeEvent: { contentOffset: { x: scrollX } } }], {
+              useNativeDriver: false,
+              listener: (e: { nativeEvent: { contentOffset: { x: number } } }) => {
+                const i = Math.round(e.nativeEvent.contentOffset.x / width);
+                if (i !== index && i >= 0 && i < pages.length) setIndex(i);
+              },
+            })}
+            // Glisser vers la gauche sur la 3e étape fait comme « Continuer » : sans espace, l'écran du pseudo s'ouvre.
+            onTouchStart={(e) => (touchX.current = pageXOf(e))}
+            onTouchEnd={(e) => {
+              const swipedNext = touchX.current - pageXOf(e) > SWIPE;
+              if (swipedNext && !hasAccount && index === LAST - 1 && !accountMode) askSpace();
+            }}
+            onContentSizeChange={(w) => {
+              if (avatarPending && w >= STEPS.length * width - 1) {
+                setAvatarPending(false);
+                goTo(LAST);
+              }
+            }}
+            scrollEventThrottle={16}
+            renderItem={({ item, index: i }) =>
+              'art' in item ? (
+                <View style={[styles.page, { width, height: pageHeight }]}>
+                  <OnboardingArt name={item.art} playing={i === index && !reduceMotion} scale={artScale} />
+                  <AppText color={color.textOnBrandPrimary} style={styles.text} accessibilityRole="header">
+                    {item.text}
                   </AppText>
-                </AvatarChooser>
-              </View>
-            )
-          }
-        />
-      </View>
+                </View>
+              ) : (
+                // Pas de marge latérale : le carrousel d'avatars prend toute la largeur de l'écran.
+                <View style={[styles.avatarPage, { width, height: pageHeight }]}>
+                  <AvatarChooser
+                    avatarId={avatarId}
+                    onAvatarChange={setAvatarId}
+                    background={background}
+                    onBackgroundChange={setBackground}>
+                    <AppText
+                      color={color.textOnBrandPrimary}
+                      style={[styles.text, styles.avatarText]}
+                      accessibilityRole="header">
+                      {hadAccount ? 'Choisis ton avatar Toqué' : item.text}
+                    </AppText>
+                  </AvatarChooser>
+                </View>
+              )
+            }
+          />
+        </View>
 
-      <View style={styles.bottom}>
-        <Dots scrollX={scrollX} width={width} index={index} />
-        <Button
-          block
-          variant="secondary"
-          label={index === LAST ? (hadAccount ? 'Valider' : 'Valider et créer mon compte') : 'Continuer'}
-          onPress={next}
-        />
-      </View>
+        <View style={styles.bottom}>
+          <Dots scrollX={scrollX} width={width} index={index} />
+          <Button
+            block
+            variant="secondary"
+            label={index === LAST ? (hadAccount ? 'Valider' : 'Valider et créer mon compte') : 'Continuer'}
+            onPress={next}
+          />
+        </View>
 
-      <SpaceSheet
-        visible={spaceOpen}
-        onClose={() => setSpaceOpen(false)}
-        onCreate={async (created) => {
-          const returning = await join(created.toqueId, created.name);
-          setSpaceOpen(false);
-          // Espace déjà configuré (réinstallation, reconnexion) : l'avatar est retrouvé, pas besoin de le redemander.
-          if (returning) router.dismissTo('/');
-          else setAvatarPending(true);
-        }}
-      />
+        {accountMode && (
+          <View style={styles.account}>
+            <AccountStep
+              mode={accountMode}
+              onModeChange={setAccountMode}
+              onSubmit={async (pseudo, mode) => {
+                const returning = await join(pseudo, mode === 'create' ? 'create' : 'join');
+                setAccountMode(null);
+                // Espace déjà configuré (autre téléphone, réinstallation) : l'avatar est retrouvé, pas besoin de le redemander.
+                if (returning) router.dismissTo('/');
+                else setAvatarPending(true);
+              }}
+            />
+          </View>
+        )}
+      </View>
     </View>
   );
 }
@@ -305,8 +324,15 @@ const styles = StyleSheet.create({
   sideEnd: {
     justifyContent: 'flex-end',
   },
+  body: {
+    flex: 1,
+  },
   pager: {
     flex: 1,
+  },
+  account: {
+    ...StyleSheet.absoluteFill,
+    backgroundColor: color.bgBrandPage,
   },
   page: {
     alignItems: 'center',

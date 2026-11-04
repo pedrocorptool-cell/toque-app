@@ -28,8 +28,8 @@ export type SpaceData = {
 
 export type Table = 'recipes' | 'categories' | 'shopping_items';
 
-/** Pourquoi un ID n'a pas rattaché le téléphone, pour le message de la sheet. */
-export type JoinErrorKind = 'not_found' | 'too_many' | 'offline' | 'unknown';
+/** Pourquoi un pseudo n'a pas rattaché le téléphone, pour le message de l'écran de connexion. */
+export type JoinErrorKind = 'not_found' | 'taken' | 'bad_pseudo' | 'too_many' | 'offline' | 'unknown';
 export class JoinError extends Error {
   constructor(readonly kind: JoinErrorKind) {
     super(kind);
@@ -148,38 +148,46 @@ export async function restoreSpace(): Promise<SpaceData | null> {
   }
 }
 
-/** Rattache ce téléphone à l'espace de cet ID d'invitation et enregistre le pseudo saisi. */
-export async function joinSpace(code: string, name: string): Promise<SpaceData> {
+/** Connexion : rattache ce téléphone à l'espace de ce pseudo, avec ses recettes et son profil. */
+export function joinSpace(pseudo: string): Promise<SpaceData> {
+  return attempt(() => attach('join_space', pseudo), 'joinSpace');
+}
+
+/** Création : un espace neuf à ce pseudo, refusé s'il est déjà pris. Le pseudo sert aussi de nom d'utilisateur. */
+export function createSpace(pseudo: string): Promise<SpaceData> {
+  return attempt(() => attach('create_space', pseudo), 'createSpace');
+}
+
+async function attempt(run: () => Promise<SpaceData>, label: string): Promise<SpaceData> {
   try {
-    return await withTimeout(join(code, name), JOIN_TIMEOUT);
+    return await withTimeout(run(), JOIN_TIMEOUT);
   } catch (error) {
     if (error instanceof JoinError) throw error;
     const err = error as { message?: string; status?: number };
-    if (/too_many_attempts/.test(err.message ?? '')) throw new JoinError('too_many');
+    const message = err.message ?? '';
+    if (/too_many_attempts/.test(message)) throw new JoinError('too_many');
+    if (/\btaken\b/.test(message)) throw new JoinError('taken');
+    if (/bad_pseudo/.test(message)) throw new JoinError('bad_pseudo');
     if (isNetworkError(err)) throw new JoinError('offline');
-    console.warn('[Toqué] joinSpace', error);
+    console.warn(`[Toqué] ${label}`, error);
     throw new JoinError('unknown');
   }
 }
 
-async function join(code: string, name: string): Promise<SpaceData> {
+async function attach(rpc: 'join_space' | 'create_space', pseudo: string): Promise<SpaceData> {
   const auth = db().auth;
   const { data } = await auth.getSession();
   if (!data.session) {
     const { error } = await auth.signInAnonymously();
     if (error) throw error;
   }
-  const { data: spaceId, error } = await db().rpc('join_space', { p_code: code });
+  const { data: spaceId, error } = await db().rpc(rpc, { p_code: pseudo });
   if (error) throw error;
   if (!spaceId) throw new JoinError('not_found');
-  const space = await loadSpace(spaceId as string);
-  space.profile = { ...space.profile, name };
-  await saveProfile(space.spaceId, space.profile);
-  remember(space);
-  return space;
+  return loadSpace(spaceId as string);
 }
 
-/** Détache ce téléphone de son espace : les recettes restent dans la base, retrouvables avec l'ID. */
+/** Détache ce téléphone de son espace : les recettes restent dans la base, retrouvables avec le pseudo. */
 export async function leaveSpace() {
   const { data } = await db().auth.getSession();
   if (data.session) await db().from('space_members').delete().eq('user_id', data.session.user.id);

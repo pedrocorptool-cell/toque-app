@@ -3,6 +3,7 @@ import { createContext, useContext, useEffect, useMemo, useRef, useState, type R
 import { CATEGORIES, RECIPES } from './recipes';
 import { DEMO_SHOPPING } from './shopping';
 import {
+  createSpace,
   joinSpace,
   leaveSpace,
   pushRows,
@@ -29,9 +30,9 @@ export type Snapshot = Omit<SpaceData, 'spaceId'> & {
 type SpaceState = {
   ready: boolean;
   snapshot: Snapshot;
-  /** Lève une `JoinError` si l'ID ne rattache pas le téléphone. Renvoie true si l'onboarding avait déjà été fait
-   *  dans cet espace : l'avatar est alors retrouvé. */
-  join: (code: string, name: string) => Promise<boolean>;
+  /** Connexion (`join`) ou création (`create`) par pseudo. Lève une `JoinError` si le pseudo ne rattache pas le
+   *  téléphone. Renvoie true si l'onboarding avait déjà été fait dans cet espace : l'avatar est alors retrouvé. */
+  join: (pseudo: string, mode: 'join' | 'create') => Promise<boolean>;
   leave: () => Promise<void>;
 };
 
@@ -68,8 +69,10 @@ export function SpaceProvider({ children }: { children: ReactNode }) {
     () => ({
       ready,
       snapshot,
-      join: async (code, name) => {
-        const space = supabase ? await joinSpace(code, name) : { ...OFFLINE, code, profile: { name }, spaceId: null };
+      join: async (pseudo, mode) => {
+        const space = supabase
+          ? await (mode === 'create' ? createSpace : joinSpace)(pseudo)
+          : { ...OFFLINE, code: pseudo, profile: { name: pseudo }, spaceId: null };
         const profile: StoredProfile = space.profile;
         // Les espaces créés avant le drapeau `onboarded` comptent comme configurés s'ils ont un avatar.
         const returning = profile.onboarded ?? Boolean(profile.avatar);

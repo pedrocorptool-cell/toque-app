@@ -1,4 +1,4 @@
--- Toqué : tables, accès et ID d'invitation.
+-- Toqué : tables, accès et connexion par pseudo.
 -- À coller une fois dans Supabase > SQL Editor, puis « Run ». Le relancer ne casse rien.
 -- Prérequis : Authentication > Sign In / Providers > « Allow anonymous sign-ins » activé.
 
@@ -50,6 +50,16 @@ create table if not exists public.join_attempts (
 );
 create index if not exists join_attempts_user_at on public.join_attempts (user_id, at);
 
+-- Pseudo comparé sans majuscules, accents ni espaces en trop : « Zoé » et « zoe » sont le même compte.
+create extension if not exists unaccent with schema extensions;
+create or replace function public.toque_key(p text) returns text
+language sql stable set search_path = public, extensions as $$
+  select lower(extensions.unaccent(regexp_replace(trim(p), '\s+', ' ', 'g')))
+$$;
+alter table public.spaces add column if not exists code_key text;
+update public.spaces set code_key = public.toque_key(code) where code_key is null;
+create unique index if not exists spaces_pseudo_key on public.spaces (code_key);
+
 -- L'espace du téléphone qui fait la demande (aucun s'il n'a pas encore saisi d'ID).
 create or replace function public.my_space() returns uuid
 language sql stable security definer set search_path = public as $$
@@ -71,7 +81,7 @@ begin
   if v_fails >= 5 then
     raise exception 'too_many_attempts';
   end if;
-  select id into v_space from public.spaces where lower(code) = lower(trim(p_code));
+  select id into v_space from public.spaces where code_key = public.toque_key(p_code);
   if v_space is null then
     insert into public.join_attempts (user_id) values (auth.uid());
     return null;
@@ -82,6 +92,34 @@ begin
 end;
 $$;
 
+-- Crée l'espace de ce pseudo et y rattache le téléphone. Le pseudo sert ensuite à se reconnecter (V1, entre proches :
+-- il n'y a pas de mot de passe). Lève `taken` s'il est déjà pris, `bad_pseudo` s'il ne convient pas.
+create or replace function public.create_space(p_code text) returns uuid
+language plpgsql security definer set search_path = public as $$
+declare
+  v_code text := regexp_replace(trim(p_code), '\s+', ' ', 'g');
+  v_space uuid;
+begin
+  if auth.uid() is null then
+    raise exception 'not_signed_in';
+  end if;
+  if char_length(v_code) < 2 or char_length(v_code) > 24 or v_code !~ '^[[:alnum:] _#.-]+$' then
+    raise exception 'bad_pseudo';
+  end if;
+  if exists (select 1 from public.spaces where code_key = public.toque_key(v_code)) then
+    raise exception 'taken';
+  end if;
+  insert into public.spaces (code, code_key, profile)
+    values (v_code, public.toque_key(v_code), jsonb_build_object('name', v_code))
+    returning id into v_space;
+  insert into public.space_members (user_id, space_id) values (auth.uid(), v_space)
+    on conflict (user_id) do update set space_id = excluded.space_id, joined_at = now();
+  return v_space;
+end;
+$$;
+
+revoke all on function public.create_space(text) from public, anon;
+grant execute on function public.create_space(text) to authenticated;
 revoke all on function public.join_space(text) from public, anon;
 grant execute on function public.join_space(text) to authenticated;
 grant execute on function public.my_space() to authenticated;
@@ -123,5 +161,6 @@ drop policy if exists "images de mon espace" on storage.objects;
 create policy "images de mon espace" on storage.objects for insert to authenticated
   with check (bucket_id = 'recipe-images' and (storage.foldername(name))[1] = public.my_space()::text);
 
--- Ton espace. Pour un ami, relance seulement cette ligne avec son ID.
-insert into public.spaces (code) values ('FolleCourgette#0001') on conflict (code) do nothing;
+-- Les espaces se créent maintenant depuis l'app, avec un pseudo. Pour te reconnecter avec un pseudo plutôt qu'avec
+-- l'ancien ID, renomme ton espace (remplace « Pierre » par le pseudo voulu) :
+-- update public.spaces set code = 'Pierre', code_key = public.toque_key('Pierre') where code = 'FolleCourgette#0001';
