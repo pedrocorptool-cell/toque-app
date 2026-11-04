@@ -20,8 +20,11 @@ import {
   RecipeCard,
   SearchField,
   TextButton,
+  Toast,
+  useToast,
   type FilterOption,
 } from '@/components/ui';
+import { LIST_TOAST_END, RecipeActions, type RecipeSheet } from '@/components/screens/recipe/RecipeActions';
 import {
   type Category,
   DURATIONS,
@@ -37,6 +40,7 @@ import {
   type Recipe,
   type Filters,
 } from '@/data/recipes';
+import { haptics } from '@/data/haptics';
 import { socialOf } from '@/data/imports';
 import { useRecipes } from '@/data/RecipesContext';
 import { color, radius, space } from '@/theme/tokens';
@@ -62,6 +66,9 @@ export default function HomeScreen() {
   const [draft, setDraft] = useState<Filters>(EMPTY_FILTERS);
   const [creatorQuery, setCreatorQuery] = useState('');
   const [importOpen, setImportOpen] = useState(false);
+  // Appui long sur une carte : la sheet des actions de cette recette, puis celle qu'on y choisit.
+  const [actions, setActions] = useState<{ recipe: Recipe; sheet: RecipeSheet | null } | null>(null);
+  const toast = useToast();
   // Le + de la barre d'onglets passe un paramètre nouveau à chaque appui : la sheet d'import s'ouvre.
   const { importer } = useLocalSearchParams<{ importer?: string }>();
   useEffect(() => {
@@ -151,6 +158,10 @@ export default function HomeScreen() {
               hashtags={hashtagsOf(recipe, categories)}
               creator={creatorOf(recipe)}
               onPress={() => router.push(`/recette/${recipe.id}`)}
+              onLongPress={() => {
+                haptics.lift();
+                setActions({ recipe, sheet: 'menu' });
+              }}
             />
           ))}
           {results.length === 0 && (
@@ -204,6 +215,25 @@ export default function HomeScreen() {
           emptyLabel="Aucun créateur ne correspond."
         />
       </FilterSheet>
+
+      {actions && (
+        <RecipeActions
+          recipe={actions.recipe}
+          sheet={actions.sheet}
+          onSheet={(sheet) => setActions((a) => a && { ...a, sheet })}
+          onToast={toast.show}
+        />
+      )}
+      <Toast
+        message={toast.message}
+        onClose={toast.hide}
+        action={
+          toast.message?.endsWith(LIST_TOAST_END)
+            ? { label: 'Voir', onPress: () => (toast.hide(), router.navigate('/liste')) }
+            : undefined
+        }
+        style={styles.toast}
+      />
 
       <ImportSheet
         visible={importOpen}
@@ -264,6 +294,12 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: color.bgBrandPage,
+  },
+  toast: {
+    position: 'absolute',
+    left: space[16],
+    right: space[16],
+    bottom: space[16],
   },
   scrollContent: {
     flexGrow: 1,

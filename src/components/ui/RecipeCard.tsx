@@ -18,17 +18,28 @@ type RecipeCardProps = {
   hashtags?: string;
   creator: { name: string; avatar?: ImageSourcePropType };
   onPress?: () => void;
+  /** Appui long : la sheet des actions de la recette. */
+  onLongPress?: () => void;
 };
 
 /** Carte recette de la home (Figma : écran « Home »). */
-export function RecipeCard({ title, image, duration, hashtags, creator, onPress }: RecipeCardProps) {
+export function RecipeCard({ title, image, duration, hashtags, creator, onPress, onLongPress }: RecipeCardProps) {
   const reduceMotion = useReduceMotion();
   const photo = useRef(new Animated.Value(0)).current;
   const showPhoto = () =>
     Animated.timing(photo, { toValue: 1, duration: reduceMotion ? 0 : PHOTO_FADE, useNativeDriver: true }).start();
 
   return (
-    <Tappable feedback="card" accessibilityRole="button" onPress={onPress} style={styles.card}>
+    <Tappable
+      feedback="card"
+      accessibilityRole="button"
+      onPress={onPress}
+      onLongPress={onLongPress}
+      delayLongPress={400}
+      // Lecteur d'écran : les actions sont proposées sans appui long.
+      accessibilityActions={onLongPress ? [{ name: 'longpress', label: 'Actions' }] : undefined}
+      onAccessibilityAction={(e) => e.nativeEvent.actionName === 'longpress' && onLongPress?.()}
+      style={styles.card}>
       <View style={styles.image}>
         <Animated.Image
           source={image}

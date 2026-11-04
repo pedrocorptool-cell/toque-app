@@ -154,7 +154,10 @@ function instructions(categories: { id: string; label: string }[]) {
     'steps : une action par étape, phrase courte à l’infinitif. timer : la durée en secondes quand l’étape demande ' +
       'd’attendre (cuisson, repos), sinon null. ingredients : les numéros (à partir de 0, dans l’ordre de la liste ' +
       'ingredients) des ingrédients utilisés dans cette étape, liste vide si aucun.',
-    'tip : une astuce donnée par la source, ou null.',
+    'tip : seulement si la source écrit ou dit vraiment une astuce ou un conseil de cuisine (dans le texte, la ' +
+      'légende, les commentaires de l’auteur ou la vidéo) : variante, accompagnement, conservation, geste technique. ' +
+      'Reprends-la fidèlement, sans l’inventer. Un avis ou une description (« un vrai délice », « très peu sucré ») ' +
+      'n’est pas une astuce. Dans le doute, et le plus souvent, null.',
     categories.length
       ? `category : la catégorie qui convient le mieux, une seule, parmi ${categories.map((c) => `${c.id} (${c.label})`).join(', ')} ; null si aucune ne convient.`
       : 'category : null.',

@@ -1,4 +1,3 @@
-import * as Clipboard from 'expo-clipboard';
 import * as ImagePicker from 'expo-image-picker';
 import { router, useFocusEffect, useLocalSearchParams } from 'expo-router';
 import { useCallback, useEffect, useRef, useState } from 'react';
@@ -8,9 +7,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { BlurGlow } from '@/components/art/BlurGlow';
 import { Icon } from '@/components/icons/Icon';
 import { PaperCard } from '@/components/screens/recipe/PaperCard';
-import { SaveSheet } from '@/components/screens/recipe/SaveSheet';
-import { ShareDialog } from '@/components/screens/recipe/ShareDialog';
-import { ShoppingSheet } from '@/components/screens/recipe/ShoppingSheet';
+import { LIST_TOAST_END, RecipeActions, type RecipeSheet } from '@/components/screens/recipe/RecipeActions';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
 import { PICKER, picked } from '@/components/screens/import/PhotoImport';
 import { TipCard } from '@/components/screens/recipe/TipCard';
@@ -50,8 +47,6 @@ const TABS = [
   { value: 'steps', label: 'Recette', icon: 'recipe' },
 ] as const;
 
-/** Fin du toast d'ajout à la liste de courses, qui porte l'action « Voir ». */
-const LIST_TOAST_END = 'à la liste';
 const ESTIMATED = 'Vérifie si les quantités sont indiquées dans les commentaires. Si elles y sont,';
 /** Hauteur de la photo floutée derrière le hero (Figma : 244 px sous la barre d'état). */
 const BLUR_HEIGHT = 244;
@@ -113,11 +108,7 @@ export default function RecipeScreen() {
   useEffect(() => {
     if (timerCount === 0) setTimersOpen(false);
   }, [timerCount]);
-  const [menuOpen, setMenuOpen] = useState(false);
-  const [shareOpen, setShareOpen] = useState(false);
-  const [deleteOpen, setDeleteOpen] = useState(false);
-  const [saveOpen, setSaveOpen] = useState(false);
-  const [shoppingOpen, setShoppingOpen] = useState(false);
+  const [sheet, setSheet] = useState<RecipeSheet | null>(null);
   const [toast, setToast] = useState<string | null>(importee ? 'Recette importée dans tes recettes' : null);
   const photoRef = useRef<Image>(null);
   // Retour depuis un minuteur : la fiche s'ouvre sur l'onglet Recette, défilée jusqu'à l'étape du minuteur.
@@ -217,12 +208,6 @@ export default function RecipeScreen() {
     });
   };
 
-  // La sheet des actions descend d'abord : la suivante (enregistrer, partager…) ne s'ouvre qu'après.
-  const menuAction = (action: () => void) => () => {
-    setMenuOpen(false);
-    setTimeout(action, SHEET_DURATION);
-  };
-
   return (
     <View style={styles.screen}>
       <ScrollView
@@ -244,7 +229,7 @@ export default function RecipeScreen() {
               <Icon name="edit" color={color.textOnBrandPrimary} />
               <AppText color={color.textOnBrandPrimary}>Modifier</AppText>
             </Tappable>
-            <IconButton icon="more" accessibilityLabel="Plus d’actions" onPress={() => setMenuOpen(true)} />
+            <IconButton icon="more" accessibilityLabel="Plus d’actions" onPress={() => setSheet('menu')} />
           </View>
         </View>
 
@@ -285,7 +270,7 @@ export default function RecipeScreen() {
           <Tappable
             accessibilityRole="button"
             accessibilityLabel={saved ? `Modifier les catégories : ${saved}` : undefined}
-            onPress={() => setSaveOpen(true)}
+            onPress={() => setSheet('save')}
             style={styles.half}>
             {saved ? (
               <Tag label={saved} tone="onBrand" shrink />
@@ -326,7 +311,7 @@ export default function RecipeScreen() {
                 </View>
               }
               footer={
-                <Tappable accessibilityRole="button" onPress={() => setShoppingOpen(true)} style={styles.footerAction}>
+                <Tappable accessibilityRole="button" onPress={() => setSheet('shopping')} style={styles.footerAction}>
                   <Icon name="basket" color={color.actionSecondaryIcon} />
                   <AppText>Ajouter à la liste de courses</AppText>
                 </Tappable>
@@ -433,86 +418,15 @@ export default function RecipeScreen() {
         style={[styles.toast, { bottom: (tab === 'steps' ? CTA_SPACE : space[16]) + insets.bottom }]}
       />
 
-      {/* Figma 706:540 « Actions recette » : les actions du « … » dans une sheet, en bas de l'écran. */}
-      <BottomSheet visible={menuOpen} onClose={() => setMenuOpen(false)}>
-        <ListCard>
-          <ListRow
-            label="Enregistrer"
-            leading={<Icon name="bookmark" />}
-            onPress={menuAction(() => setSaveOpen(true))}
-          />
-          <ListRow
-            label="Ajouter à la liste de courses"
-            leading={<Icon name="basket" />}
-            onPress={menuAction(() => setShoppingOpen(true))}
-          />
-          <ListRow label="Partager" leading={<Icon name="qrCode" />} onPress={menuAction(() => setShareOpen(true))} />
-          <ListRow
-            label="Supprimer"
-            danger
-            leading={<Icon name="trash" color={color.feedbackDanger} />}
-            onPress={menuAction(() => setDeleteOpen(true))}
-          />
-        </ListCard>
-      </BottomSheet>
-
       <TimerSheet visible={timersOpen} onClose={() => setTimersOpen(false)} timers={timers} />
 
-      <ShareDialog
-        visible={shareOpen}
-        onClose={() => setShareOpen(false)}
-        onCopyLink={async () => {
-          await Clipboard.setStringAsync(`https://toque.app/recette/${recipe.id}`);
-          setShareOpen(false);
-          setToast('Lien copié');
-        }}
-      />
-
-      <Dialog
-        visible={deleteOpen}
-        onClose={() => setDeleteOpen(false)}
-        title="Supprimer la recette"
-        message={
-          <>
-            Es-tu sûr de vouloir supprimer la recette <AppText style={styles.strong}>{recipe.title}</AppText> ?
-          </>
-        }
-        confirmLabel="Oui, supprimer"
-        onConfirm={() => {
-          setDeleteOpen(false);
-          removeRecipe(recipe.id);
-          goBack();
-        }}
-      />
-
-      <SaveSheet
-        visible={saveOpen}
-        onClose={() => setSaveOpen(false)}
-        initial={recipe.categories}
-        onSave={(ids) => {
-          setSaveOpen(false);
-          setRecipeCategories(recipe.id, ids);
-          if (ids.length) haptics.success();
-          const labels = categories.filter((c) => ids.includes(c.id)).map((c) => c.label);
-          setToast(
-            labels.length ? `Recette enregistrée dans ${labels.join(', ')}` : 'Recette retirée de tes catégories',
-          );
-        }}
-      />
-
-      <ShoppingSheet
-        visible={shoppingOpen}
-        onClose={() => setShoppingOpen(false)}
-        items={ingredients}
-        onAdd={(selected) => {
-          addFromRecipe(selected, recipe.id);
-          setShoppingOpen(false);
-          setToast(
-            selected.length > 1
-              ? `${selected.length} ingrédients ajoutés ${LIST_TOAST_END}`
-              : `1 ingrédient ajouté ${LIST_TOAST_END}`,
-          );
-        }}
+      <RecipeActions
+        recipe={recipe}
+        sheet={sheet}
+        onSheet={setSheet}
+        servings={servings}
+        onToast={setToast}
+        onDeleted={() => goBack()}
       />
     </View>
   );

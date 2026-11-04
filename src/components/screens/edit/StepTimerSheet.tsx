@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
 import { AppText, BottomSheet, Button, TextButton } from '@/components/ui';
@@ -25,6 +25,9 @@ const two = (n: number) => (n ? String(n).padStart(2, '0') : '');
 /** Figma « Ajouter un minuteur » / « Modifier le minuteur » : heures, minutes, secondes. */
 export function StepTimerSheet({ visible, initial, onClose, onSave, onRemove }: StepTimerSheetProps) {
   const [values, setValues] = useState(['', '', '']);
+  const inputs = useRef<(TextInput | null)[]>([]);
+  // Références stables : une nouvelle fonction à chaque rendu ferait reprendre le focus au champ sur le web.
+  const refs = useRef(UNITS.map((_, i) => (el: TextInput | null) => void (inputs.current[i] = el))).current;
   useEffect(() => {
     if (visible) setValues(split(initial).map(two));
   }, [visible, initial]);
@@ -60,9 +63,13 @@ export function StepTimerSheet({ visible, initial, onClose, onSave, onRemove }: 
             </AppText>
             <TextInput
               value={values[i]}
-              onChangeText={(v) =>
-                setValues((list) => list.map((x, j) => (j === i ? v.replace(/\D/g, '').slice(0, 2) : x)))
-              }
+              ref={refs[i]}
+              onChangeText={(v) => {
+                const digits = v.replace(/\D/g, '').slice(0, 2);
+                setValues((list) => list.map((x, j) => (j === i ? digits : x)));
+                // Deux chiffres saisis : on passe tout seul au champ suivant.
+                if (digits.length === 2) inputs.current[i + 1]?.focus();
+              }}
               keyboardType="number-pad"
               maxLength={2}
               placeholder="00"
