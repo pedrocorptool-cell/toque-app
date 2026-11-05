@@ -1,5 +1,5 @@
 import type { ReactNode } from 'react';
-import { ScrollView, StyleSheet, View } from 'react-native';
+import { KeyboardAvoidingView, ScrollView, StyleSheet, View } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { AppText, IconButton, Logo, Toast, type ToastState } from '@/components/ui';
@@ -34,9 +34,12 @@ export function ProfileScreen({ title, back, toast, children }: ProfileScreenPro
         </View>
       </View>
 
-      <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
-        {children}
-      </ScrollView>
+      {/* Le clavier remonte la feuille (padding, Android compris : l'app est bord à bord) ; elle défile jusqu'au champ. */}
+      <KeyboardAvoidingView style={styles.keyboard} behavior="padding">
+        <ScrollView style={styles.sheet} contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled">
+          {children}
+        </ScrollView>
+      </KeyboardAvoidingView>
 
       <Toast message={toast.message} onClose={toast.hide} style={styles.toast} />
     </View>
@@ -47,6 +50,9 @@ const styles = StyleSheet.create({
   screen: {
     flex: 1,
     backgroundColor: color.bgBrandPage,
+  },
+  keyboard: {
+    flex: 1,
   },
   header: {
     gap: space[24],
