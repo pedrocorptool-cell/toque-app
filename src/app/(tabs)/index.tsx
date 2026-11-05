@@ -1,7 +1,17 @@
 import { router, useLocalSearchParams } from 'expo-router';
 import { useShareIntentContext } from 'expo-share-intent';
-import { useEffect, useMemo, useState } from 'react';
-import { Image, ScrollView, StyleSheet, View } from 'react-native';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import {
+  Animated,
+  Easing,
+  Image,
+  Platform,
+  ScrollView,
+  StyleSheet,
+  View,
+  type NativeScrollEvent,
+  type NativeSyntheticEvent,
+} from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { Icon } from '@/components/icons/Icon';
@@ -53,6 +63,10 @@ const FILTERS: { key: FilterKey; chip: string; title: string }[] = [
   { key: 'duration', chip: 'Durée', title: 'Durée de préparation' },
   { key: 'source', chip: 'Importé via', title: 'Importé via' },
 ];
+
+const NATIVE = Platform.OS !== 'web';
+// Défilement minimal (px) dans un sens avant de cacher ou de rouvrir la recherche et les filtres.
+const SCROLL_NUDGE = 6;
 
 /** Figma : écran « Home » — liste des recettes, recherche et filtres. */
 export default function HomeScreen() {
@@ -109,44 +123,40 @@ export default function HomeScreen() {
 
   const current = FILTERS.find((f) => f.key === shownFilter)!;
 
+  // En descendant dans la liste, la recherche et les filtres remontent sous le logo et « Vos recettes » : la liste
+  // prend tout l'écran. Ils reviennent dès qu'on remonte, et restent toujours visibles en haut de la liste.
+  const [topHeight, setTopHeight] = useState(0);
+  const [toolsHeight, setToolsHeight] = useState(0);
+  const hide = useRef(new Animated.Value(0)).current;
+  const hidden = useRef(false);
+  const lastY = useRef(0);
+  const setHidden = (next: boolean) => {
+    if (hidden.current === next) return;
+    hidden.current = next;
+    Animated.timing(hide, {
+      toValue: next ? 1 : 0,
+      duration: 240,
+      easing: Easing.out(Easing.cubic),
+      useNativeDriver: NATIVE,
+    }).start();
+  };
+  const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
+    const y = nativeEvent.contentOffset.y;
+    const dy = y - lastY.current;
+    if (y <= toolsHeight) setHidden(false);
+    else if (dy > SCROLL_NUDGE) setHidden(true);
+    else if (dy < -SCROLL_NUDGE) setHidden(false);
+    else return;
+    lastY.current = y;
+  };
+
   return (
     <View style={styles.screen}>
-      <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-        <View style={[styles.header, { paddingTop: insets.top + space[24] }]}>
-          <View style={styles.topRow}>
-            <Logo />
-            <Tappable
-              accessibilityRole="button"
-              accessibilityLabel="Profil"
-              onPress={() => router.navigate('/profil')}
-              hitSlop={space[4]}
-              style={styles.profile}>
-              <Icon name="profile" color={color.textPrimary} />
-            </Tappable>
-          </View>
-          <AppText variant="title" color={color.textOnBrandPrimary}>
-            Vos recettes
-          </AppText>
-          <SearchField value={query} onChangeText={setQuery} />
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.chipsScroller}
-            contentContainerStyle={styles.chips}>
-            {FILTERS.map(({ key, chip }) => {
-              const count = filters[key].length;
-              return (
-                <FilterChip
-                  key={key}
-                  label={count ? `${chip} (${count})` : chip}
-                  active={count > 0}
-                  onPress={() => openSheet(key)}
-                />
-              );
-            })}
-          </ScrollView>
-        </View>
-
+      <ScrollView
+        contentContainerStyle={[styles.scrollContent, { paddingTop: topHeight + toolsHeight }]}
+        keyboardShouldPersistTaps="handled"
+        onScroll={onScroll}
+        scrollEventThrottle={16}>
         <View style={styles.content}>
           <CookingCards />
           {results.map((recipe) => (
@@ -187,6 +197,55 @@ export default function HomeScreen() {
           )}
         </View>
       </ScrollView>
+
+      {/* Recherche et filtres : sous le haut de l'en-tête, ils glissent dessous quand on descend dans la liste. */}
+      <Animated.View
+        onLayout={(e) => setToolsHeight(e.nativeEvent.layout.height)}
+        style={[
+          styles.tools,
+          {
+            top: topHeight,
+            opacity: hide.interpolate({ inputRange: [0, 0.6, 1], outputRange: [1, 0, 0] }),
+            transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -toolsHeight] }) }],
+          },
+        ]}>
+        <SearchField value={query} onChangeText={setQuery} />
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.chipsScroller}
+          contentContainerStyle={styles.chips}>
+          {FILTERS.map(({ key, chip }) => {
+            const count = filters[key].length;
+            return (
+              <FilterChip
+                key={key}
+                label={count ? `${chip} (${count})` : chip}
+                active={count > 0}
+                onPress={() => openSheet(key)}
+              />
+            );
+          })}
+        </ScrollView>
+      </Animated.View>
+      <View
+        onLayout={(e) => setTopHeight(e.nativeEvent.layout.height)}
+        style={[styles.header, { paddingTop: insets.top + space[24] }]}>
+        <View style={styles.topRow}>
+          <Logo />
+          <Tappable
+            accessibilityRole="button"
+            accessibilityLabel="Profil"
+            onPress={() => router.navigate('/profil')}
+            hitSlop={space[4]}
+            style={styles.profile}>
+            <Icon name="profile" color={color.textPrimary} />
+          </Tappable>
+        </View>
+        <AppText variant="title" color={color.textOnBrandPrimary}>
+          Vos recettes
+        </AppText>
+      </View>
 
       <FilterSheet
         visible={openFilter !== null}
@@ -304,10 +363,27 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
+  // En-tête fixe : logo, profil et « Vos recettes » restent toujours à l'écran.
   header: {
+    position: 'absolute',
+    top: 0,
+    left: 0,
+    right: 0,
     gap: space[24],
     paddingHorizontal: space[16],
+    paddingBottom: space[16],
+    backgroundColor: color.bgBrandPage,
+  },
+  // Recherche et filtres, sous l'en-tête fixe (24 px sous le titre comme avant, 24 px au-dessus de la liste).
+  tools: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    gap: space[24],
+    paddingHorizontal: space[16],
+    paddingTop: space[8],
     paddingBottom: space[24],
+    backgroundColor: color.bgBrandPage,
   },
   // Même hauteur que la ligne de la home (icône du profil de 40 px) : le logo ne bouge pas d'un onglet à l'autre.
   topRow: {
