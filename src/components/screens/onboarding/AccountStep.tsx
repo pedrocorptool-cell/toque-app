@@ -156,6 +156,20 @@ const CARD = { x: 140.1, y: 239.3, width: 178, height: 110, radius: 9.6 };
 /** Un passage du reflet, de bas en haut, puis une pause avant le suivant. */
 const SHINE_MS = 1400;
 const SHINE_PAUSE = 2200;
+/** Progression du reflet sur un tour : immobile pendant la pause, puis un passage accéléré puis freiné. */
+const SHINE_STEPS = 16;
+const SHINE_START = SHINE_PAUSE / (SHINE_PAUSE + SHINE_MS);
+const SHINE_INPUT = [
+  0,
+  ...Array.from({ length: SHINE_STEPS + 1 }, (_, i) => SHINE_START + ((1 - SHINE_START) * i) / SHINE_STEPS),
+];
+const SHINE_CURVE = [
+  0,
+  ...Array.from({ length: SHINE_STEPS + 1 }, (_, i) => {
+    const t = i / SHINE_STEPS;
+    return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  }),
+];
 
 /**
  * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis reste en place ; un reflet
@@ -176,17 +190,16 @@ function Badge({ width }: { width: number }) {
     drop.setValue(0);
     shine.setValue(0);
     const fall = Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true });
-    // Le reflet commence et finit hors de la carte : le retour au départ de chaque tour ne se voit pas.
+    // Une seule animation native en boucle, pause comprise : enchaîner une pause et un passage dans la boucle ne
+    // rejouait le reflet qu'une fois. Il commence et finit hors de la carte, le retour au départ ne se voit pas.
     const sweep = Animated.loop(
-      Animated.sequence([
-        Animated.delay(SHINE_PAUSE),
-        Animated.timing(shine, {
-          toValue: 1,
-          duration: SHINE_MS,
-          easing: Easing.inOut(Easing.quad),
-          useNativeDriver: true,
-        }),
-      ]),
+      Animated.timing(shine, {
+        toValue: 1,
+        duration: SHINE_PAUSE + SHINE_MS,
+        easing: Easing.linear,
+        // Sur le web, une boucle « native » ne joue qu'un tour : on y anime en JS.
+        useNativeDriver: Platform.OS !== 'web',
+      }),
     );
     fall.start();
     sweep.start();
@@ -225,7 +238,14 @@ function Badge({ width }: { width: number }) {
           <Animated.View
             style={{
               height: band,
-              transform: [{ translateY: shine.interpolate({ inputRange: [0, 1], outputRange: [card.height, -band] }) }],
+              transform: [
+                {
+                  translateY: shine.interpolate({
+                    inputRange: SHINE_INPUT,
+                    outputRange: SHINE_CURVE.map((t) => card.height - t * (card.height + band)),
+                  }),
+                },
+              ],
             }}>
             <LinearGradient
               colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
