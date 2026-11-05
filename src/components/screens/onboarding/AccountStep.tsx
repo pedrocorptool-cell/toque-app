@@ -23,6 +23,8 @@ export type AccountMode = 'create' | 'login';
 const BADGE = { width: 327, height: 236 };
 /** L'image du badge avec ses cordons (Figma 1013:17424), qui débordent du cadre jusqu'aux bords de l'écran. */
 const BADGE_ART = { width: 452, height: 349 };
+/** Hauteur des cordons au-dessus du cadre : elle déborde vers le haut sans pousser le reste de l'écran. */
+const BADGE_OVERFLOW = BADGE_ART.height - BADGE.height;
 
 const COPY: Record<AccountMode, { title: string; message: string; switch: string; submit: string }> = {
   // Figma 748:6064
@@ -207,6 +209,8 @@ function Badge({ width }: { width: number }) {
       style={{
         width,
         height,
+        // Seul le cadre de la maquette compte dans la mise en page, comme dans Figma.
+        marginTop: -BADGE_OVERFLOW * scale,
         opacity: drop.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
         transform: [{ translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) }],
       }}>
