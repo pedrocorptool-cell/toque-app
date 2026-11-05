@@ -1,7 +1,9 @@
 import { useEffect, useRef, useState } from 'react';
+import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
   Easing,
+  Image,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -147,81 +149,90 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   );
 }
 
-/** Balancement au repos : ±2°, un aller-retour en 3,6 s. L'élan de l'arrivée ajoute jusqu'à 4° qui s'éteignent. */
-const SWAY = 2;
-const PERIOD = 3600;
-const KICK = 4;
-const KICK_MS = 4000;
-
-// Courbes échantillonnées pour `interpolate` : tout le mouvement est calculé côté natif, sans relais JS entre deux
-// étapes (c'était la cause des à-coups).
-const STEPS = 48;
-const T = Array.from({ length: STEPS + 1 }, (_, i) => i / STEPS);
-/** Un tour de sinus : finit comme il commence, en position et en vitesse, donc la boucle ne se voit pas. */
-const SINE = T.map((t) => SWAY * Math.sin(2 * Math.PI * t));
-/** L'élan, en phase avec le sinus (même période), amorti jusqu'à 0 en douceur. */
-const KICK_CURVE = T.map((t) => {
-  const ms = t * KICK_MS;
-  return KICK * Math.exp((-2.5 * ms) / KICK_MS) * (1 - t) ** 2 * Math.sin((2 * Math.PI * ms) / PERIOD);
-});
+/** La carte dans l'image du badge (Figma 1013:17426), en px de la maquette : c'est elle seule qui brille. */
+const CARD = { x: 140.1, y: 239.3, width: 178, height: 110, radius: 9.6 };
+/** Un passage du reflet, de bas en haut, puis une pause avant le suivant. */
+const SHINE_MS = 1400;
+const SHINE_PAUSE = 2200;
 
 /**
- * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis se balance au bout de ses
- * cordons : un premier élan amorti, puis un léger va-et-vient continu. Il pivote en haut au centre, où les cordons
- * partent. Fixe si « Réduire les animations » est activé.
+ * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis reste en place ; un reflet
+ * passe en boucle sur la carte, de bas en haut. Fixe et sans reflet si « Réduire les animations » est activé.
  */
 function Badge({ width }: { width: number }) {
-  const height = (width * BADGE_ART.height) / BADGE_ART.width;
+  const scale = width / BADGE_ART.width;
+  const height = BADGE_ART.height * scale;
   const reduceMotion = useReduceMotion();
   const drop = useRef(new Animated.Value(0)).current;
-  const sway = useRef(new Animated.Value(0)).current;
-  const kick = useRef(new Animated.Value(1)).current;
+  const shine = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     if (reduceMotion) {
       drop.setValue(1);
-      sway.setValue(0);
-      kick.setValue(1);
       return;
     }
     drop.setValue(0);
-    sway.setValue(0);
-    kick.setValue(0);
-    // Trois animations natives lancées ensemble : la boucle du sinus et l'élan partagent la même horloge.
-    const animations = [
-      Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }),
-      Animated.loop(
-        Animated.timing(sway, { toValue: 1, duration: PERIOD, easing: Easing.linear, useNativeDriver: true }),
-      ),
-      Animated.timing(kick, { toValue: 1, duration: KICK_MS, easing: Easing.linear, useNativeDriver: true }),
-    ];
-    animations.forEach((animation) => animation.start());
-    return () => animations.forEach((animation) => animation.stop());
-  }, [reduceMotion, drop, sway, kick]);
+    shine.setValue(0);
+    const fall = Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true });
+    // Le reflet commence et finit hors de la carte : le retour au départ de chaque tour ne se voit pas.
+    const sweep = Animated.loop(
+      Animated.sequence([
+        Animated.delay(SHINE_PAUSE),
+        Animated.timing(shine, {
+          toValue: 1,
+          duration: SHINE_MS,
+          easing: Easing.inOut(Easing.quad),
+          useNativeDriver: true,
+        }),
+      ]),
+    );
+    fall.start();
+    sweep.start();
+    return () => {
+      fall.stop();
+      sweep.stop();
+    };
+  }, [reduceMotion, drop, shine]);
 
-  const swing = Animated.add(
-    sway.interpolate({ inputRange: T, outputRange: SINE }),
-    kick.interpolate({ inputRange: T, outputRange: KICK_CURVE }),
-  );
-  const rotate = swing.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] });
+  const card = {
+    left: CARD.x * scale,
+    top: CARD.y * scale,
+    width: CARD.width * scale,
+    height: CARD.height * scale,
+    borderRadius: CARD.radius * scale,
+  };
+  const band = card.height;
   return (
-    <Animated.Image
-      source={require('@/assets/images/onboarding/badge.png')}
-      resizeMode="contain"
-      accessibilityIgnoresInvertColors
+    <Animated.View
       style={{
         width,
         height,
         opacity: drop.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
-        // Pivot en haut au centre : on remonte de la moitié de la hauteur, on tourne, puis on redescend.
-        transform: [
-          { translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) },
-          { translateY: -height / 2 },
-          { rotate },
-          { translateY: height / 2 },
-        ],
-      }}
-    />
+        transform: [{ translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) }],
+      }}>
+      <Image
+        source={require('@/assets/images/onboarding/badge.png')}
+        resizeMode="contain"
+        accessibilityIgnoresInvertColors
+        style={{ width, height }}
+      />
+      {!reduceMotion && (
+        <View pointerEvents="none" style={[styles.card, card]}>
+          <Animated.View
+            style={{
+              height: band,
+              transform: [{ translateY: shine.interpolate({ inputRange: [0, 1], outputRange: [card.height, -band] }) }],
+            }}>
+            <LinearGradient
+              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
+              start={{ x: 0, y: 1 }}
+              end={{ x: 0, y: 0 }}
+              style={StyleSheet.absoluteFill}
+            />
+          </Animated.View>
+        </View>
+      )}
+    </Animated.View>
   );
 }
 
@@ -254,7 +265,10 @@ const styles = StyleSheet.create({
     fontSize: 16,
     lineHeight: 24,
     textAlign: 'center',
-    paddingHorizontal: space[32],
+  },
+  card: {
+    position: 'absolute',
+    overflow: 'hidden',
   },
   fieldBlock: {
     alignSelf: 'stretch',
