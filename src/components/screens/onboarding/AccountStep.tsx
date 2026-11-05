@@ -10,6 +10,7 @@ import {
   View,
   useWindowDimensions,
 } from 'react-native';
+import Svg, { Ellipse } from 'react-native-svg';
 
 import { AppText, BrandField, Button, TextButton, useReduceMotion } from '@/components/ui';
 import { isPseudo } from '@/data/profile';
@@ -18,12 +19,13 @@ import { color, font, space } from '@/theme/tokens';
 
 export type AccountMode = 'create' | 'login';
 
-/** Figma 1013:17463 : le cadre du badge Toqué, 327 × 236. */
-const BADGE = { width: 327, height: 236 };
-/** L'image du badge avec ses cordons (Figma 1013:17424), qui débordent du cadre jusqu'aux bords de l'écran. */
-const BADGE_ART = { width: 452, height: 349 };
-/** Hauteur des cordons au-dessus du cadre : elle déborde vers le haut sans pousser le reste de l'écran. */
-const BADGE_OVERFLOW = BADGE_ART.height - BADGE.height;
+/** Figma 1044:17842 : l'illustration, une carte Toqué inclinée qui flotte au-dessus de son ombre, 361 × 208. */
+const ART = {
+  width: 361,
+  height: 208,
+  card: { image: require('@/assets/images/onboarding/badge-card.png'), x: 61, y: 0.5, width: 237.5, height: 195 },
+  shadow: { x: 36, y: 178.7, width: 289, height: 34 },
+};
 
 const COPY: Record<AccountMode, { title: string; message: string; switch: string; submit: string }> = {
   // Figma 748:6064
@@ -68,8 +70,8 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   const [busy, setBusy] = useState(false);
   const copy = COPY[mode];
   const { width } = useWindowDimensions();
-  // Réduit avec le cadre de 327 px sur les écrans plus étroits que la maquette.
-  const badgeScale = Math.min(1, (width - space[16] * 2) / BADGE.width);
+  // Réduite sur les écrans plus étroits que la maquette.
+  const artScale = Math.min(1, (width - space[16] * 2) / ART.width);
 
   const submit = async () => {
     if (busy || !pseudo.trim()) return;
@@ -88,7 +90,7 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={styles.main}>
-          <Badge width={BADGE_ART.width * badgeScale} />
+          <FloatingCard scale={artScale} />
           <View style={styles.texts}>
             <AppText color={color.textOnBrandPrimary} style={styles.title} accessibilityRole="header">
               {copy.title}
@@ -125,6 +127,13 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
                 {MESSAGES[error]}
               </AppText>
             )}
+            <Button
+              block
+              variant="secondary"
+              label={busy ? 'Vérification…' : copy.submit}
+              disabled={busy || !pseudo.trim()}
+              onPress={submit}
+            />
           </View>
         </View>
       </ScrollView>
@@ -138,99 +147,49 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
             onModeChange(mode === 'create' ? 'login' : 'create');
           }}
         />
-        <Button
-          block
-          variant="secondary"
-          label={busy ? 'Vérification…' : copy.submit}
-          disabled={busy || !pseudo.trim()}
-          onPress={submit}
-        />
       </View>
     </KeyboardAvoidingView>
   );
 }
 
-/** Calques du badge (Figma 1013:17424), en px de la maquette dans l'image de 452 × 349. */
-const BADGE_LAYERS = {
-  base: require('@/assets/images/onboarding/badge-base.png'),
-  /** Les deux reflets obliques de la carte (Rectangles 72 et 73). */
-  shine: { image: require('@/assets/images/onboarding/badge-shine.png'), x: 202.8, y: 239.3, width: 101, height: 110 },
-  /** Les 14 étoiles de l'ID, qui se tapent une à une. */
-  stars: { image: require('@/assets/images/onboarding/badge-stars.png'), x: 219.3, y: 299.6, width: 78, height: 4 },
-};
-const STAR_COUNT = 14;
-/** La carte, où passent les reflets. */
-const CARD = { x: 140.1, y: 239.3, width: 178, height: 110, radius: 9.6 };
-
-/**
- * Un tour de 5,4 s sur une seule horloge (une boucle native d'un seul `timing` : enchaîner des étapes dans la boucle
- * ne la rejouait qu'une fois). Les étoiles se tapent, les reflets traversent la carte, puis les étoiles s'effacent.
- */
-const CYCLE = 5400;
-const at = (ms: number) => ms / CYCLE;
-const TYPE = { from: at(300), to: at(1500) };
-const SWEEP = { from: at(2000), to: at(3200) };
-const ERASE = { from: at(4600), to: at(4900) };
-// Une marche par étoile : l'ID se tape, il ne glisse pas.
-const TYPE_INPUT = [0, TYPE.from];
-const TYPE_OUTPUT = [0, 0];
-for (let i = 1; i <= STAR_COUNT; i++) {
-  const t = TYPE.from + ((TYPE.to - TYPE.from) * i) / STAR_COUNT;
-  TYPE_INPUT.push(t - 0.0001, t);
-  TYPE_OUTPUT.push((i - 1) / STAR_COUNT, i / STAR_COUNT);
-}
-TYPE_INPUT.push(1);
-TYPE_OUTPUT.push(1);
-/** Passage des reflets, accéléré puis freiné, échantillonné pour `interpolate`. */
-const SWEEP_STEPS = 12;
-const SWEEP_INPUT = [
-  0,
-  ...Array.from({ length: SWEEP_STEPS + 1 }, (_, i) => SWEEP.from + ((SWEEP.to - SWEEP.from) * i) / SWEEP_STEPS),
-  1,
-];
-const SWEEP_OUTPUT = [
-  0,
-  ...Array.from({ length: SWEEP_STEPS + 1 }, (_, i) => {
-    const t = i / SWEEP_STEPS;
-    return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-  }),
-  1,
-];
+/** Un aller-retour de flottement : la carte monte et redescend, son ombre se resserre quand elle s'éloigne. */
+const FLOAT_MS = 3200;
+const FLOAT_STEPS = 24;
+const FLOAT_INPUT = Array.from({ length: FLOAT_STEPS + 1 }, (_, i) => i / FLOAT_STEPS);
+/** Un tour de sinus, de 0 à 0 : la boucle se raccorde sans à-coup, en position comme en vitesse. */
+const FLOAT_SINE = FLOAT_INPUT.map((t) => Math.sin(2 * Math.PI * t));
 // Sur le web, une boucle « native » ne joue qu'un tour : on y anime en JS.
 const NATIVE = Platform.OS !== 'web';
 
 /**
- * Comme les autres illustrations de l'onboarding : le badge descend avec un petit rebond, puis en boucle son ID se
- * tape étoile par étoile et ses reflets traversent la carte. Au repos (« Réduire les animations »), il est tel que
- * dans Figma.
+ * Comme les autres illustrations de l'onboarding : la carte tombe sur son ombre avec un petit rebond, puis flotte en
+ * boucle, en montant et en se penchant un peu, pendant que son ombre se resserre. Tout le flottement suit une seule
+ * horloge en boucle native. Immobile, telle que dans Figma, si « Réduire les animations » est activé.
  */
-function Badge({ width }: { width: number }) {
-  const scale = width / BADGE_ART.width;
-  const height = BADGE_ART.height * scale;
+function FloatingCard({ scale }: { scale: number }) {
   const reduceMotion = useReduceMotion();
   const drop = useRef(new Animated.Value(0)).current;
   const clock = useRef(new Animated.Value(0)).current;
-  // Au repos (« Réduire les animations ») : l'ID et les reflets tels que dans Figma.
-  const playing = !reduceMotion;
 
   useEffect(() => {
     if (reduceMotion) {
       drop.setValue(1);
+      clock.setValue(0);
       return;
     }
     drop.setValue(0);
     clock.setValue(0);
     const fall = Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: NATIVE });
-    const loop = Animated.loop(
-      Animated.timing(clock, { toValue: 1, duration: CYCLE, easing: Easing.linear, useNativeDriver: NATIVE }),
+    const float = Animated.loop(
+      Animated.timing(clock, { toValue: 1, duration: FLOAT_MS, easing: Easing.linear, useNativeDriver: NATIVE }),
     );
     fall.start();
-    // Le badge tombe avec un ID vide ; la boucle démarre quand il s'est posé.
-    const timer = setTimeout(() => loop.start(), 700);
+    // Le flottement commence une fois la carte posée.
+    const timer = setTimeout(() => float.start(), 900);
     return () => {
       clearTimeout(timer);
       fall.stop();
-      loop.stop();
+      float.stop();
     };
   }, [reduceMotion, drop, clock]);
 
@@ -241,70 +200,55 @@ function Badge({ width }: { width: number }) {
     width: layer.width * scale,
     height: layer.height * scale,
   });
-  const card = { ...box(CARD), borderRadius: CARD.radius * scale };
-  const stars = BADGE_LAYERS.stars;
-  const shine = BADGE_LAYERS.shine;
-  const starsWidth = stars.width * scale;
-  // Part de l'ID tapée : la fenêtre qui le montre s'ouvre de gauche à droite, l'image restant en place.
-  const typed = clock.interpolate({ inputRange: TYPE_INPUT, outputRange: TYPE_OUTPUT });
-  const hidden = typed.interpolate({ inputRange: [0, 1], outputRange: [-starsWidth, 0] });
-  const sweep = clock.interpolate({ inputRange: SWEEP_INPUT, outputRange: SWEEP_OUTPUT });
-  // Les reflets partent juste avant le bord gauche de la carte et sortent par le bord droit.
-  const shineFrom = (CARD.x - shine.x - shine.width) * scale;
-  const shineTo = (CARD.x + CARD.width - shine.x) * scale;
+  const lift = clock.interpolate({ inputRange: FLOAT_INPUT, outputRange: FLOAT_SINE });
+  const { card, shadow } = ART;
 
   return (
-    <Animated.View
-      style={{
-        width,
-        height,
-        // Seul le cadre de la maquette compte dans la mise en page, comme dans Figma.
-        marginTop: -BADGE_OVERFLOW * scale,
-        opacity: drop.interpolate({ inputRange: [0, 0.4], outputRange: [0, 1], extrapolate: 'clamp' }),
-        transform: [{ translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) }],
-      }}>
-      <Image
-        source={BADGE_LAYERS.base}
-        resizeMode="contain"
-        accessibilityIgnoresInvertColors
-        style={{ width, height }}
-      />
+    <View style={{ width: ART.width * scale, height: ART.height * scale }}>
       <Animated.View
         style={[
-          box(stars),
-          styles.clip,
-          playing && {
-            opacity: clock.interpolate({ inputRange: [0, ERASE.from, ERASE.to, 1], outputRange: [1, 1, 0, 0] }),
-            transform: [{ translateX: hidden }],
+          box(shadow),
+          {
+            opacity: drop.interpolate({ inputRange: [0, 1], outputRange: [0, 1], extrapolate: 'clamp' }),
+            transform: [
+              { scaleX: drop.interpolate({ inputRange: [0, 1], outputRange: [0.5, 1] }) },
+              // En haut de son flottement, la carte est plus loin : l'ombre rétrécit.
+              { scale: lift.interpolate({ inputRange: [-1, 1], outputRange: [1.05, 0.95] }) },
+            ],
           },
         ]}>
-        <Animated.Image
-          source={stars.image}
-          style={[
-            { width: starsWidth, height: stars.height * scale },
-            playing && { transform: [{ translateX: Animated.multiply(hidden, -1) }] },
-          ]}
+        {/* Figma : ellipse noire à 20 %. */}
+        <Svg width="100%" height="100%" viewBox={`0 0 ${shadow.width} ${shadow.height}`} preserveAspectRatio="none">
+          <Ellipse
+            cx={shadow.width / 2}
+            cy={shadow.height / 2}
+            rx={shadow.width / 2}
+            ry={shadow.height / 2}
+            fill="#000"
+            fillOpacity={0.2}
+          />
+        </Svg>
+      </Animated.View>
+      <Animated.View
+        style={[
+          box(card),
+          {
+            opacity: drop.interpolate({ inputRange: [0, 0.3], outputRange: [0, 1], extrapolate: 'clamp' }),
+            transform: [
+              { translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-120 * scale, 0] }) },
+              { translateY: lift.interpolate({ inputRange: [-1, 1], outputRange: [5 * scale, -5 * scale] }) },
+              { rotate: lift.interpolate({ inputRange: [-1, 1], outputRange: ['1.5deg', '-1.5deg'] }) },
+            ],
+          },
+        ]}>
+        <Image
+          source={card.image}
+          resizeMode="contain"
+          accessibilityIgnoresInvertColors
+          style={{ width: card.width * scale, height: card.height * scale }}
         />
       </Animated.View>
-      <View pointerEvents="none" style={[card, styles.clip]}>
-        <Animated.Image
-          source={shine.image}
-          style={[
-            box({ ...shine, x: shine.x - CARD.x, y: shine.y - CARD.y }),
-            playing && {
-              transform: [
-                {
-                  translateX: sweep.interpolate({
-                    inputRange: [0, 1],
-                    outputRange: [shineFrom, shineTo],
-                  }),
-                },
-              ],
-            },
-          ]}
-        />
-      </View>
-    </Animated.View>
+    </View>
   );
 }
 
@@ -338,19 +282,16 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
   },
-  clip: {
-    overflow: 'hidden',
-  },
+  // Figma : le champ et le bouton à 16 px l'un de l'autre, le message d'erreur entre les deux.
   fieldBlock: {
     alignSelf: 'stretch',
-    gap: space[8],
+    gap: space[16],
   },
   error: {
     textAlign: 'center',
   },
   bottom: {
     alignItems: 'center',
-    gap: space[24],
     paddingHorizontal: space[16],
   },
 });
