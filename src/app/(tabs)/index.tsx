@@ -135,7 +135,7 @@ export default function HomeScreen() {
     hidden.current = next;
     Animated.timing(hide, {
       toValue: next ? 1 : 0,
-      duration: 240,
+      duration: 300,
       easing: Easing.out(Easing.cubic),
       useNativeDriver: NATIVE,
     }).start();
@@ -143,7 +143,7 @@ export default function HomeScreen() {
   const onScroll = ({ nativeEvent }: NativeSyntheticEvent<NativeScrollEvent>) => {
     const y = nativeEvent.contentOffset.y;
     const dy = y - lastY.current;
-    if (y <= toolsHeight) setHidden(false);
+    if (y <= space[24]) setHidden(false);
     else if (dy > SCROLL_NUDGE) setHidden(true);
     else if (dy < -SCROLL_NUDGE) setHidden(false);
     else return;
@@ -152,53 +152,7 @@ export default function HomeScreen() {
 
   return (
     <View style={styles.screen}>
-      <ScrollView
-        contentContainerStyle={[styles.scrollContent, { paddingTop: topHeight + toolsHeight }]}
-        keyboardShouldPersistTaps="handled"
-        onScroll={onScroll}
-        scrollEventThrottle={16}>
-        <View style={styles.content}>
-          <CookingCards />
-          {results.map((recipe) => (
-            <RecipeCard
-              key={recipe.id}
-              title={recipe.title}
-              image={recipe.image}
-              duration={`${recipe.duration} mn`}
-              hashtags={hashtagsOf(recipe, categories)}
-              creator={creatorOf(recipe)}
-              onPress={() => router.push(`/recette/${recipe.id}`)}
-              onLongPress={() => {
-                haptics.lift();
-                setActions({ recipe, sheet: 'menu' });
-              }}
-            />
-          ))}
-          {results.length === 0 && (
-            <View style={styles.noRecipe}>
-              <Image source={NOTEBOOK} style={styles.notebook} />
-              {recipes.length === 0 ? (
-                <View style={styles.noRecipeTexts}>
-                  <AppText variant="headline">Aucune recette</AppText>
-                  <AppText color={color.textSecondary} style={styles.noRecipeText}>
-                    Tu n’as encore aucune recette enregistrée. Importe ta première recette avec le bouton + !
-                  </AppText>
-                </View>
-              ) : (
-                <View style={styles.noRecipeTexts}>
-                  <AppText variant="headline">Aucune recette trouvée</AppText>
-                  <AppText color={color.textSecondary} style={styles.noRecipeText}>
-                    Nous n’avons trouvé aucune recette. Modifie les filtres ou essaye un autre mot clé.
-                  </AppText>
-                  <TextButton label="Réinitialiser les filtres" onPress={resetAll} />
-                </View>
-              )}
-            </View>
-          )}
-        </View>
-      </ScrollView>
-
-      {/* Recherche et filtres : sous le haut de l'en-tête, ils glissent dessous quand on descend dans la liste. */}
+      {/* Recherche et filtres : sous le haut de l'en-tête, la feuille des recettes les recouvre quand on descend. */}
       <Animated.View
         onLayout={(e) => setToolsHeight(e.nativeEvent.layout.height)}
         style={[
@@ -206,7 +160,7 @@ export default function HomeScreen() {
           {
             top: topHeight,
             opacity: hide.interpolate({ inputRange: [0, 0.6, 1], outputRange: [1, 0, 0] }),
-            transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -toolsHeight] }) }],
+            transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -space[16]] }) }],
           },
         ]}>
         <SearchField value={query} onChangeText={setQuery} />
@@ -246,6 +200,63 @@ export default function HomeScreen() {
           Vos recettes
         </AppText>
       </View>
+      {/* La feuille des recettes : en descendant, elle monte jusque sous « Vos recettes » et recouvre la recherche et
+          les filtres ; elle redescend dès qu'on remonte. Elle déborde en bas d'autant, la liste garde son défilement. */}
+      <Animated.View
+        style={[
+          styles.sheet,
+          {
+            top: topHeight + toolsHeight,
+            bottom: -toolsHeight,
+            transform: [{ translateY: hide.interpolate({ inputRange: [0, 1], outputRange: [0, -toolsHeight] }) }],
+          },
+        ]}>
+        <ScrollView
+          contentContainerStyle={[styles.scrollContent, { paddingBottom: toolsHeight }]}
+          keyboardShouldPersistTaps="handled"
+          onScroll={onScroll}
+          scrollEventThrottle={16}>
+          <View style={styles.content}>
+            <CookingCards />
+            {results.map((recipe) => (
+              <RecipeCard
+                key={recipe.id}
+                title={recipe.title}
+                image={recipe.image}
+                duration={`${recipe.duration} mn`}
+                hashtags={hashtagsOf(recipe, categories)}
+                creator={creatorOf(recipe)}
+                onPress={() => router.push(`/recette/${recipe.id}`)}
+                onLongPress={() => {
+                  haptics.lift();
+                  setActions({ recipe, sheet: 'menu' });
+                }}
+              />
+            ))}
+            {results.length === 0 && (
+              <View style={styles.noRecipe}>
+                <Image source={NOTEBOOK} style={styles.notebook} />
+                {recipes.length === 0 ? (
+                  <View style={styles.noRecipeTexts}>
+                    <AppText variant="headline">Aucune recette</AppText>
+                    <AppText color={color.textSecondary} style={styles.noRecipeText}>
+                      Tu n’as encore aucune recette enregistrée. Importe ta première recette avec le bouton + !
+                    </AppText>
+                  </View>
+                ) : (
+                  <View style={styles.noRecipeTexts}>
+                    <AppText variant="headline">Aucune recette trouvée</AppText>
+                    <AppText color={color.textSecondary} style={styles.noRecipeText}>
+                      Nous n’avons trouvé aucune recette. Modifie les filtres ou essaye un autre mot clé.
+                    </AppText>
+                    <TextButton label="Réinitialiser les filtres" onPress={resetAll} />
+                  </View>
+                )}
+              </View>
+            )}
+          </View>
+        </ScrollView>
+      </Animated.View>
 
       <FilterSheet
         visible={openFilter !== null}
@@ -371,17 +382,16 @@ const styles = StyleSheet.create({
     right: 0,
     gap: space[24],
     paddingHorizontal: space[16],
-    paddingBottom: space[16],
+    paddingBottom: space[24],
     backgroundColor: color.bgBrandPage,
   },
-  // Recherche et filtres, sous l'en-tête fixe (24 px sous le titre comme avant, 24 px au-dessus de la liste).
+  // Recherche et filtres, sous l'en-tête fixe : 24 px sous le titre, 24 px au-dessus de la feuille des recettes.
   tools: {
     position: 'absolute',
     left: 0,
     right: 0,
     gap: space[24],
     paddingHorizontal: space[16],
-    paddingTop: space[8],
     paddingBottom: space[24],
     backgroundColor: color.bgBrandPage,
   },
@@ -399,14 +409,20 @@ const styles = StyleSheet.create({
     gap: space[8],
     paddingHorizontal: space[16],
   },
+  sheet: {
+    position: 'absolute',
+    left: 0,
+    right: 0,
+    overflow: 'hidden',
+    borderTopLeftRadius: radius.sheet,
+    borderTopRightRadius: radius.sheet,
+    backgroundColor: color.bgPage,
+  },
   content: {
     flex: 1,
     gap: space[16],
     padding: space[16],
     paddingBottom: space[24],
-    borderTopLeftRadius: radius.sheet,
-    borderTopRightRadius: radius.sheet,
-    backgroundColor: color.bgPage,
   },
   noRecipe: {
     alignItems: 'center',
