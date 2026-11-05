@@ -45,7 +45,7 @@ const COPY: Record<AccountMode, { title: string; message: string; switch: string
 
 const MESSAGES: Record<JoinErrorKind, string> = {
   bad_pseudo: 'Ton pseudo doit faire 2 à 24 caractères : lettres, chiffres, espaces ou _ # . -',
-  taken: 'Ce pseudo n’est pas disponible.',
+  taken: 'Ce pseudo n’est pas disponible',
   not_found: 'Aucun compte Toqué à ce pseudo. Vérifie l’orthographe.',
   too_many: 'Trop d’essais. Réessaie dans 15 minutes.',
   offline: 'Pas de connexion. Vérifie ton réseau et réessaie.',
