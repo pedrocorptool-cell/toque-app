@@ -3,6 +3,7 @@ import {
   Animated,
   Easing,
   Image,
+  Keyboard,
   KeyboardAvoidingView,
   Platform,
   ScrollView,
@@ -69,6 +70,11 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   const [error, setError] = useState<JoinErrorKind | null>(null);
   const [busy, setBusy] = useState(false);
   const copy = COPY[mode];
+  const scroll = useRef<ScrollView>(null);
+  useEffect(() => {
+    const sub = Keyboard.addListener('keyboardDidShow', () => scroll.current?.scrollToEnd({ animated: true }));
+    return () => sub.remove();
+  }, []);
   const { width } = useWindowDimensions();
   // Réduite sur les écrans plus étroits que la maquette.
   const artScale = Math.min(1, (width - space[16] * 2) / ART.width);
@@ -87,8 +93,14 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   };
 
   return (
-    <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
-      <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" bounces={false}>
+    // Le clavier remonte l'écran (padding, Android compris : l'app est bord à bord, la fenêtre ne se redimensionne
+    // pas) et on fait défiler jusqu'au champ et à son bouton, pour qu'ils restent visibles et touchables.
+    <KeyboardAvoidingView style={styles.root} behavior="padding">
+      <ScrollView
+        ref={scroll}
+        contentContainerStyle={styles.content}
+        keyboardShouldPersistTaps="handled"
+        bounces={false}>
         <View style={styles.main}>
           <FloatingCard scale={artScale} />
           <View style={styles.texts}>
