@@ -1,5 +1,4 @@
 import { useEffect, useRef, useState } from 'react';
-import { LinearGradient } from 'expo-linear-gradient';
 import {
   Animated,
   Easing,
@@ -30,7 +29,7 @@ const COPY: Record<AccountMode, { title: string; message: string; switch: string
   // Figma 748:6064
   create: {
     title: 'Crée ton espace Toqué',
-    message: 'Choisis un pseudo qui claque et retiens-le pour tes futures connexions Toqué.',
+    message: 'Choisis un pseudo qui claque et retiens-le pour tes prochaines connexions Toqué.',
     switch: 'J’ai déjà un compte Toqué',
     submit: 'Continuer',
   },
@@ -151,36 +150,68 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   );
 }
 
-/** La carte dans l'image du badge (Figma 1013:17426), en px de la maquette : c'est elle seule qui brille. */
+/** Calques du badge (Figma 1013:17424), en px de la maquette dans l'image de 452 × 349. */
+const BADGE_LAYERS = {
+  base: require('@/assets/images/onboarding/badge-base.png'),
+  /** Les deux reflets obliques de la carte (Rectangles 72 et 73). */
+  shine: { image: require('@/assets/images/onboarding/badge-shine.png'), x: 202.8, y: 239.3, width: 101, height: 110 },
+  /** Les 14 étoiles de l'ID, qui se tapent une à une. */
+  stars: { image: require('@/assets/images/onboarding/badge-stars.png'), x: 219.3, y: 299.6, width: 78, height: 4 },
+};
+const STAR_COUNT = 14;
+/** La carte, où passent les reflets. */
 const CARD = { x: 140.1, y: 239.3, width: 178, height: 110, radius: 9.6 };
-/** Un passage du reflet, de bas en haut, puis une pause avant le suivant. */
-const SHINE_MS = 1400;
-const SHINE_PAUSE = 2200;
-/** Progression du reflet sur un tour : immobile pendant la pause, puis un passage accéléré puis freiné. */
-const SHINE_STEPS = 16;
-const SHINE_START = SHINE_PAUSE / (SHINE_PAUSE + SHINE_MS);
-const SHINE_INPUT = [
-  0,
-  ...Array.from({ length: SHINE_STEPS + 1 }, (_, i) => SHINE_START + ((1 - SHINE_START) * i) / SHINE_STEPS),
-];
-const SHINE_CURVE = [
-  0,
-  ...Array.from({ length: SHINE_STEPS + 1 }, (_, i) => {
-    const t = i / SHINE_STEPS;
-    return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
-  }),
-];
 
 /**
- * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis reste en place ; un reflet
- * passe en boucle sur la carte, de bas en haut. Fixe et sans reflet si « Réduire les animations » est activé.
+ * Un tour de 5,4 s sur une seule horloge (une boucle native d'un seul `timing` : enchaîner des étapes dans la boucle
+ * ne la rejouait qu'une fois). Les étoiles se tapent, les reflets traversent la carte, puis les étoiles s'effacent.
+ */
+const CYCLE = 5400;
+const at = (ms: number) => ms / CYCLE;
+const TYPE = { from: at(300), to: at(1500) };
+const SWEEP = { from: at(2000), to: at(3200) };
+const ERASE = { from: at(4600), to: at(4900) };
+// Une marche par étoile : l'ID se tape, il ne glisse pas.
+const TYPE_INPUT = [0, TYPE.from];
+const TYPE_OUTPUT = [0, 0];
+for (let i = 1; i <= STAR_COUNT; i++) {
+  const t = TYPE.from + ((TYPE.to - TYPE.from) * i) / STAR_COUNT;
+  TYPE_INPUT.push(t - 0.0001, t);
+  TYPE_OUTPUT.push((i - 1) / STAR_COUNT, i / STAR_COUNT);
+}
+TYPE_INPUT.push(1);
+TYPE_OUTPUT.push(1);
+/** Passage des reflets, accéléré puis freiné, échantillonné pour `interpolate`. */
+const SWEEP_STEPS = 12;
+const SWEEP_INPUT = [
+  0,
+  ...Array.from({ length: SWEEP_STEPS + 1 }, (_, i) => SWEEP.from + ((SWEEP.to - SWEEP.from) * i) / SWEEP_STEPS),
+  1,
+];
+const SWEEP_OUTPUT = [
+  0,
+  ...Array.from({ length: SWEEP_STEPS + 1 }, (_, i) => {
+    const t = i / SWEEP_STEPS;
+    return t < 0.5 ? 2 * t * t : 1 - (-2 * t + 2) ** 2 / 2;
+  }),
+  1,
+];
+// Sur le web, une boucle « native » ne joue qu'un tour : on y anime en JS.
+const NATIVE = Platform.OS !== 'web';
+
+/**
+ * Comme les autres illustrations de l'onboarding : le badge descend avec un petit rebond, puis en boucle son ID se
+ * tape étoile par étoile et ses reflets traversent la carte. Au repos (« Réduire les animations »), il est tel que
+ * dans Figma.
  */
 function Badge({ width }: { width: number }) {
   const scale = width / BADGE_ART.width;
   const height = BADGE_ART.height * scale;
   const reduceMotion = useReduceMotion();
   const drop = useRef(new Animated.Value(0)).current;
-  const shine = useRef(new Animated.Value(0)).current;
+  const clock = useRef(new Animated.Value(0)).current;
+  // Au repos (« Réduire les animations ») : l'ID et les reflets tels que dans Figma.
+  const playing = !reduceMotion;
 
   useEffect(() => {
     if (reduceMotion) {
@@ -188,35 +219,40 @@ function Badge({ width }: { width: number }) {
       return;
     }
     drop.setValue(0);
-    shine.setValue(0);
-    const fall = Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true });
-    // Une seule animation native en boucle, pause comprise : enchaîner une pause et un passage dans la boucle ne
-    // rejouait le reflet qu'une fois. Il commence et finit hors de la carte, le retour au départ ne se voit pas.
-    const sweep = Animated.loop(
-      Animated.timing(shine, {
-        toValue: 1,
-        duration: SHINE_PAUSE + SHINE_MS,
-        easing: Easing.linear,
-        // Sur le web, une boucle « native » ne joue qu'un tour : on y anime en JS.
-        useNativeDriver: Platform.OS !== 'web',
-      }),
+    clock.setValue(0);
+    const fall = Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: NATIVE });
+    const loop = Animated.loop(
+      Animated.timing(clock, { toValue: 1, duration: CYCLE, easing: Easing.linear, useNativeDriver: NATIVE }),
     );
     fall.start();
-    sweep.start();
+    // Le badge tombe avec un ID vide ; la boucle démarre quand il s'est posé.
+    const timer = setTimeout(() => loop.start(), 700);
     return () => {
+      clearTimeout(timer);
       fall.stop();
-      sweep.stop();
+      loop.stop();
     };
-  }, [reduceMotion, drop, shine]);
+  }, [reduceMotion, drop, clock]);
 
-  const card = {
-    left: CARD.x * scale,
-    top: CARD.y * scale,
-    width: CARD.width * scale,
-    height: CARD.height * scale,
-    borderRadius: CARD.radius * scale,
-  };
-  const band = card.height;
+  const box = (layer: { x: number; y: number; width: number; height: number }) => ({
+    position: 'absolute' as const,
+    left: layer.x * scale,
+    top: layer.y * scale,
+    width: layer.width * scale,
+    height: layer.height * scale,
+  });
+  const card = { ...box(CARD), borderRadius: CARD.radius * scale };
+  const stars = BADGE_LAYERS.stars;
+  const shine = BADGE_LAYERS.shine;
+  const starsWidth = stars.width * scale;
+  // Part de l'ID tapée : la fenêtre qui le montre s'ouvre de gauche à droite, l'image restant en place.
+  const typed = clock.interpolate({ inputRange: TYPE_INPUT, outputRange: TYPE_OUTPUT });
+  const hidden = typed.interpolate({ inputRange: [0, 1], outputRange: [-starsWidth, 0] });
+  const sweep = clock.interpolate({ inputRange: SWEEP_INPUT, outputRange: SWEEP_OUTPUT });
+  // Les reflets partent juste avant le bord gauche de la carte et sortent par le bord droit.
+  const shineFrom = (CARD.x - shine.x - shine.width) * scale;
+  const shineTo = (CARD.x + CARD.width - shine.x) * scale;
+
   return (
     <Animated.View
       style={{
@@ -228,34 +264,46 @@ function Badge({ width }: { width: number }) {
         transform: [{ translateY: drop.interpolate({ inputRange: [0, 1], outputRange: [-height * 0.4, 0] }) }],
       }}>
       <Image
-        source={require('@/assets/images/onboarding/badge.png')}
+        source={BADGE_LAYERS.base}
         resizeMode="contain"
         accessibilityIgnoresInvertColors
         style={{ width, height }}
       />
-      {!reduceMotion && (
-        <View pointerEvents="none" style={[styles.card, card]}>
-          <Animated.View
-            style={{
-              height: band,
+      <Animated.View
+        style={[
+          box(stars),
+          styles.clip,
+          playing && {
+            opacity: clock.interpolate({ inputRange: [0, ERASE.from, ERASE.to, 1], outputRange: [1, 1, 0, 0] }),
+            transform: [{ translateX: hidden }],
+          },
+        ]}>
+        <Animated.Image
+          source={stars.image}
+          style={[
+            { width: starsWidth, height: stars.height * scale },
+            playing && { transform: [{ translateX: Animated.multiply(hidden, -1) }] },
+          ]}
+        />
+      </Animated.View>
+      <View pointerEvents="none" style={[card, styles.clip]}>
+        <Animated.Image
+          source={shine.image}
+          style={[
+            box({ ...shine, x: shine.x - CARD.x, y: shine.y - CARD.y }),
+            playing && {
               transform: [
                 {
-                  translateY: shine.interpolate({
-                    inputRange: SHINE_INPUT,
-                    outputRange: SHINE_CURVE.map((t) => card.height - t * (card.height + band)),
+                  translateX: sweep.interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [shineFrom, shineTo],
                   }),
                 },
               ],
-            }}>
-            <LinearGradient
-              colors={['rgba(255,255,255,0)', 'rgba(255,255,255,0.55)', 'rgba(255,255,255,0)']}
-              start={{ x: 0, y: 1 }}
-              end={{ x: 0, y: 0 }}
-              style={StyleSheet.absoluteFill}
-            />
-          </Animated.View>
-        </View>
-      )}
+            },
+          ]}
+        />
+      </View>
     </Animated.View>
   );
 }
@@ -290,8 +338,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
     textAlign: 'center',
   },
-  card: {
-    position: 'absolute',
+  clip: {
     overflow: 'hidden',
   },
   fieldBlock: {
