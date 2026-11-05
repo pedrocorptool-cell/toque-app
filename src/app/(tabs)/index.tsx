@@ -416,12 +416,14 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     borderTopLeftRadius: radius.sheet,
     borderTopRightRadius: radius.sheet,
+    // Marge fixe en haut de la feuille : les cartes défilent dessous sans toucher son bord.
+    paddingTop: space[16],
     backgroundColor: color.bgPage,
   },
   content: {
     flex: 1,
     gap: space[16],
-    padding: space[16],
+    paddingHorizontal: space[16],
     paddingBottom: space[24],
   },
   noRecipe: {
