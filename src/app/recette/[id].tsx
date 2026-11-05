@@ -30,6 +30,7 @@ import {
 import { SHEET_DURATION } from '@/components/ui/Overlays';
 import { importRecipe } from '@/data/imports';
 import { useCooking } from '@/data/CookingContext';
+import { openingServings } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { creatorOf, formatIngredient, savedHashtagsOf, stepWithQuantities, type Recipe } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -75,9 +76,10 @@ export default function RecipeScreen() {
   const recipe = last.current;
 
   const [tab, setTab] = useState<Tab>(etape ? 'steps' : 'ingredients');
-  // La fiche s'ouvre sur les parts par défaut du profil ; les quantités sont recalculées depuis la recette.
+  // La fiche s'ouvre sur les parts par défaut du profil (en automatique, celles de la recette) ; les quantités sont
+  // recalculées depuis la recette.
   const { defaultServings } = useProfile();
-  const [servings, setServings] = useState(defaultServings);
+  const [servings, setServings] = useState(() => (recipe ? openingServings(defaultServings, recipe) : 2));
   const { timers: allTimers, timerFor, toggle, beforeTimerStart, remove, setFocusedRecipeId } = useTimers();
   const inProgress = useCooking().cookingOf(id);
   const [timersOpen, setTimersOpen] = useState(false);

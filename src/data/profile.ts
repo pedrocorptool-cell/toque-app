@@ -36,3 +36,13 @@ export const SERVING_PRESETS = [1, 2, 3, 4, 5];
 export function partsLabel(count: number) {
   return `${count} part${count > 1 ? 's' : ''}`;
 }
+
+/** Parts d'ouverture des recettes : un nombre fixe, ou `auto` pour celles de la recette importée. */
+export type DefaultServings = number | 'auto';
+
+export const servingsLabel = (servings: DefaultServings) =>
+  servings === 'auto' ? 'Automatique' : partsLabel(servings);
+
+/** Parts avec lesquelles s'ouvre une recette ; en automatique, celles de la recette d'origine. */
+export const openingServings = (servings: DefaultServings, recipe: { servings: number }) =>
+  servings === 'auto' ? recipe.servings : servings;

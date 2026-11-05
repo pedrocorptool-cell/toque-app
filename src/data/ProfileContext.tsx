@@ -2,7 +2,7 @@ import { createContext, useContext, useEffect, useMemo, useState, type ReactNode
 
 import { color } from '@/theme/tokens';
 
-import type { Avatar, TimerSoundId } from './profile';
+import type { Avatar, DefaultServings, TimerSoundId } from './profile';
 import type { Snapshot } from './SpaceContext';
 import { useProfileSync, useSpace } from './SpaceContext';
 
@@ -14,9 +14,9 @@ type ProfileState = {
   setAccount: (account: Account) => void;
   avatar: Avatar;
   setAvatar: (avatar: Avatar) => void;
-  /** Nombre de parts avec lequel s'ouvrent les fiches recette. */
-  defaultServings: number;
-  setDefaultServings: (count: number) => void;
+  /** Parts avec lesquelles s'ouvrent les fiches recette : un nombre, ou `auto` pour celles de la recette. */
+  defaultServings: DefaultServings;
+  setDefaultServings: (servings: DefaultServings) => void;
   timerSound: TimerSoundId;
   setTimerSound: (id: TimerSoundId) => void;
   /** Présentation de l'app vue : l'onboarding ne s'ouvre qu'au premier lancement. */
@@ -36,20 +36,20 @@ export function ProfileProvider({ children }: { children: ReactNode }) {
   const { profile } = snapshot;
   const [account, setAccount] = useState(accountOf(snapshot));
   const [avatar, setAvatar] = useState<Avatar>(profile.avatar ?? DEFAULT_AVATAR);
-  const [defaultServings, setDefaultServings] = useState(profile.defaultServings ?? 2);
+  const [defaultServings, setDefaultServings] = useState<DefaultServings>(profile.servings ?? 'auto');
   const [timerSound, setTimerSound] = useState<TimerSoundId>(profile.timerSound ?? 'timer');
   const [onboarded, setOnboarded] = useState(snapshot.onboarded);
 
   useEffect(() => {
     setAccount(accountOf(snapshot));
     setAvatar(snapshot.profile.avatar ?? DEFAULT_AVATAR);
-    setDefaultServings(snapshot.profile.defaultServings ?? 2);
+    setDefaultServings(snapshot.profile.servings ?? 'auto');
     setTimerSound(snapshot.profile.timerSound ?? 'timer');
     setOnboarded(snapshot.onboarded);
   }, [snapshot]);
 
   const stored = useMemo(
-    () => ({ name: account.name, avatar, defaultServings, timerSound, onboarded }),
+    () => ({ name: account.name, avatar, servings: defaultServings, timerSound, onboarded }),
     [account.name, avatar, defaultServings, timerSound, onboarded],
   );
   useProfileSync(stored);

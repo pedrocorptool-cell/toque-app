@@ -9,7 +9,7 @@ import { useImport } from '@/components/screens/import/useImport';
 import { ImportSheet } from '@/components/screens/ImportSheet';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
 import { AppText, Avatar, Dialog, ListCard, ListRow, TextButton, useToast, Tappable } from '@/components/ui';
-import { partsLabel, TIMER_SOUNDS } from '@/data/profile';
+import { servingsLabel, TIMER_SOUNDS } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { useRecipes } from '@/data/RecipesContext';
 import { useSpace } from '@/data/SpaceContext';
@@ -56,7 +56,7 @@ export default function ProfilScreen() {
           <SettingRow
             icon="users"
             label="Parts par défaut"
-            value={partsLabel(defaultServings)}
+            value={servingsLabel(defaultServings)}
             onPress={() => router.push('/profil/parts')}
           />
           <SettingRow

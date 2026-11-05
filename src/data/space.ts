@@ -1,6 +1,6 @@
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-import type { Avatar, TimerSoundId } from './profile';
+import type { Avatar, DefaultServings, TimerSoundId } from './profile';
 import { BUNDLED_IMAGES, CATEGORIES, LEGACY_CATEGORIES, type Category, type Recipe } from './recipes';
 import type { ShoppingItem } from './shopping';
 import { supabase } from './supabase';
@@ -9,7 +9,9 @@ import { supabase } from './supabase';
 export type StoredProfile = {
   name?: string;
   avatar?: Avatar;
-  defaultServings?: number;
+  /** Parts d'ouverture des recettes ; absent : automatique. (Remplace `defaultServings`, d'avant le mode
+   *  automatique, pour que tous les profils démarrent en automatique.) */
+  servings?: DefaultServings;
   timerSound?: TimerSoundId;
   /** Onboarding terminé (avatar choisi) : une reconnexion le saute. */
   onboarded?: boolean;

@@ -23,6 +23,7 @@ import { TimerSheet } from '@/components/screens/TimerSheet';
 import { AppText, IconButton, TimerCard, TimerChip, Tappable } from '@/components/ui';
 import { useCooking } from '@/data/CookingContext';
 import { haptics } from '@/data/haptics';
+import { openingServings } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { formatIngredient, stepWithQuantities } from '@/data/recipes';
 import { useRecipes } from '@/data/RecipesContext';
@@ -73,7 +74,7 @@ export default function StepByStepScreen() {
   // Recette en cours : on reprend à l'étape où on s'était arrêté, aux mêmes parts.
   const { cookingOf, track, end } = useCooking();
   const [resumed] = useState(() => (id ? cookingOf(id) : undefined));
-  const servings = Number(params.parts) || resumed?.parts || defaultServings;
+  const servings = Number(params.parts) || resumed?.parts || (recipe ? openingServings(defaultServings, recipe) : 2);
 
   const [index, setIndex] = useState(() => Math.min(resumed?.step ?? 0, recipe?.steps.length ?? 0));
   // Ouvrir le mode étape par étape ou changer d'étape : la recette est en cours (card sur la home).

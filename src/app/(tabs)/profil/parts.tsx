@@ -5,24 +5,37 @@ import { Icon } from '@/components/icons/Icon';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
 import { ServingsSheet } from '@/components/screens/profile/ServingsSheet';
 import { ListCard, ListRow, Radio, useToast } from '@/components/ui';
-import { partsLabel, SERVING_PRESETS } from '@/data/profile';
+import { partsLabel, servingsLabel, SERVING_PRESETS } from '@/data/profile';
 import { useProfile } from '@/data/ProfileContext';
 import { color, space } from '@/theme/tokens';
 
 /** Valeur proposée à la première personnalisation (Figma « Sheet/Parts »). */
 const FIRST_CUSTOM = 6;
 
-/** Figma : « Profil/ Parts » et « Profil/ Parts/ Perso » — parts avec lesquelles s'ouvrent les recettes. */
+/**
+ * Figma : « Profil/ Parts » et « Profil/ Parts/ Perso » — parts avec lesquelles s'ouvrent les recettes. Par défaut,
+ * « Automatique » : chaque recette s'ouvre sur les parts de la recette d'origine.
+ */
 export default function PartsScreen() {
   const { defaultServings, setDefaultServings } = useProfile();
   const toast = useToast();
   const [sheetOpen, setSheetOpen] = useState(false);
-  const custom = !SERVING_PRESETS.includes(defaultServings);
+  const auto = defaultServings === 'auto';
+  const custom = !auto && !SERVING_PRESETS.includes(defaultServings);
 
   return (
     <>
       <ProfileScreen title="Parts par défaut" back toast={toast}>
         <ListCard>
+          {/* Les parts de la recette importée : ses quantités telles quelles. */}
+          <ListRow
+            label="Automatique"
+            accessibilityLabel="Automatique : les parts de la recette d’origine"
+            accessibilityRole="radio"
+            selected={auto}
+            trailing={<Radio selected={auto} />}
+            onPress={() => setDefaultServings('auto')}
+          />
           {SERVING_PRESETS.map((count) => (
             <ListRow
               key={count}
@@ -37,7 +50,7 @@ export default function PartsScreen() {
           <ListRow
             label={custom ? String(defaultServings) : 'Personnaliser'}
             accessibilityLabel={
-              custom ? `${partsLabel(defaultServings)}, modifier` : 'Personnaliser le nombre de parts'
+              custom ? `${servingsLabel(defaultServings)}, modifier` : 'Personnaliser le nombre de parts'
             }
             accessibilityRole="radio"
             selected={custom}
@@ -55,7 +68,7 @@ export default function PartsScreen() {
       <ServingsSheet
         visible={sheetOpen}
         onClose={() => setSheetOpen(false)}
-        initial={custom ? defaultServings : FIRST_CUSTOM}
+        initial={typeof defaultServings === 'number' && custom ? defaultServings : FIRST_CUSTOM}
         onSave={(count) => {
           setDefaultServings(count);
           setSheetOpen(false);
