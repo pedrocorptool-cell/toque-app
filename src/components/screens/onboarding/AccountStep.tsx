@@ -144,44 +144,62 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   );
 }
 
-/** Angle du balancement au repos, en degrés, et durée d'un aller. */
+/** Balancement au repos : ±2°, un aller-retour en 3,6 s. L'élan de l'arrivée ajoute jusqu'à 4° qui s'éteignent. */
 const SWAY = 2;
-const SWAY_MS = 1800;
+const PERIOD = 3600;
+const KICK = 4;
+const KICK_MS = 4000;
+
+// Courbes échantillonnées pour `interpolate` : tout le mouvement est calculé côté natif, sans relais JS entre deux
+// étapes (c'était la cause des à-coups).
+const STEPS = 48;
+const T = Array.from({ length: STEPS + 1 }, (_, i) => i / STEPS);
+/** Un tour de sinus : finit comme il commence, en position et en vitesse, donc la boucle ne se voit pas. */
+const SINE = T.map((t) => SWAY * Math.sin(2 * Math.PI * t));
+/** L'élan, en phase avec le sinus (même période), amorti jusqu'à 0 en douceur. */
+const KICK_CURVE = T.map((t) => {
+  const ms = t * KICK_MS;
+  return KICK * Math.exp((-2.5 * ms) / KICK_MS) * (1 - t) ** 2 * Math.sin((2 * Math.PI * ms) / PERIOD);
+});
 
 /**
  * Le badge descend à l'arrivée avec un petit rebond, comme un badge qu'on accroche, puis se balance au bout de ses
- * cordons : un premier élan amorti, puis un léger va-et-vient. Il pivote en haut au centre, où les cordons partent.
- * Fixe si « Réduire les animations » est activé.
+ * cordons : un premier élan amorti, puis un léger va-et-vient continu. Il pivote en haut au centre, où les cordons
+ * partent. Fixe si « Réduire les animations » est activé.
  */
 function Badge({ width }: { width: number }) {
   const height = (width * BADGE.height) / BADGE.width;
   const reduceMotion = useReduceMotion();
   const drop = useRef(new Animated.Value(0)).current;
-  const swing = useRef(new Animated.Value(0)).current;
+  const sway = useRef(new Animated.Value(0)).current;
+  const kick = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
     if (reduceMotion) {
       drop.setValue(1);
-      swing.setValue(0);
+      sway.setValue(0);
+      kick.setValue(1);
       return;
     }
-    const ease = Easing.inOut(Easing.sin);
-    const to = (toValue: number, duration: number) =>
-      Animated.timing(swing, { toValue, duration, easing: ease, useNativeDriver: true });
-    const animation = Animated.parallel([
+    drop.setValue(0);
+    sway.setValue(0);
+    kick.setValue(0);
+    // Trois animations natives lancées ensemble : la boucle du sinus et l'élan partagent la même horloge.
+    const animations = [
       Animated.spring(drop, { toValue: 1, friction: 5, tension: 60, useNativeDriver: true }),
-      Animated.sequence([
-        // L'élan de l'arrivée, qui s'amortit jusqu'au balancement de repos.
-        to(6, 500),
-        to(-4, 800),
-        to(SWAY, 900),
-        Animated.loop(Animated.sequence([to(-SWAY, SWAY_MS), to(SWAY, SWAY_MS)])),
-      ]),
-    ]);
-    animation.start();
-    return () => animation.stop();
-  }, [reduceMotion, drop, swing]);
+      Animated.loop(
+        Animated.timing(sway, { toValue: 1, duration: PERIOD, easing: Easing.linear, useNativeDriver: true }),
+      ),
+      Animated.timing(kick, { toValue: 1, duration: KICK_MS, easing: Easing.linear, useNativeDriver: true }),
+    ];
+    animations.forEach((animation) => animation.start());
+    return () => animations.forEach((animation) => animation.stop());
+  }, [reduceMotion, drop, sway, kick]);
 
+  const swing = Animated.add(
+    sway.interpolate({ inputRange: T, outputRange: SINE }),
+    kick.interpolate({ inputRange: T, outputRange: KICK_CURVE }),
+  );
   const rotate = swing.interpolate({ inputRange: [-10, 10], outputRange: ['-10deg', '10deg'] });
   return (
     <Animated.Image
