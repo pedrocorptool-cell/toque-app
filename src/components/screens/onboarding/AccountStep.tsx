@@ -17,8 +17,10 @@ import { color, font, space } from '@/theme/tokens';
 
 export type AccountMode = 'create' | 'login';
 
-/** Figma 1013:17424 : le badge Toqué, 327 × 236. */
+/** Figma 1013:17463 : le cadre du badge Toqué, 327 × 236. */
 const BADGE = { width: 327, height: 236 };
+/** L'image du badge avec ses cordons (Figma 1013:17424), qui débordent du cadre jusqu'aux bords de l'écran. */
+const BADGE_ART = { width: 452, height: 349 };
 
 const COPY: Record<AccountMode, { title: string; message: string; switch: string; submit: string }> = {
   // Figma 748:6064
@@ -63,7 +65,8 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
   const [busy, setBusy] = useState(false);
   const copy = COPY[mode];
   const { width } = useWindowDimensions();
-  const badgeWidth = Math.min(BADGE.width, width - space[16] * 2);
+  // Réduit avec le cadre de 327 px sur les écrans plus étroits que la maquette.
+  const badgeScale = Math.min(1, (width - space[16] * 2) / BADGE.width);
 
   const submit = async () => {
     if (busy || !pseudo.trim()) return;
@@ -82,7 +85,7 @@ export function AccountStep({ mode, onModeChange, onSubmit }: AccountStepProps) 
     <KeyboardAvoidingView style={styles.root} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView contentContainerStyle={styles.content} keyboardShouldPersistTaps="handled" bounces={false}>
         <View style={styles.main}>
-          <Badge width={badgeWidth} />
+          <Badge width={BADGE_ART.width * badgeScale} />
           <View style={styles.texts}>
             <AppText color={color.textOnBrandPrimary} style={styles.title} accessibilityRole="header">
               {copy.title}
@@ -168,7 +171,7 @@ const KICK_CURVE = T.map((t) => {
  * partent. Fixe si « Réduire les animations » est activé.
  */
 function Badge({ width }: { width: number }) {
-  const height = (width * BADGE.height) / BADGE.width;
+  const height = (width * BADGE_ART.height) / BADGE_ART.width;
   const reduceMotion = useReduceMotion();
   const drop = useRef(new Animated.Value(0)).current;
   const sway = useRef(new Animated.Value(0)).current;
