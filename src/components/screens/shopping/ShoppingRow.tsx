@@ -120,10 +120,13 @@ type CheckedRowProps = {
 /**
  * Figma « Liste » : article coché, barré et grisé, aligné sous les cases des articles à acheter.
  * Le barré est un trait dessiné, le même sur toutes les lignes, pendant et après l'animation : passer au barré du
- * texte à la fin le ferait changer d'épaisseur et de hauteur. Un article sur plusieurs lignes garde le barré du texte.
+ * texte à la fin le ferait changer d'épaisseur et de hauteur. Sur plusieurs lignes, un trait au milieu de chaque ligne,
+ * à sa longueur. Le web ne donne pas les lignes du texte : il garde le barré du texte.
  */
 export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRowProps) {
-  const [multiline, setMultiline] = useState(false);
+  // Lignes du texte (téléphone) ; sur le web, seulement s'il en a plusieurs.
+  const [lines, setLines] = useState<{ x: number; y: number; width: number; height: number }[] | null>(null);
+  const [webMultiline, setWebMultiline] = useState(false);
   const strike = useRef(new Animated.Value(animateStrike ? 0 : 1)).current;
 
   useEffect(() => {
@@ -143,13 +146,30 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
       <View style={styles.checkedLabel}>
         <AppText
           color={color.textSecondary}
-          style={[styles.lines, multiline && styles.struck]}
-          onTextLayout={(e) => setMultiline(e.nativeEvent.lines.length > 1)}>
+          style={[styles.lines, webMultiline && styles.struck]}
+          onTextLayout={(e) =>
+            setLines(e.nativeEvent.lines.map(({ x, y, width, height }) => ({ x, y, width, height })))
+          }
+          onLayout={(e) => Platform.OS === 'web' && setWebMultiline(e.nativeEvent.layout.height > LINE_HEIGHT * 1.5)}>
           {item.label}
         </AppText>
-        {!multiline && (
-          <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />
-        )}
+        {!webMultiline &&
+          (lines && lines.length > 1 ? (
+            lines.map((line, i) => (
+              <Animated.View
+                key={i}
+                pointerEvents="none"
+                style={[
+                  styles.strike,
+                  styles.lineStrike,
+                  { left: line.x, width: line.width, top: line.y + line.height * 0.52 },
+                  { transform: [{ scaleX: strike }] },
+                ]}
+              />
+            ))
+          ) : (
+            <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />
+          ))}
       </View>
     </View>
   );
@@ -211,5 +231,8 @@ const styles = StyleSheet.create({
     height: 1.5,
     backgroundColor: color.textSecondary,
     transformOrigin: 'left',
+  },
+  lineStrike: {
+    right: undefined,
   },
 });
