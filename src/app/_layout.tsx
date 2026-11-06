@@ -21,6 +21,7 @@ import { ShoppingProvider } from '@/data/ShoppingContext';
 import { SpaceProvider, useSpace } from '@/data/SpaceContext';
 import { TimersProvider } from '@/data/TimersContext';
 import { CookingProvider } from '@/data/CookingContext';
+import { CookingNotification } from '@/components/CookingNotification';
 import { color } from '@/theme/tokens';
 
 SplashScreen.preventAutoHideAsync();
@@ -82,6 +83,7 @@ function App() {
                 />
               </Stack>
               <TimerAlert />
+              <CookingNotification />
               <LaunchSplash />
             </CookingProvider>
           </TimersProvider>

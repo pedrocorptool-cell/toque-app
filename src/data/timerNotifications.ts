@@ -2,6 +2,8 @@ import { isRunningInExpoGo } from 'expo';
 import type * as NotificationsModule from 'expo-notifications';
 import { Platform } from 'react-native';
 
+import { cookingNotificationAvailable } from '../../modules/cooking-notification';
+
 import type { TimerSoundId } from './profile';
 
 /** Les notifications locales n'existent que sur téléphone ; sur le web, l'app sonne seule quand elle est ouverte. */
@@ -59,6 +61,8 @@ export async function askNotificationPermission(): Promise<NotificationPermissio
  * Expo Go, qui n'embarque pas ces fichiers, joue le son par défaut.
  */
 export async function scheduleTimerEnd(id: string, seconds: number, body: string, sound: TimerSoundId) {
+  // Android avec la notification « Recette en cours » : c'est elle qui sonne à la fin du minuteur.
+  if (cookingNotificationAvailable) return;
   const Notifications = notifications();
   if (!Notifications || seconds <= 0) return;
   // Android n'accepte que des minuscules et des « _ » dans le nom des ressources : den-den.wav devient den_den.wav.

@@ -1,0 +1,8 @@
+<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+  <!-- Fin d'un minuteur à l'heure près, même téléphone en veille (application de minuteurs). -->
+  <uses-permission android:name="android.permission.USE_EXACT_ALARM" />
+  <uses-permission android:name="android.permission.SCHEDULE_EXACT_ALARM" android:maxSdkVersion="32" />
+  <application>
+    <receiver android:name="expo.modules.cookingnotification.TimerEndReceiver" android:exported="false" />
+  </application>
+</manifest>

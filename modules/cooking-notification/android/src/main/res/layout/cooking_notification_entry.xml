@@ -1,0 +1,95 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+  Figma « Notif Android » (1061:*) : photo de la recette, nom et étape, gros minuteur à droite.
+  Android 12+ ajoute lui-même au-dessus la ligne « Toqué • Recette en cours » et limite ce contenu à 48 dp.
+-->
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+  android:layout_width="match_parent"
+  android:layout_height="48dp"
+  android:gravity="center_vertical"
+  android:orientation="horizontal">
+
+  <ImageView
+    android:id="@+id/cooking_photo"
+    android:layout_width="40dp"
+    android:layout_height="40dp"
+    android:scaleType="centerCrop" />
+
+  <LinearLayout
+    android:layout_width="0dp"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp"
+    android:layout_weight="1"
+    android:orientation="vertical">
+
+    <TextView
+      android:id="@+id/cooking_title"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:ellipsize="end"
+      android:maxLines="1"
+      android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+      android:textSize="14sp" />
+
+    <TextView
+      android:id="@+id/cooking_step"
+      android:layout_width="match_parent"
+      android:layout_height="wrap_content"
+      android:layout_marginTop="2dp"
+      android:ellipsize="end"
+      android:maxLines="1"
+      android:textAppearance="@android:style/TextAppearance.Material.Notification"
+      android:textSize="12sp" />
+  </LinearLayout>
+
+  <FrameLayout
+    android:id="@+id/cooking_time"
+    android:layout_width="wrap_content"
+    android:layout_height="wrap_content"
+    android:layout_marginStart="12dp">
+
+    <!-- Minuteur qui tourne : compte à rebours tenu par Android, même app fermée. -->
+    <Chronometer
+      android:id="@+id/cooking_chrono"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:fontFamily="sans-serif-light"
+      android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+      android:textSize="24sp" />
+
+    <!-- Minuteur en pause : temps restant figé. -->
+    <TextView
+      android:id="@+id/cooking_still"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:fontFamily="sans-serif-light"
+      android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+      android:textSize="24sp" />
+
+    <!-- Minuteur qui sonne : « 00:00:00 » clignote, comme dans la sheet du minuteur. -->
+    <ViewFlipper
+      android:id="@+id/cooking_blink"
+      android:layout_width="wrap_content"
+      android:layout_height="wrap_content"
+      android:autoStart="true"
+      android:flipInterval="500">
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-light"
+        android:text="00:00:00"
+        android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+        android:textSize="24sp" />
+
+      <TextView
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:fontFamily="sans-serif-light"
+        android:text="00:00:00"
+        android:textAppearance="@android:style/TextAppearance.Material.Notification.Title"
+        android:textColor="@android:color/transparent"
+        android:textSize="24sp" />
+    </ViewFlipper>
+  </FrameLayout>
+</LinearLayout>
