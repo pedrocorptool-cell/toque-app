@@ -2,6 +2,7 @@ import { createContext, useContext, useEffect, useRef, useState, type MutableRef
 import {
   Animated,
   Easing,
+  Keyboard,
   KeyboardAvoidingView,
   Modal,
   PanResponder,
@@ -166,6 +167,19 @@ type FilterSheetProps = {
 /** Figma : écrans « Filtre/ … » — titre à gauche, croix, liste d'options et « Footer de filtre ». */
 export function FilterSheet({ visible, onClose, title, header, children, onClear, onSubmit, count }: FilterSheetProps) {
   const insets = useSafeAreaInsets();
+  // Avec une recherche, la liste garde la hauteur qu'elle avait avant la saisie : la sheet ne rétrécit pas à mesure
+  // que les résultats se filtrent, et le champ reste juste au-dessus du clavier. Remesurée à l'ouverture et quand le
+  // clavier apparaît ou disparaît.
+  const [bodyHeight, setBodyHeight] = useState<number | null>(null);
+  useEffect(() => {
+    if (!visible || !header) return setBodyHeight(null);
+    const remeasure = () => setBodyHeight(null);
+    const subs = [
+      Keyboard.addListener('keyboardDidShow', remeasure),
+      Keyboard.addListener('keyboardDidHide', remeasure),
+    ];
+    return () => subs.forEach((sub) => sub.remove());
+  }, [visible, !!header]);
   return (
     <SheetModal visible={visible} onClose={onClose} sheetStyle={[styles.filterSheet, { paddingBottom: insets.bottom }]}>
       <View style={styles.filterHeader}>
@@ -173,7 +187,14 @@ export function FilterSheet({ visible, onClose, title, header, children, onClear
         <CloseButton onPress={onClose} />
       </View>
       {header}
-      <SheetScrollView style={styles.filterBody} bounces={false} keyboardShouldPersistTaps="handled">
+      <SheetScrollView
+        style={[styles.filterBody, !!header && bodyHeight !== null && { minHeight: bodyHeight }]}
+        onLayout={(e) => {
+          const height = e.nativeEvent.layout.height;
+          if (header) setBodyHeight((locked) => locked ?? height);
+        }}
+        bounces={false}
+        keyboardShouldPersistTaps="handled">
         {children}
       </SheetScrollView>
       <FilterFooter onClear={onClear} onSubmit={onSubmit} count={count} />
