@@ -125,14 +125,18 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
     Keyboard.dismiss();
     touch();
   };
+  /** Créateur saisi : un créateur connu du même nom, sinon un nouveau (« Maman »). Champ vide : celui d'avant. */
+  const typedCreator = (): CreatorValue => {
+    const name = creatorText.trim();
+    if (!name || name === creator.name) return creator;
+    return knownCreators.find((c) => c.name.toLowerCase() === name.toLowerCase()) ?? { id: name, name };
+  };
   const commitCreatorText = () => {
     setCreatorOpen(false);
-    const name = creatorText.trim();
-    if (!name) return setCreatorText(creator.name);
-    if (name === creator.name) return;
-    const known = knownCreators.find((c) => c.name.toLowerCase() === name.toLowerCase());
-    setCreator(known ?? { id: name, name });
-    setCreatorText(known?.name ?? name);
+    const next = typedCreator();
+    setCreatorText(next.name);
+    if (next === creator) return;
+    setCreator(next);
     touch();
   };
 
@@ -192,6 +196,8 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
       if (stored) nextImage = { uri: stored };
     }
 
+    // « Enregistrer » touché sans quitter le champ du créateur : le nom saisi compte quand même.
+    const creator = typedCreator();
     const avatar = creator.avatar as { uri?: string } | undefined;
     updateRecipe(recipe.id, {
       title: title.trim() || recipe.title,
