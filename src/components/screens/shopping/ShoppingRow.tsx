@@ -113,6 +113,8 @@ const STRIKE_DURATION = 280;
 type CheckedRowProps = {
   item: ShoppingItem;
   onToggle: () => void;
+  onRename: (label: string) => void;
+  onRemove: () => void;
   /** Article qu'on vient de cocher : le trait se trace au lieu d'être déjà là. */
   animateStrike?: boolean;
 };
@@ -123,7 +125,9 @@ type CheckedRowProps = {
  * texte à la fin le ferait changer d'épaisseur et de hauteur. Sur plusieurs lignes, un trait au milieu de chaque ligne,
  * à sa longueur. Le web ne donne pas les lignes du texte : il garde le barré du texte.
  */
-export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRowProps) {
+export function CheckedRow({ item, onToggle, onRename, onRemove, animateStrike = false }: CheckedRowProps) {
+  // Toucher le texte d'un article coché le passe en saisie, avec la croix pour le supprimer.
+  const [editing, setEditing] = useState(false);
   // Lignes du texte (téléphone) ; sur le web, seulement s'il en a plusieurs.
   const [lines, setLines] = useState<{ x: number; y: number; width: number; height: number }[] | null>(null);
   const [webMultiline, setWebMultiline] = useState(false);
@@ -143,33 +147,70 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
   return (
     <View style={[styles.row, styles.checkedRow]}>
       <Checkbox checked onChange={onToggle} />
-      <View style={styles.checkedLabel}>
-        <AppText
-          color={color.textSecondary}
-          style={[styles.lines, webMultiline && styles.struck]}
-          onTextLayout={(e) =>
-            setLines(e.nativeEvent.lines.map(({ x, y, width, height }) => ({ x, y, width, height })))
-          }
-          onLayout={(e) => Platform.OS === 'web' && setWebMultiline(e.nativeEvent.layout.height > LINE_HEIGHT * 1.5)}>
-          {item.label}
-        </AppText>
-        {!webMultiline &&
-          (lines && lines.length > 1 ? (
-            lines.map((line, i) => (
-              <Animated.View
-                key={i}
-                pointerEvents="none"
-                style={[
-                  styles.strike,
-                  styles.lineStrike,
-                  { left: line.x, width: line.width, top: line.y + line.height * 0.52 },
-                  { transform: [{ scaleX: strike }] },
-                ]}
-              />
-            ))
-          ) : (
-            <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />
-          ))}
+      {editing ? (
+        <TextInput
+          value={item.label}
+          autoFocus
+          multiline
+          scrollEnabled={false}
+          onChangeText={(label) => onRename(label.replace(/\n/g, ' '))}
+          onBlur={() => {
+            setEditing(false);
+            if (!item.label.trim()) onRemove();
+          }}
+          onSubmitEditing={() => setEditing(false)}
+          submitBehavior="blurAndSubmit"
+          {...(Platform.OS === 'web' && { blurOnSubmit: true, numberOfLines: 1 })}
+          returnKeyType="done"
+          cursorColor={color.textPrimary}
+          selectionColor={color.textPrimary}
+          style={[styles.input, styles.checkedInput]}
+        />
+      ) : (
+        <Tappable
+          accessibilityRole="button"
+          accessibilityLabel={`Modifier ${item.label}`}
+          onPress={() => setEditing(true)}
+          style={styles.checkedLabel}>
+          <AppText
+            color={color.textSecondary}
+            style={[styles.lines, webMultiline && styles.struck]}
+            onTextLayout={(e) =>
+              setLines(e.nativeEvent.lines.map(({ x, y, width, height }) => ({ x, y, width, height })))
+            }
+            onLayout={(e) => Platform.OS === 'web' && setWebMultiline(e.nativeEvent.layout.height > LINE_HEIGHT * 1.5)}>
+            {item.label}
+          </AppText>
+          {!webMultiline &&
+            (lines && lines.length > 1 ? (
+              lines.map((line, i) => (
+                <Animated.View
+                  key={i}
+                  pointerEvents="none"
+                  style={[
+                    styles.strike,
+                    styles.lineStrike,
+                    { left: line.x, width: line.width, top: line.y + line.height * 0.52 },
+                    { transform: [{ scaleX: strike }] },
+                  ]}
+                />
+              ))
+            ) : (
+              <Animated.View pointerEvents="none" style={[styles.strike, { transform: [{ scaleX: strike }] }]} />
+            ))}
+        </Tappable>
+      )}
+      <View style={styles.removeSlot}>
+        {editing && (
+          <Tappable
+            accessibilityRole="button"
+            accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}
+            onPress={onRemove}
+            {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
+            hitSlop={space[8]}>
+            <Icon name="close" color={color.textPrimary} />
+          </Tappable>
+        )}
       </View>
     </View>
   );
@@ -214,7 +255,12 @@ const styles = StyleSheet.create({
     paddingLeft: 24 + space[8],
   },
   checkedLabel: {
-    flexShrink: 1,
+    flex: 1,
+  },
+  // En saisie, l'article coché reste grisé et barré.
+  checkedInput: {
+    color: color.textSecondary,
+    textDecorationLine: 'line-through',
   },
   lines: {
     lineHeight: LINE_HEIGHT,

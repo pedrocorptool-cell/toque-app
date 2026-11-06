@@ -165,6 +165,8 @@ export default function ListeScreen() {
                   item={item}
                   animateStrike={item.id === justChecked}
                   onToggle={() => toggleSmoothly(item.id)}
+                  onRename={(label) => rename(item.id, label)}
+                  onRemove={() => remove(item.id)}
                 />
               ))}
             </View>
