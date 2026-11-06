@@ -88,17 +88,20 @@ export function ToBuyRow(props: ToBuyRowProps) {
         selectionColor={color.textPrimary}
         style={styles.input}
       />
-      {focused && props.removable && (
-        <Tappable
-          accessibilityRole="button"
-          accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}
-          onPress={props.onRemove}
-          // Sur le web, l'appui ferait perdre le focus au champ, et la croix disparaîtrait avant le clic.
-          {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
-          hitSlop={space[8]}>
-          <Icon name="close" color={color.textPrimary} />
-        </Tappable>
-      )}
+      {/* La place de la croix est toujours gardée : le texte garde la même largeur, et ne se recoupe pas, au focus. */}
+      <View style={styles.removeSlot}>
+        {focused && props.removable && (
+          <Tappable
+            accessibilityRole="button"
+            accessibilityLabel={`Supprimer ${item.label || 'l’article'}`}
+            onPress={props.onRemove}
+            // Sur le web, l'appui ferait perdre le focus au champ, et la croix disparaîtrait avant le clic.
+            {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
+            hitSlop={space[8]}>
+            <Icon name="close" color={color.textPrimary} />
+          </Tappable>
+        )}
+      </View>
     </Animated.View>
   );
 }
@@ -153,6 +156,10 @@ export function CheckedRow({ item, onToggle, animateStrike = false }: CheckedRow
 }
 
 const styles = StyleSheet.create({
+  removeSlot: {
+    width: 24,
+    height: 24,
+  },
   // Sur plusieurs lignes, la case, la poignée et la croix restent en face de la première.
   row: {
     minHeight: LINE_HEIGHT,
