@@ -1,6 +1,7 @@
+import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
-import { AppText } from '@/components/ui';
+import { AppText, ClearButton } from '@/components/ui';
 import { color, radius, space, text } from '@/theme/tokens';
 
 type CategoryFieldsProps = {
@@ -13,6 +14,7 @@ type CategoryFieldsProps = {
  * (Figma « V2 Sheet » 713:2882, sans couleur).
  */
 export function CategoryFields({ name, onNameChange }: CategoryFieldsProps) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={styles.field}>
       <AppText>#</AppText>
@@ -23,8 +25,11 @@ export function CategoryFields({ name, onNameChange }: CategoryFieldsProps) {
         placeholderTextColor={color.textSecondary}
         accessibilityLabel="Nom de la catégorie"
         autoFocus
+        onFocus={() => setFocused(true)}
+        onBlur={() => setFocused(false)}
         style={styles.input}
       />
+      <ClearButton visible={focused && !!name} onClear={() => onNameChange('')} />
     </View>
   );
 }

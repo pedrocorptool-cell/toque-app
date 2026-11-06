@@ -5,7 +5,7 @@ import { Platform, StyleSheet, TextInput, View } from 'react-native';
 import { Icon } from '@/components/icons/Icon';
 import { AvatarPicker } from '@/components/screens/profile/AvatarPicker';
 import { ProfileScreen } from '@/components/screens/profile/ProfileScreen';
-import { AppText, Avatar, BottomSheet, ListCard, ListRow, useToast, Tappable } from '@/components/ui';
+import { AppText, Avatar, BottomSheet, ClearButton, ListCard, ListRow, useToast, Tappable } from '@/components/ui';
 import { useProfile } from '@/data/ProfileContext';
 import { color, radius, space, text } from '@/theme/tokens';
 
@@ -14,6 +14,7 @@ export default function CompteScreen() {
   const { account, setAccount, avatar, setAvatar } = useProfile();
   const toast = useToast();
   const [name, setName] = useState(account.name);
+  const [nameFocused, setNameFocused] = useState(false);
   const [photoOpen, setPhotoOpen] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -56,18 +57,22 @@ export default function CompteScreen() {
           <AppText variant="overline" color={color.textSecondary} nativeID="nom">
             Nom d’utilisateur
           </AppText>
-          <TextInput
-            value={name}
-            onChangeText={setName}
-            onBlur={saveName}
-            onSubmitEditing={saveName}
-            accessibilityLabelledBy="nom"
-            accessibilityLabel="Nom d’utilisateur"
-            autoComplete="name"
-            textContentType="name"
-            returnKeyType="done"
-            style={styles.field}
-          />
+          <View style={[styles.field, styles.fieldRow]}>
+            <TextInput
+              value={name}
+              onChangeText={setName}
+              onFocus={() => setNameFocused(true)}
+              onBlur={() => (setNameFocused(false), saveName())}
+              onSubmitEditing={saveName}
+              accessibilityLabelledBy="nom"
+              accessibilityLabel="Nom d’utilisateur"
+              autoComplete="name"
+              textContentType="name"
+              returnKeyType="done"
+              style={styles.fieldInput}
+            />
+            <ClearButton visible={nameFocused && !!name} onClear={() => setName('')} />
+          </View>
 
           <AppText variant="overline" color={color.textSecondary} nativeID="toque-id">
             Pseudo Toqué
@@ -143,6 +148,19 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: color.borderDefault,
     backgroundColor: color.bgSurface,
+  },
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
+  fieldInput: {
+    ...text.body,
+    flex: 1,
+    height: '100%',
+    padding: 0,
+    color: color.textPrimary,
+    ...(Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)),
   },
   field: {
     ...text.body,

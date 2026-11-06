@@ -18,7 +18,7 @@ import { Icon } from '@/components/icons/Icon';
 import { AddRow, EDIT_LINE, EditRow } from '@/components/screens/edit/EditRow';
 import { StepTimerSheet } from '@/components/screens/edit/StepTimerSheet';
 import { ImportLoading } from '@/components/screens/import/ImportLoading';
-import { AppText, Dialog, IconButton, Tappable } from '@/components/ui';
+import { AppText, ClearButton, Dialog, IconButton, Tappable } from '@/components/ui';
 import { moveItem, useReorder } from '@/components/ui/useReorder';
 import { isStoredImage, storeRecipeImage } from '@/data/imports';
 import { creatorOf, creatorsOf, formatIngredient, type Ingredient, type Recipe, type Step } from '@/data/recipes';
@@ -74,6 +74,8 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
   const [creator, setCreator] = useState<CreatorValue>(() => creatorOf(recipe));
   const [creatorText, setCreatorText] = useState(creator.name);
   const [creatorOpen, setCreatorOpen] = useState(false);
+  // Champ en saisie : la croix d'effacement s'affiche à son bout.
+  const [focusedField, setFocusedField] = useState<'title' | 'creator' | null>(null);
   // La quantité reste dans le texte, aux parts de la recette : « 20 cl de bouillon de volaille ».
   const [ingredients, setIngredients] = useState<IngredientRow[]>(() =>
     recipe.ingredients.map((i, origin) => ({
@@ -250,14 +252,19 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
               <AppText variant="overline" color={color.textSecondary} nativeID="nom">
                 Nom
               </AppText>
-              <TextInput
-                value={title}
-                onChangeText={(v) => (setTitle(v), touch())}
-                accessibilityLabelledBy="nom"
-                accessibilityLabel="Nom"
-                returnKeyType="done"
-                style={styles.field}
-              />
+              <View style={[styles.field, styles.fieldRow]}>
+                <TextInput
+                  value={title}
+                  onChangeText={(v) => (setTitle(v), touch())}
+                  onFocus={() => setFocusedField('title')}
+                  onBlur={() => setFocusedField(null)}
+                  accessibilityLabelledBy="nom"
+                  accessibilityLabel="Nom"
+                  returnKeyType="done"
+                  style={styles.fieldInput}
+                />
+                <ClearButton visible={focusedField === 'title' && !!title} onClear={() => (setTitle(''), touch())} />
+              </View>
             </View>
 
             <View style={[styles.group, styles.raised]}>
@@ -271,14 +278,15 @@ function EditRecipe({ recipe, recipes }: { recipe: Recipe; recipes: Recipe[] }) 
                 <TextInput
                   value={creatorText}
                   onChangeText={setCreatorText}
-                  onFocus={() => setCreatorOpen(true)}
-                  onBlur={commitCreatorText}
+                  onFocus={() => (setCreatorOpen(true), setFocusedField('creator'))}
+                  onBlur={() => (setFocusedField(null), commitCreatorText())}
                   onSubmitEditing={commitCreatorText}
                   accessibilityLabelledBy="createur"
                   accessibilityLabel="Créateur"
                   returnKeyType="done"
                   style={styles.creatorInput}
                 />
+                <ClearButton visible={focusedField === 'creator' && !!creatorText} onClear={() => setCreatorText('')} />
               </View>
               {creatorOpen && suggestions.length > 0 && (
                 <View style={styles.dropdown}>
@@ -511,6 +519,20 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: space[8],
     paddingLeft: space[8],
+  },
+  // Champ dans une pastille : le texte prend la place, la croix d'effacement au bout.
+  fieldRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: space[8],
+  },
+  fieldInput: {
+    ...text.body,
+    flex: 1,
+    height: '100%',
+    padding: 0,
+    color: color.textPrimary,
+    ...(Platform.OS === 'web' && ({ outlineStyle: 'none' } as object)),
   },
   creatorInput: {
     ...text.body,

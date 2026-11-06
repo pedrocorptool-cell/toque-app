@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View } from 'react-native';
 
-import { AppText, Button } from '@/components/ui';
+import { AppText, Button, ClearButton } from '@/components/ui';
 import { normalizeUrl } from '@/data/imports';
 import { color, radius, space, text } from '@/theme/tokens';
 
@@ -9,6 +9,7 @@ import { color, radius, space, text } from '@/theme/tokens';
 export function WebImport({ onImport }: { onImport: (url: string) => void }) {
   const [value, setValue] = useState('');
   const [error, setError] = useState(false);
+  const [focused, setFocused] = useState(false);
 
   const submit = (input = value) => {
     const url = normalizeUrl(input);
@@ -38,8 +39,11 @@ export function WebImport({ onImport }: { onImport: (url: string) => void }) {
             autoCorrect={false}
             autoFocus
             returnKeyType="go"
+            onFocus={() => setFocused(true)}
+            onBlur={() => setFocused(false)}
             style={styles.input}
           />
+          <ClearButton visible={focused && !!value} onClear={() => (setValue(''), setError(false))} />
         </View>
         {error && (
           <AppText variant="label" color={color.feedbackDanger}>

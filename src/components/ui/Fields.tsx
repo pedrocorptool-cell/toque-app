@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { Platform, StyleSheet, TextInput, View, type TextInputProps } from 'react-native';
 
 import { Icon } from '@/components/icons/Icon';
@@ -48,6 +49,29 @@ export function SearchField({
   );
 }
 
+type ClearButtonProps = {
+  /** Champ en saisie et non vide. */
+  visible: boolean;
+  onClear: () => void;
+  color?: string;
+};
+
+/** Croix au bout d'un champ en saisie : vide le texte, le champ garde le focus. */
+export function ClearButton({ visible, onClear, color: ink = color.textPrimary }: ClearButtonProps) {
+  if (!visible) return null;
+  return (
+    <Tappable
+      accessibilityRole="button"
+      accessibilityLabel="Effacer"
+      onPress={onClear}
+      // Sur le web, l'appui ferait perdre le focus au champ, et la croix disparaîtrait avant le clic.
+      {...(Platform.OS === 'web' && { onMouseDown: (e: { preventDefault: () => void }) => e.preventDefault() })}
+      hitSlop={space[12]}>
+      <Icon name="close" color={ink} />
+    </Tappable>
+  );
+}
+
 type BrandFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & {
   /** Erreur : contour rouge, le message est affiché à part. */
   invalid?: boolean;
@@ -55,13 +79,21 @@ type BrandFieldProps = Omit<TextInputProps, 'style' | 'placeholderTextColor'> & 
 
 /** Figma « Onbarding » (748:6064) : champ de saisie sur le fond brun, comme la recherche sans loupe. */
 export function BrandField({ invalid, ...props }: BrandFieldProps) {
+  const [focused, setFocused] = useState(false);
   return (
     <View style={[styles.search, styles.brandField, invalid && styles.brandFieldInvalid]}>
       <TextInput
         {...props}
+        onFocus={(e) => (setFocused(true), props.onFocus?.(e))}
+        onBlur={(e) => (setFocused(false), props.onBlur?.(e))}
         placeholderTextColor={color.textOnBrandSecondary}
         selectionColor={color.textOnBrandPrimary}
         style={[styles.input, { color: color.textOnBrandPrimary }, WEB_NO_OUTLINE]}
+      />
+      <ClearButton
+        visible={focused && !!props.value}
+        onClear={() => props.onChangeText?.('')}
+        color={color.textOnBrandPrimary}
       />
     </View>
   );
