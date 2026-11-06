@@ -107,7 +107,7 @@ function CookingCard({ entry, width, onStop }: { entry: Entry; width: number; on
             <AppText variant="cardTitle" color={color.textOnBrandPrimary} numberOfLines={1}>
               {recipe.title}
             </AppText>
-            <AppText style={styles.status} color={color.textOnBrandPrimary}>
+            <AppText style={styles.status} color={color.textOnBrandSecondary}>
               {status}
             </AppText>
           </View>
