@@ -352,7 +352,7 @@ function normalize(value: string) {
 
 // Mots qui ne désignent pas l'ingrédient lui-même : unités, mesures, liaisons.
 const NOT_INGREDIENT = new Set(
-  'cuillere cuilleres soupe cafe pincee pincees tranche tranches gousse gousses brin brins botte bottes sachet sachets boite boites verre verres tasse tasses morceau morceaux feuille feuilles quelques environ grosse grosses petit petite petits petites gros frais fraiche coupe coupes'.split(
+  'cuillere cuilleres soupe cafe pincee pincees tranche tranches gousse gousses brin brins botte bottes sachet sachets boite boites verre verres tasse tasses morceau morceaux feuille feuilles quelques environ grosse grosses petit petite petits petites gros frais fraiche coupe coupes les des une aux sur par pot pots bol bols'.split(
     ' ',
   ),
 );
@@ -360,10 +360,13 @@ const NOT_INGREDIENT = new Set(
 /** Mots significatifs d'un nom d'ingrédient (« g de chocolat noir » → chocolat, noir), réduits à leur début pour
  *  que « œuf » trouve « œufs ». */
 function ingredientWords(name: string) {
-  return normalize(name.replace(/œ/g, 'oe'))
-    .split(/[^a-z]+/)
-    .filter((w) => w.length >= 4 && !NOT_INGREDIENT.has(w))
-    .map((w) => w.slice(0, 5));
+  return (
+    normalize(name.replace(/œ/g, 'oe'))
+      .split(/[^a-z]+/)
+      // Dès 3 lettres : « sel », « riz », « ail », « eau ».
+      .filter((w) => w.length >= 3 && !NOT_INGREDIENT.has(w))
+      .map((w) => w.slice(0, 5))
+  );
 }
 
 /**
@@ -387,23 +390,31 @@ export function stepIngredients(recipe: Recipe, index: number): Ingredient[] {
 
 /**
  * Texte d'une étape avec la quantité de chaque ingrédient juste après sa mention : « Faire fondre le chocolat (80g) ».
- * Les ingrédients de l'étape que le texte ne nomme pas restent à part (`rest`), pour être listés sous l'étape.
+ * Ceux que le texte ne nomme pas sont ajoutés en fin de phrase : « Verser l'appareil (200 g de beurre). »
  */
 export function stepWithQuantities(recipe: Recipe, index: number, servings: number) {
   const step = recipe.steps[index];
-  if (!step) return { text: '', rest: [] as Ingredient[] };
+  if (!step) return { text: '' };
   const words = [...step.text.matchAll(/[\p{L}œŒ]+/gu)].map((m) => ({
     key: normalize(m[0].replace(/œ/gi, 'oe')).slice(0, 5),
     end: m.index! + m[0].length,
     start: m.index!,
   }));
-  const inserts: { at: number; label: string }[] = [];
+  // Une mention par groupe d'ingrédients : « les deux farines » porte la farine de force et la T45.
+  const inserts: { at: number; words: number[]; items: Ingredient[] }[] = [];
   const rest: Ingredient[] = [];
   for (const ingredient of stepIngredients(recipe, index)) {
     const own = ingredientWords(ingredient.name);
-    const first = words.findIndex((w) => w.key === own[0] && !inserts.some((i) => i.at === w.end));
+    const free = (w: number) => !inserts.some((i) => i.words.includes(w));
+    const find = (keys: string[]) => words.findIndex((w, n) => keys.includes(w.key) && free(n));
+    // Le mot principal d'abord ; sinon un autre mot du nom (« emmental » pour « fromage râpé (emmental) »).
+    let first = find(own.slice(0, 1));
+    if (first === -1) first = find(own.slice(1));
     if (first === -1) {
-      rest.push(ingredient);
+      // Mot déjà pris par un autre ingrédient (« farines ») : même parenthèse.
+      const shared = inserts.find((i) => i.words.some((n) => words[n].key === own[0]));
+      if (shared && ingredient.qty !== undefined) shared.items.push(ingredient);
+      else if (!shared) rest.push(ingredient);
       continue;
     }
     if (ingredient.qty === undefined) continue;
@@ -417,11 +428,28 @@ export function stepWithQuantities(recipe: Recipe, index: number, servings: numb
       step.text.slice(words[last].end, words[last + 1].start).trim() === ''
     )
       last++;
-    inserts.push({ at: words[last].end, label: ` (${shortQuantity(ingredient, servings, recipe.servings)})` });
+    inserts.push({
+      at: words[last].end,
+      words: Array.from({ length: last - first + 1 }, (_, k) => first + k),
+      items: [ingredient],
+    });
   }
+  // Un seul ingrédient : sa quantité courte (« 80g ») ; plusieurs : chacun avec son nom.
+  const labelOf = (items: Ingredient[]) =>
+    items.length === 1
+      ? shortQuantity(items[0], servings, recipe.servings)
+      : items.map((i) => formatIngredient(i, servings, recipe.servings)).join(', ');
   let text = step.text;
-  for (const { at, label } of inserts.sort((a, b) => b.at - a.at)) text = text.slice(0, at) + label + text.slice(at);
-  return { text, rest };
+  for (const { at, items } of inserts.sort((a, b) => b.at - a.at))
+    text = `${text.slice(0, at)} (${labelOf(items)})${text.slice(at)}`;
+  // Ingrédients que le texte ne nomme pas (« verser l'appareil ») : en fin de phrase, entre parenthèses.
+  const unnamed = rest.filter((i) => i.qty !== undefined);
+  if (unnamed.length) {
+    const list = unnamed.map((i) => formatIngredient(i, servings, recipe.servings)).join(', ');
+    const [, body, end] = text.match(/^([\s\S]*?)([.!…]*\s*)$/)!;
+    text = `${body} (${list})${end}`;
+  }
+  return { text };
 }
 
 export function matchesText(label: string, query: string) {

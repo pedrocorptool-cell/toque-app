@@ -123,7 +123,7 @@ export default function HomeScreen() {
 
   const current = FILTERS.find((f) => f.key === shownFilter)!;
 
-  // En descendant dans la liste, la recherche et les filtres remontent sous le logo et « Vos recettes » : la liste
+  // En descendant dans la liste, la recherche et les filtres remontent sous le logo et « Mes recettes » : la liste
   // prend tout l'écran. Ils reviennent dès qu'on remonte, et restent toujours visibles en haut de la liste.
   const [topHeight, setTopHeight] = useState(0);
   const [toolsHeight, setToolsHeight] = useState(0);
@@ -197,10 +197,10 @@ export default function HomeScreen() {
           </Tappable>
         </View>
         <AppText variant="title" color={color.textOnBrandPrimary}>
-          Vos recettes
+          Mes recettes
         </AppText>
       </View>
-      {/* La feuille des recettes : en descendant, elle monte jusque sous « Vos recettes » et recouvre la recherche et
+      {/* La feuille des recettes : en descendant, elle monte jusque sous « Mes recettes » et recouvre la recherche et
           les filtres ; elle redescend dès qu'on remonte. Elle déborde en bas d'autant, la liste garde son défilement. */}
       <Animated.View
         style={[
@@ -374,7 +374,7 @@ const styles = StyleSheet.create({
   scrollContent: {
     flexGrow: 1,
   },
-  // En-tête fixe : logo, profil et « Vos recettes » restent toujours à l'écran.
+  // En-tête fixe : logo, profil et « Mes recettes » restent toujours à l'écran.
   header: {
     position: 'absolute',
     top: 0,
